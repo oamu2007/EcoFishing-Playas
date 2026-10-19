@@ -1,7 +1,9 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/gameplay/player.tscn" id="1_player"]
 [ext_resource type="Script" path="res://scripts/gameplay/playas_vertical_slice.gd" id="2_level"]
+[ext_resource type="Script" path="res://scripts/systems/trash_manager.gd" id="3_trash"]
+[ext_resource type="Script" path="res://scripts/systems/pollution_system.gd" id="4_pollution"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_vertical"]
 size = Vector2(32, 900)
@@ -77,3 +79,9 @@ shape = SubResource("RectangleShape2D_ocean")
 
 [node name="Player" parent="." instance=ExtResource("1_player")]
 position = Vector2(520, 450)
+
+[node name="TrashManager" type="Node2D" parent="."]
+script = ExtResource("3_trash")
+
+[node name="PollutionSystem" type="Node" parent="."]
+script = ExtResource("4_pollution")

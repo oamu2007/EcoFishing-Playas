@@ -4,6 +4,7 @@ extends Node2D
 signal state_changed(new_state: State)
 signal hook_landed(water_position: Vector2)
 signal retrieval_completed(water_position: Vector2)
+signal retrieval_advanced(previous_position: Vector2, current_position: Vector2, hook_radius: float)
 signal target_detected(target: Area2D)
 
 enum State { IDLE, CASTING, WAITING, RETRIEVING }
@@ -42,14 +43,26 @@ func is_active() -> bool:
 
 
 func invalid_target_reason(target: Vector2) -> String:
+	return invalid_target_reason_from(global_position, target)
+
+
+func get_hook_attachment() -> Node2D:
+	return _hook.visual
+
+
+func get_hook_water_position() -> Vector2:
+	return _hook.global_position
+
+
+func invalid_target_reason_from(origin: Vector2, target: Vector2) -> String:
 	if not water_bounds.has_area():
 		return "No fishing water configured"
-	var closest_water: Vector2 = global_position.clamp(water_bounds.position, water_bounds.end)
-	if global_position.distance_to(closest_water) > shoreline_distance:
+	var closest_water: Vector2 = origin.clamp(water_bounds.position, water_bounds.end)
+	if origin.distance_to(closest_water) > shoreline_distance:
 		return "Move closer to the shoreline"
 	if not water_bounds.has_point(target):
 		return "Aim at the ocean"
-	var cast_distance: float = global_position.distance_to(target)
+	var cast_distance: float = origin.distance_to(target)
 	if cast_distance < minimum_cast_range or cast_distance > maximum_cast_range:
 		return "Target outside casting range"
 	return ""
@@ -93,8 +106,11 @@ func _process(delta: float) -> void:
 		State.RETRIEVING:
 			_elapsed += delta
 			var progress: float = clampf(_elapsed / retrieval_duration, 0.0, 1.0)
+			var previous_position: Vector2 = _hook.global_position
 			_hook.global_position = _start.lerp(_tip.global_position, progress)
 			_hook.set_height(0.0)
+			# Include the final segment before IDLE/completion so fast returns cannot tunnel.
+			retrieval_advanced.emit(previous_position, _hook.global_position, _hook.get_collision_radius())
 			if progress >= 1.0:
 				_hook.hide()
 				_line.hide()
