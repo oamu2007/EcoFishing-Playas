@@ -2,7 +2,7 @@
 
 EcoFishing Playas is a 2D top-down environmental fishing game set in Playas de Tijuana. Instead of catching fish, the player removes ocean trash; as pollution falls, the water clears and marine life returns.
 
-The repository currently contains the Godot 4 project foundation, directory conventions, and a plan for the first playable vertical slice. Gameplay has not been implemented yet.
+The project includes a playable beach, fisherman movement, and a mouse-aimed cast/wait/retrieve loop. Trash collection and pollution tracking are planned next.
 
 ## Requirements
 
@@ -26,9 +26,9 @@ On systems where the executable is versioned, use `godot4` instead of `godot`.
 
 ## Run the project
 
-There is no main scene yet because gameplay implementation has intentionally not started. After the first implementation milestone creates and assigns a main scene, run it with **F6** for the current scene or **F5** for the project.
+Press **F5** to run. Move with **WASD or arrow keys**. Approach the shoreline, aim into the ocean with the mouse, and **left click** when the target is green. After landing, **left click again** to retrieve. Movement locks until retrieval completes. A red marker/status message explains invalid casts.
 
-The command-line equivalent, once a main scene exists, is:
+The command-line equivalent is:
 
 ```sh
 godot --path .

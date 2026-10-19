@@ -1,6 +1,7 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/gameplay/player.tscn" id="1_player"]
+[ext_resource type="Script" path="res://scripts/gameplay/playas_vertical_slice.gd" id="2_level"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_vertical"]
 size = Vector2(32, 900)
@@ -12,6 +13,7 @@ size = Vector2(840, 32)
 size = Vector2(24, 900)
 
 [node name="PlayasVerticalSlice" type="Node2D"]
+script = ExtResource("2_level")
 
 [node name="Environment" type="Node2D" parent="."]
 

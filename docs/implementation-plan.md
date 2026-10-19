@@ -31,10 +31,36 @@ A player can launch the project into one small Playas de Tijuana shoreline, move
 
 ## Milestone 3: Fishing interaction
 
-- Build the fishing rod as an owned scene/component with explicit ready, cast, and retrieve states.
-- Add cast targeting/range rules and simple line/hook presentation.
-- Prevent movement or repeated casts only where the chosen feel requires it.
-- Detect catchable targets using dedicated collision layers and emit a typed catch result.
+**Status: Implemented; verification results recorded below.**
+
+- [x] Modular rod, line, and hook scenes with IDLE, CASTING, WAITING, RETRIEVING states.
+- [x] Mouse aim; left click casts and retrieves after landing.
+- [x] Shoreline proximity, water bounds, range validation, and green/red aim feedback.
+- [x] Interpolated cast with separate parabolic visual height and exact water landing.
+- [x] Connected line, rotating rod, movement locking, and repeated-click protection.
+- [x] Typed lifecycle and waiting-only FishingTarget overlap signals.
+- [ ] Actual catch selection and collection with trash in Milestone 4.
+
+Manual acceptance procedure:
+
+1. Press F5. Test WASD/arrows, diagonal speed, beach collision, and camera follow.
+2. From spawn, aim at water and click. Expect a red marker and “Move closer to the shoreline”; movement remains available.
+3. Walk right to the ocean barrier. Aim on sand, then water beyond 420 px from the rod. Both reject without locking movement.
+4. Aim into visible water (world X=1000 near the player's Y). Green means valid. Click: hook arcs up then lands exactly on target, with line connected.
+5. Rapidly click and hold movement during flight: no extra cast, early retrieval, or player movement.
+6. Wait several seconds after landing: hook stays on target, line stays visible, status says “Waiting”. Moving the mouse does not move the hook.
+7. Click to retrieve. Rapid clicks cannot restart it. Hook returns to tip, line/hook hide, and movement unlocks. Repeat at different targets.
+8. Resize the window and repeat aiming to check camera/canvas conversion. Check the Debugger for errors.
+
+Automated verification on Godot 4.7.2: headless editor import passed; the main scene ran for 120 frames without script/resource errors; `tests/fishing_smoke_test.gd` passed with zero failures. It checks input configuration, rejected/valid targets, movement lock, arc height, line endpoints, exact landing, stable waiting, click gating, and retrieval cleanup. Interactive appearance and mouse aiming after window resizing still need the manual procedure above.
+
+Run from the project root (use the full executable path if Godot is not on PATH):
+
+```sh
+godot --headless --path . --editor --import --quit
+godot --headless --path . --script res://tests/fishing_smoke_test.gd
+godot --headless --path . --quit-after 120
+```
 
 **Exit check:** The player can repeatedly cast and retrieve; valid targets are detected once and invalid casts recover safely.
 
