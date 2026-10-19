@@ -1,0 +1,77 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/gameplay/player.tscn" id="1_player"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_vertical"]
+size = Vector2(32, 900)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_horizontal"]
+size = Vector2(840, 32)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ocean"]
+size = Vector2(24, 900)
+
+[node name="PlayasVerticalSlice" type="Node2D"]
+
+[node name="Environment" type="Node2D" parent="."]
+
+[node name="Ocean" type="Polygon2D" parent="Environment"]
+polygon = PackedVector2Array(840, 0, 1600, 0, 1600, 900, 840, 900)
+color = Color(0.08, 0.47, 0.65, 1)
+
+[node name="DeepWater" type="Polygon2D" parent="Environment"]
+polygon = PackedVector2Array(1180, 0, 1600, 0, 1600, 900, 1180, 900)
+color = Color(0.04, 0.33, 0.53, 1)
+
+[node name="ShallowWater" type="Polygon2D" parent="Environment"]
+polygon = PackedVector2Array(840, 0, 920, 0, 940, 120, 913, 240, 938, 360, 910, 480, 935, 610, 914, 740, 930, 900, 840, 900)
+color = Color(0.22, 0.67, 0.72, 1)
+
+[node name="Beach" type="Polygon2D" parent="Environment"]
+polygon = PackedVector2Array(0, 0, 840, 0, 840, 900, 0, 900)
+color = Color(0.87, 0.74, 0.48, 1)
+
+[node name="WetSand" type="Polygon2D" parent="Environment"]
+polygon = PackedVector2Array(780, 0, 840, 0, 840, 900, 790, 900, 798, 780, 781, 660, 802, 540, 784, 420, 800, 300, 779, 180, 795, 70)
+color = Color(0.72, 0.62, 0.43, 1)
+
+[node name="DunePatch" type="Polygon2D" parent="Environment"]
+polygon = PackedVector2Array(0, 0, 245, 0, 220, 85, 130, 110, 0, 90)
+color = Color(0.78, 0.69, 0.4, 1)
+
+[node name="DunePatch2" type="Polygon2D" parent="Environment"]
+polygon = PackedVector2Array(0, 710, 120, 690, 250, 740, 300, 900, 0, 900)
+color = Color(0.79, 0.69, 0.4, 1)
+
+[node name="FoamLine1" type="Line2D" parent="Environment"]
+points = PackedVector2Array(858, 0, 868, 90, 854, 180, 870, 270, 856, 360, 870, 450, 855, 540, 869, 630, 856, 720, 868, 810, 858, 900)
+width = 5.0
+default_color = Color(0.85, 0.96, 0.91, 0.85)
+
+[node name="FoamLine2" type="Line2D" parent="Environment"]
+points = PackedVector2Array(891, 0, 900, 100, 886, 205, 901, 310, 889, 415, 902, 520, 888, 625, 901, 730, 890, 835, 896, 900)
+width = 2.0
+default_color = Color(0.79, 0.94, 0.91, 0.5)
+
+[node name="WorldBounds" type="StaticBody2D" parent="."]
+collision_layer = 1
+collision_mask = 2
+
+[node name="Left" type="CollisionShape2D" parent="WorldBounds"]
+position = Vector2(-16, 450)
+shape = SubResource("RectangleShape2D_vertical")
+
+[node name="Top" type="CollisionShape2D" parent="WorldBounds"]
+position = Vector2(420, -16)
+shape = SubResource("RectangleShape2D_horizontal")
+
+[node name="Bottom" type="CollisionShape2D" parent="WorldBounds"]
+position = Vector2(420, 916)
+shape = SubResource("RectangleShape2D_horizontal")
+
+[node name="OceanBarrier" type="CollisionShape2D" parent="WorldBounds"]
+position = Vector2(828, 450)
+shape = SubResource("RectangleShape2D_ocean")
+
+[node name="Player" parent="." instance=ExtResource("1_player")]
+position = Vector2(520, 450)

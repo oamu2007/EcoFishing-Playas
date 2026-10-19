@@ -1,0 +1,23 @@
+[gd_scene format=3]
+
+[node name="HUD" type="CanvasLayer"]
+
+[node name="ControlsPanel" type="PanelContainer" parent="."]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 344.0
+offset_bottom = 91.0
+
+[node name="MarginContainer" type="MarginContainer" parent="ControlsPanel"]
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 10
+
+[node name="Instructions" type="Label" parent="ControlsPanel/MarginContainer"]
+theme_override_colors/font_color = Color(0.94, 0.98, 0.96, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 18
+text = "MOVE  •  WASD or Arrow Keys\nExplore the beach — fishing is coming next."
