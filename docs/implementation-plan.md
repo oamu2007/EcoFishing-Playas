@@ -120,16 +120,38 @@ Manual acceptance:
 godot --headless --path . --script res://tests/refinement_smoke_test.gd
 ```
 
-Limitations: initial spawn spacing is enforced, but drifting objects may pass through one another. Sweeps use the current item position per segment, suitable for these slow currents. This level still uses axis-aligned rectangular water; shader, fish, and particles remain future work.
+Limitations: initial spawn spacing is enforced, but drifting objects may pass through one another. Sweeps use the current item position per segment, suitable for these slow currents. This level still uses axis-aligned rectangular water; fish and particles remain future work.
 
 ## Milestone 5: Environmental response
 
-- Create a water presentation that interpolates between polluted and clear states.
-- Define a few cleanliness thresholds for fish visibility/activity.
-- Add lightweight fish movement/presentation and collection feedback effects.
-- Make changes gradual and legible without coupling visuals to the HUD.
+**Status: Pollution-responsive ocean implemented and verified on Godot 4.7.2 / GL Compatibility. Fish and particles deferred per the current milestone scope.**
 
-**Exit check:** Cleaning the level visibly clears the water and causes fish to appear, including correct behavior at boundary values.
+- [x] Add a CanvasItem shader with pollution_level, clean/dirty artist palettes, depth gradient, layered smooth value noise, sediment, two slow travelling waves, restrained highlights, and animated shoreline foam.
+- [x] Add real procedural seabed geometry beneath a continuously varying transparent surface.
+- [x] Bind a dedicated typed water controller to the existing pollution model; smooth visuals over 1.6 seconds while numerical HUD updates remain immediate.
+- [x] Keep one private material per instance, initialize/rebind/reset correctly, and stop idle CPU updates while GPU animation continues.
+- [x] Preserve beach geometry, collisions, fishing/spawn bounds, player/trash physics, pollution calculations, and compact HUD. Retain the hidden Ocean polygon as the bounds source.
+- [x] Add a separate live three-state preview and reproducible full-scene screenshots without changing game state.
+- [x] Document all shader equations, explicit draw order, tuning, renderer compatibility, and performance limits in `docs/water-rendering.md`.
+- [x] Add headless water-state tests and a real OpenGL render check; retain the previous three smoke tests.
+
+Automated checks: editor/import, fishing/cleanup/refinement/water smoke tests, headless main startup, and `git diff --check`. Real-render checks compile the shader on Intel Iris Xe / OpenGL Compatibility, compare dirty/midway/clean images and actual seabed visibility, confirm animation at both endpoints, and write captures under `.godot/water_captures/`. Screenshots were visually reviewed; cross-device performance still requires profiling.
+
+Manual acceptance:
+
+1. Press F5. At 100% the water should be muted/murky with almost invisible sand/rocks, but moving waves/foam and all trash remain visible.
+2. Approach the same shoreline and cast/retrieve. The HUD percentage changes on return immediately; water smoothly approaches the new state over approximately 1.6 seconds, without a jump or change to beach collision.
+3. Retrieve another batch during a transition. Confirm the new target is approached continuously, and the line/hook/trash/aim marker remain readable.
+4. At roughly halfway, expect subdued turquoise and partially visible seabed. At completion, expect cyan/blue, clearly visible submerged details, and continuing wave motion. Empty casts must not change water pollution.
+5. Stop/re-run (F8/F5). Water starts dirty again with fresh counts. Confirm the compact HUD and H-help still behave normally after resizing.
+6. Open `scenes/levels/water_preview.tscn`, press F6, and compare all three continuously animated states. Use the separate non-headless render harness for fixed-phase screenshots; see the graphics study document.
+
+```sh
+godot --headless --path . --script res://tests/water_smoke_test.gd
+godot --path . --script res://tests/water_render_check.gd
+```
+
+**Exit check:** Cleanup continuously changes water color/opacity, reveals the real seabed, and preserves ongoing surface animation at 100%, 50%, and 0%, with no gameplay regression.
 
 ## Milestone 6: Vertical-slice polish and verification
 

@@ -1,0 +1,22 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/gameplay/water_visuals.gd" id="1_controller"]
+[ext_resource type="Script" path="res://scripts/gameplay/seabed.gd" id="2_seabed"]
+[ext_resource type="Shader" path="res://shaders/ocean.gdshader" id="3_shader"]
+
+[sub_resource type="ShaderMaterial" id="WaterMaterial"]
+shader = ExtResource("3_shader")
+
+[node name="Water" type="Node2D"]
+z_index = -10
+script = ExtResource("1_controller")
+
+[node name="Seabed" type="Node2D" parent="."]
+script = ExtResource("2_seabed")
+
+[node name="Surface" type="ColorRect" parent="."]
+z_index = 1
+material = SubResource("WaterMaterial")
+offset_right = 760.0
+offset_bottom = 900.0
+mouse_filter = 2

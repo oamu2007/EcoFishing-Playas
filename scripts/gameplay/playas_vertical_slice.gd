@@ -8,6 +8,7 @@ var shore_end: Vector2
 @onready var _ocean: Polygon2D = $Environment/Ocean
 @onready var _rod: FishingRod = $Player/FishingRod
 @onready var _player: CharacterBody2D = $Player
+@onready var _water: WaterVisuals = $Environment/Water
 
 
 func _ready() -> void:
@@ -29,6 +30,9 @@ func _ready() -> void:
 	trash_manager.trash_collected.connect(_on_trash_collected)
 	trash_manager.initialize(_rod, shore_start, shore_end)
 	pollution.initialize(trash_manager.initial_pollution_values())
+	_water.global_position = bounds.position
+	_water.configure_size(bounds.size)
+	_water.bind_pollution(pollution)
 
 
 func _shape_bounds(collider: CollisionShape2D) -> Rect2:
