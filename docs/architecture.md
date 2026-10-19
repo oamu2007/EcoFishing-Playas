@@ -28,6 +28,16 @@ This is a target composition, not a requirement to put every behavior in the mai
 
 ## Scene responsibilities
 
+### Implemented fishing composition
+
+`Player` owns a `FishingRod` and checks `is_active()` to lock movement outside `IDLE`. The rod owns an aiming pivot, a tip marker, separate `FishingLine` and `FishingHook` scenes, and a status label. The pivot rotates toward the world-space mouse position; line endpoints are converted into local coordinates.
+
+The level derives an axis-aligned water rectangle from its rectangular ocean polygon and injects it into the rod. Translation/scaling is supported; rotated or nonrectangular water needs a polygon-based validator. Validation checks distance to water (140 px), a water target, and range (60–420 px), measured from the rod origin.
+
+States are `IDLE -> CASTING -> WAITING -> RETRIEVING -> IDLE`. The target is fixed on cast. Hook ground position interpolates toward it while only the visual child receives `-4 * height * t * (1 - t)` on screen Y. Height is zero at both endpoints. Collision stays on the water plane; retrieval interpolates back to the tip. Clicks during casting/retrieval are ignored.
+
+Typed signals: `state_changed`, `hook_landed`, `retrieval_completed`, and `target_detected`. The hook queries monitorable `Area2D` targets on layer 3 (`FishingTarget`); only waiting overlaps emit detection. Detection is a notification: Milestone 4 must own selection, deduplication, attachment, and collection. No autoloads are needed.
+
 - **Main:** Composes the level and HUD, starts a session, and connects high-level signals. It contains little or no gameplay logic.
 - **Level:** Owns terrain, collision, spawn markers, camera boundaries, and authored placement for a single shoreline area.
 - **Player:** Owns input-facing movement and the player's current ability to fish. It delegates casting and retrieval to the rod component/scene.

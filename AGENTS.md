@@ -48,3 +48,15 @@ EcoFishing Playas is a 2D top-down environmental fishing game built with Godot 4
 - Update architecture and implementation notes when introducing a new top-level system, autoload, or scene boundary.
 - Do not commit `.godot/`, generated imports, local editor state, or exported builds. Commit original assets and project resources needed to reproduce imports.
 - Before handing off a change, open the project in Godot when available, check for parser/import errors, and run the main scene when one exists.
+
+## Git Collaboration Rules
+
+- Never commit or push automatically unless explicitly requested.
+- Never modify unrelated files.
+- Do not rewrite Git history.
+- Work on feature branches for gameplay changes.
+- Keep scenes modular to minimize merge conflicts.
+- Explain every significant change.
+- Run available checks before marking a task complete.
+- Do not commit generated Godot cache files.
+- Keep main stable and playable.

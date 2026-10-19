@@ -26,6 +26,10 @@ window/stretch/aspect="expand"
 
 [input]
 
+fishing_action={
+"deadzone": 0.5,
+"events": [Object(InputEventMouseButton,"button_index":1)]
+}
 move_left={
 "deadzone": 0.5,
 "events": [Object(InputEventKey,"physical_keycode":65), Object(InputEventKey,"keycode":4194319)]
