@@ -6,20 +6,26 @@ A player can launch the project into one small Playas de Tijuana shoreline, move
 
 ## Milestone 1: Project bootstrap
 
-- Confirm the target Godot 4 version and open the project without import errors.
-- Define display resolution and input actions for movement, casting, and cancel/restart through the Godot editor.
-- Create the main scene and one test shoreline level.
-- Add a simple debug HUD and establish collision layers/masks in project settings.
-- Set the main scene only after it exists and runs successfully.
+**Status: Implemented (October 18, 2026); editor/runtime verification pending.**
+
+- [x] Confirm the project configuration targets Godot 4.7.
+- [x] Define a 960 × 540 viewport, responsive canvas scaling, and movement input actions.
+- [x] Create the main scene and one test shoreline level.
+- [x] Add a simple controls HUD and establish collision layers/masks in project settings.
+- [x] Set the main scene for F5 project runs.
+- [ ] Add fishing and restart input actions when their systems are implemented.
 
 **Exit check:** Running the project opens the test shoreline at the expected aspect ratio with no errors.
 
 ## Milestone 2: Player movement
 
-- Build a modular `CharacterBody2D` player scene.
-- Implement typed top-down movement with normalized diagonal input and exported speed.
-- Add collision and a camera appropriate to the small test map.
-- Add placeholder directional visuals or a clear debug sprite.
+**Status: Implemented (October 18, 2026); editor/runtime verification pending.**
+
+- [x] Build a modular `CharacterBody2D` player scene.
+- [x] Implement typed top-down movement with normalized diagonal input and exported speed.
+- [x] Add beach and ocean collision boundaries plus a smoothing follow camera.
+- [x] Add a clear placeholder fisherman assembled from procedural shapes.
+- [x] Support both WASD and arrow-key movement.
 
 **Exit check:** Keyboard/controller input moves the player smoothly, collisions hold, and diagonal movement is not faster.
 
