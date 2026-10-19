@@ -39,7 +39,7 @@ A player can launch the project into one small Playas de Tijuana shoreline, move
 - [x] Interpolated cast with separate parabolic visual height and exact water landing.
 - [x] Connected line, rotating rod, movement locking, and repeated-click protection.
 - [x] Typed lifecycle and waiting-only FishingTarget overlap signals.
-- [ ] Actual catch selection and collection with trash in Milestone 4.
+- [x] Actual catch selection and collection with trash implemented in Milestone 4.
 
 Manual acceptance procedure:
 
@@ -66,11 +66,29 @@ godot --headless --path . --quit-after 120
 
 ## Milestone 4: Trash collection and pollution
 
-- Create a reusable trash scene with an exported pollution-removal value.
-- Place several readable trash targets in the test water.
-- Implement the pollution system as the single owner of the pollution total.
-- Route fishing results to pollution changes through signals/coordinator logic.
-- Display the current pollution or cleanliness value in the HUD.
+**Status: Implemented; Godot 4.7.2 automated checks passed. Interactive visual acceptance remains manual.**
+
+- [x] Reusable typed trash scene with bottle, can, and bag shapes, configurable catch radius/value, and visual-only bobbing.
+- [x] Finite seeded initial batch with active-item cap, nonoverlap/shoreline spacing, and casting reachability checked against actual shoreline collision geometry.
+- [x] Nearest single-item attachment on landing; misses remain valid fishing cycles.
+- [x] Attached trash follows the hook and scores only after successful return; duplicate catches/removals/scoring are guarded.
+- [x] Independent pollution model with initial/current pollution, normalized pollution, collected/remaining counts, change/completion signals, and safe empty-batch handling.
+- [x] HUD counts/percentage, hook/collection notifications, persistent completion message, and existing control instructions.
+- [x] Existing fishing smoke test retained; cleanup smoke test covers deterministic spawning, bounds/spacing/reachability, type coverage, nearest selection, attachment, duplicates, misses, completion, capped/empty batches, and HUD completion.
+
+Automated verification: headless editor import, `tests/fishing_smoke_test.gd`, `tests/cleanup_smoke_test.gd`, a headless main-scene run, and `git diff --check`. See the architecture document for future shader signal bindings.
+
+Manual acceptance:
+
+1. Press F5. Confirm 12 remaining, 0 collected, and 100% pollution. Walk right to the beach boundary; move up/down the shoreline to see the full batch.
+2. Identify a mint bottle, orange can, or cream bag. Aim at its center and left-click with a green marker. Confirm the normal arc/line, one attached item after landing, and unchanged counts/pollution while waiting.
+3. Click again. Confirm the item follows the hook, then disappears only on return; collected increases once, remaining decreases once, pollution drops, and a named collection notification appears.
+4. Cast into a clear gap. Wait, then retrieve. No item or pollution/count change should occur.
+5. Repeat with rapid clicks and movement keys during casting/retrieval. No extra catch/score or movement should occur. Check invalid sand/far/inland targets still reject.
+6. Walk along the shoreline and collect all 12. Confirm 0 remaining, 12 collected, 0% pollution, and the completion message. Wait to confirm no replacements spawn.
+7. Resize the window and check aiming/UI legibility. Stop/re-run with F8/F5 to reset the seeded batch. No in-game restart button is implemented yet.
+
+Run the added test with `godot --headless --path . --script res://tests/cleanup_smoke_test.gd` after the editor import command above.
 
 **Exit check:** Retrieving trash removes it once, updates the HUD by the correct amount, and clamps pollution at its valid bounds.
 

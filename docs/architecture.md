@@ -36,7 +36,24 @@ The level derives an axis-aligned water rectangle from its rectangular ocean pol
 
 States are `IDLE -> CASTING -> WAITING -> RETRIEVING -> IDLE`. The target is fixed on cast. Hook ground position interpolates toward it while only the visual child receives `-4 * height * t * (1 - t)` on screen Y. Height is zero at both endpoints. Collision stays on the water plane; retrieval interpolates back to the tip. Clicks during casting/retrieval are ignored.
 
-Typed signals: `state_changed`, `hook_landed`, `retrieval_completed`, and `target_detected`. The hook queries monitorable `Area2D` targets on layer 3 (`FishingTarget`); only waiting overlaps emit detection. Detection is a notification: Milestone 4 must own selection, deduplication, attachment, and collection. No autoloads are needed.
+Typed rod signals: `state_changed`, `hook_landed`, `retrieval_completed`, and `target_detected`. The hook queries monitorable `Area2D` targets on layer 3 (`FishingTarget`); only waiting overlaps emit detection. `TrashManager` subscribes to these events and owns selection, attachment, and successful collection. No autoloads are needed.
+
+### Implemented cleanup composition
+
+`World` owns a `TrashManager` (which contains unhooked trash), a `PollutionSystem`, and the existing player/environment. `Main` binds the HUD to these local instances. The rod remains unaware of pollution and trash types.
+
+- `OceanTrash` is a reusable `Area2D` scene with bottle, can, and bag visuals. Each instance has a stable catch circle, type, and configurable pollution value. Only its visual child bobs. The default batch cycles types with pollution values 10, 15, and 20.
+- `TrashManager` spawns one finite batch (12 by default, seed 2026), with a configurable cap, spacing, shoreline clearance, and catch radius. There is no replenishment timer. The level computes a reachable shoreline segment from actual world-boundary shapes, player collider extents, and rod offset. The manager samples an inset ocean rectangle within rod range, validates each candidate with `FishingRod.invalid_target_reason_from()`, and rejects crowded candidates. A bounded attempt budget avoids infinite loops; impossible configurations warn and register only the actual batch.
+- On `hook_landed`, the manager selects the nearest available item whose own catch radius contains the landing position. This synchronous geometric check avoids stale physics overlap caches and prevents catches along the airborne path. `target_detected` is an additional waiting-only hint; its handling is deferred to avoid reparenting during physics callbacks. Both paths use the same nearest-selection check and single held-item guard.
+- Hooking reparents that one item to the hook's visual anchor, stops bobbing, and disables its monitorability. Pollution and counts remain unchanged. `retrieval_completed` in IDLE finalizes collection, removes the manager's item reference, and emits `trash_collected(item_id: int, type_name: String)`. Trash guards repeated removal; the manager clears its held reference before notifying observers.
+- `PollutionSystem.initialize(item_values: Dictionary[int, int])` snapshots actual spawned instance IDs and their pollution values. `collect(item_id)` consumes an ID once, subtracts its registered value, and updates counts. Unknown/duplicate IDs return false without emitting changes. This model can be tested without rendering or physics.
+- `TrashManager.trash_hooked(type_name)` and `trash_collected(item_id, type_name)` feed temporary HUD notifications. The level routes successful collection to `PollutionSystem.collect()`. The HUD only observes model state and displays collected/remaining counts, pollution percentage, and completion.
+
+### Interface for future water and fish presentation
+
+Inject the level's `PollutionSystem` into the future water/fish presenter. Read `normalized_pollution` once at binding, then subscribe to `pollution_changed(normalized_pollution: float, collected_count: int, remaining_count: int)`. The value is clamped to 0–1: 1 means the initial pollution total and 0 means clean. A future CanvasItem presenter can pass it to a shader uniform via `ShaderMaterial.set_shader_parameter()`; cleanliness is `1.0 - normalized_pollution`. The model also exposes `initial_total_pollution`, `current_pollution`, `trash_collected`, `remaining_trash`, and `cleanup_completed()`.
+
+An empty batch has zero pollution and normalized value 0, emits its initial state and completion on initialization, and shows completion immediately. Presenters must read initial state when connecting after level readiness so they do not depend on receiving the initialization signal. No water shader, fish, or particles are implemented here.
 
 - **Main:** Composes the level and HUD, starts a session, and connects high-level signals. It contains little or no gameplay logic.
 - **Level:** Owns terrain, collision, spawn markers, camera boundaries, and authored placement for a single shoreline area.
@@ -78,7 +95,7 @@ This keeps collectibles unaware of UI and keeps the player unaware of water rend
 - Use Godot input actions rather than checking physical keys in gameplay scripts.
 - Use `Area2D`/collision layers for fishing targets and interaction detection.
 - Use a shader parameter, modulate value, or layered sprites to transition water clarity; isolate the choice behind the water presentation scene.
-- Use authored spawn markers for the vertical slice before considering procedural spawning.
+- Use a finite seeded spawn batch constrained to reachable water for this slice; do not add continuous respawning.
 - Avoid autoloads initially. Add a session/game-state autoload only when changing levels creates a demonstrated need for persistent state.
 
 ## Suggested scene and script files

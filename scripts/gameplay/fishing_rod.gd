@@ -42,14 +42,26 @@ func is_active() -> bool:
 
 
 func invalid_target_reason(target: Vector2) -> String:
+	return invalid_target_reason_from(global_position, target)
+
+
+func get_hook_attachment() -> Node2D:
+	return _hook.visual
+
+
+func get_hook_water_position() -> Vector2:
+	return _hook.global_position
+
+
+func invalid_target_reason_from(origin: Vector2, target: Vector2) -> String:
 	if not water_bounds.has_area():
 		return "No fishing water configured"
-	var closest_water: Vector2 = global_position.clamp(water_bounds.position, water_bounds.end)
-	if global_position.distance_to(closest_water) > shoreline_distance:
+	var closest_water: Vector2 = origin.clamp(water_bounds.position, water_bounds.end)
+	if origin.distance_to(closest_water) > shoreline_distance:
 		return "Move closer to the shoreline"
 	if not water_bounds.has_point(target):
 		return "Aim at the ocean"
-	var cast_distance: float = global_position.distance_to(target)
+	var cast_distance: float = origin.distance_to(target)
 	if cast_distance < minimum_cast_range or cast_distance > maximum_cast_range:
 		return "Target outside casting range"
 	return ""

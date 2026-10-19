@@ -1,9 +1,11 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/levels/playas_vertical_slice.tscn" id="1_level"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="2_hud"]
+[ext_resource type="Script" path="res://scripts/gameplay/main.gd" id="3_main"]
 
 [node name="Main" type="Node"]
+script = ExtResource("3_main")
 
 [node name="World" parent="." instance=ExtResource("1_level")]
 

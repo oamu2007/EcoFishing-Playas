@@ -1,6 +1,9 @@
-[gd_scene format=3]
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1"]
 
 [node name="HUD" type="CanvasLayer"]
+script = ExtResource("1")
 
 [node name="ControlsPanel" type="PanelContainer" parent="."]
 mouse_filter = 2
@@ -23,4 +26,31 @@ theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
 theme_override_constants/shadow_offset_x = 1
 theme_override_constants/shadow_offset_y = 2
 theme_override_font_sizes/font_size = 18
-text = "MOVE: WASD / Arrow Keys | AIM: Mouse\nLeft click: Cast / Retrieve when waiting\nNear shore + green target = valid cast\nRed target = invalid | Movement locks while fishing"
+text = "MOVE: WASD / Arrow Keys | AIM: Mouse\nLeft click: Cast near trash / Retrieve when waiting\nNear shore + green target = valid cast\nMovement locks while fishing; collect after retrieval"
+
+[node name="ProgressPanel" type="PanelContainer" parent="."]
+offset_left = 20.0
+offset_top = 150.0
+offset_right = 510.0
+mouse_filter = 2
+
+[node name="Margin" type="MarginContainer" parent="ProgressPanel"]
+mouse_filter = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 10
+
+[node name="Progress" type="Label" parent="ProgressPanel/Margin"]
+mouse_filter = 2
+theme_override_font_sizes/font_size = 18
+text = "Pollution: initializing..."
+
+[node name="Notification" type="Label" parent="."]
+offset_left = 34.0
+offset_top = 230.0
+mouse_filter = 2
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 2
