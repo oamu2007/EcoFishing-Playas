@@ -21,6 +21,9 @@ func _check(condition: bool, message: String) -> void:
 func _run() -> void:
 	var main: Node = MAIN_SCENE.instantiate()
 	root.add_child(main)
+	# Drift is tested separately; keep this original spawn/catch fixture stationary.
+	for item: OceanTrash in (main.get_node("World/TrashManager") as TrashManager).items:
+		item.set_physics_process(false)
 	await process_frame
 	var level: LevelScript = main.get_node("World")
 	var player: CharacterBody2D = level.get_node("Player")
@@ -30,7 +33,7 @@ func _run() -> void:
 	rod.set_process(false)
 	player.set_physics_process(false)
 	var original_count: int = manager.items.size()
-	_check(original_count == 12, "Default batch did not spawn 12 items")
+	_check(original_count == 24, "Default batch did not spawn 24 items")
 	_check(original_count <= manager.maximum_active_items, "Exceeded active item cap")
 	_check(pollution.remaining_trash == original_count, "Pollution registration count mismatch")
 	_check(pollution.normalized_pollution == 1.0, "Initial pollution is not 100 percent")
@@ -74,7 +77,6 @@ func _run() -> void:
 	second.global_position = first.global_position + Vector2(20, 0)
 	player.global_position = Vector2(level.shore_start.x, landing.y) - rod_offset
 	var first_id: int = first.get_instance_id()
-	var first_value: int = first.pollution_value
 	_cast(rod, landing)
 	_check(first.hooked and not second.hooked, "Catch did not select exactly the nearest item")
 	_check(not first.collected and pollution.trash_collected == 0, "Landing removed or scored trash")
@@ -88,10 +90,15 @@ func _run() -> void:
 	_check(first.global_position.distance_to(rod.get_hook_attachment().global_position) < 30.0, "Caught trash detached during retrieval")
 	_check(pollution.current_pollution == total_value, "Scored before successful return")
 	rod._process(rod.retrieval_duration * 0.5)
-	_check(pollution.trash_collected == 1 and pollution.current_pollution == total_value - first_value, "Retrieval did not score correct value")
+	# The return path may now sweep additional trash; all removed values must match.
+	var returned_count: int = original_count - manager.items.size()
+	var remaining_value: int = 0
+	for item: OceanTrash in manager.items:
+		remaining_value += item.pollution_value
+	_check(first.collected and pollution.trash_collected == returned_count and pollution.current_pollution == remaining_value, "Retrieval did not score correct values")
 	_check(not pollution.collect(first_id), "Duplicate item scored twice")
 	rod.retrieval_completed.emit(landing)
-	_check(pollution.trash_collected == 1 and _change_count == 1, "Repeated completion changed score")
+	_check(pollution.trash_collected == returned_count and _change_count == returned_count, "Repeated completion changed score")
 	_check(not first.finish_collection(), "Duplicate trash removal accepted")
 	await process_frame
 	_check(not is_instance_valid(first), "Retrieved trash was not freed")
@@ -103,7 +110,7 @@ func _run() -> void:
 	for item: OceanTrash in manager.items:
 		_check(not item.hooked, "Miss caught trash outside its radius")
 	_retrieve(rod)
-	_check(pollution.trash_collected == 1 and _change_count == 1, "Miss changed pollution")
+	_check(pollution.trash_collected == returned_count and _change_count == returned_count, "Miss changed pollution")
 	# Collect the whole finite batch through the existing state machine.
 	for remaining_cast: int in range(original_count - 1):
 		if manager.items.is_empty():
@@ -117,7 +124,7 @@ func _run() -> void:
 	_check(pollution.current_pollution == 0 and pollution.normalized_pollution == 0.0, "Completed level remains polluted")
 	_check(pollution.remaining_trash == 0 and pollution.trash_collected == original_count, "Final counts incorrect")
 	_check(_completion_count == 1 and _change_count == original_count, "Pollution signals duplicated or missing")
-	_check("complete" in str(main.get_node("HUD/ProgressPanel/Margin/Progress").text), "HUD lacks completion message")
+	_check(main.get_node("HUD/Completion").visible, "HUD lacks completion message")
 	await create_timer(0.1).timeout
 	_check(manager.items.is_empty(), "Trash respawned after completion")
 	main.free()
@@ -142,7 +149,7 @@ func _test_empty_and_capped_batches() -> void:
 	_check(model.initial_total_pollution == 0 and model.current_pollution == 0, "Empty batch pollution nonzero")
 	_check(model.normalized_pollution == 0.0 and model.remaining_trash == 0, "Empty batch normalization failed")
 	_check(not model.collect(123), "Unknown item collected")
-	_check("complete" in str(main.get_node("HUD/ProgressPanel/Margin/Progress").text), "Empty level lacks completion UI")
+	_check(main.get_node("HUD/Completion").visible, "Empty level lacks completion UI")
 	main.free()
 
 

@@ -28,9 +28,9 @@ On systems where the executable is versioned, use `godot4` instead of `godot`.
 
 Press **F5** to run. Move with **WASD or arrow keys**. Approach the shoreline, aim into the ocean with the mouse, and **left click** when the target is green. After landing, **left click again** to retrieve. Movement locks until retrieval completes. A red marker/status message explains invalid casts.
 
-Aim at or near a trash item's center to hook it on landing. One item can be held per cast; the HUD shows its type. It follows the hook during retrieval and counts as collected only after returning to the fisherman. Empty-water casts do not change pollution. Walk along the shoreline to reach the whole batch.
+Aim at or near a trash item's center to hook one item on landing. During retrieval, the hook also collects trash crossed along its return path, with small offsets for held items. Cast beyond several aligned objects to collect a batch. All held items count only after returning to the fisherman. A completely empty cast/return does not change pollution. Walk along the shoreline to reach the whole batch.
 
-The default session spawns 12 nonoverlapping, reachable items using seed 2026. Mint bottles remove 10 pollution units, orange cans 15, and cream bags 20. The HUD shows collected/remaining counts and the percentage of initial pollution remaining. Collect all items for the completion message; items do not respawn. Stop with **F8** and run with **F5** to reset.
+The default session spawns 24 initially separated, reachable items using seed 2026. Trash drifts gently up/down with seeded variation and smooth turnarounds inside reachable water. Mint bottles remove 10 pollution units, orange cans 15, and cream bags 20. The compact HUD shows collected/total and pollution percentage; **H** toggles detailed controls. Catch notifications and completion use small text. Collect all items to finish; items do not respawn. Stop with **F8** and run with **F5** to reset.
 
 The level's `TrashManager` node exposes batch count/cap, seed, spacing, shoreline clearance, and catch-radius settings in the Inspector. Pollution totals use the actual spawned batch, including an empty batch. The [architecture notes](docs/architecture.md) document `PollutionSystem.normalized_pollution` and `pollution_changed` for future water-shader/fish presentation.
 
@@ -46,6 +46,7 @@ godot --path .
 godot --headless --path . --editor --import --quit
 godot --headless --path . --script res://tests/fishing_smoke_test.gd
 godot --headless --path . --script res://tests/cleanup_smoke_test.gd
+godot --headless --path . --script res://tests/refinement_smoke_test.gd
 godot --headless --path . --quit-after 120
 ```
 

@@ -6,8 +6,8 @@ signal trash_collected(item_id: int, type_name: String)
 
 const TRASH_SCENE: PackedScene = preload("res://scenes/gameplay/trash.tscn")
 
-@export_range(0, 100) var initial_item_count: int = 12
-@export_range(0, 100) var maximum_active_items: int = 12
+@export_range(0, 100) var initial_item_count: int = 24
+@export_range(0, 100) var maximum_active_items: int = 24
 @export var spawn_seed: int = 2026
 @export var minimum_spacing: float = 72.0
 @export var shoreline_clearance: float = 70.0
@@ -15,7 +15,7 @@ const TRASH_SCENE: PackedScene = preload("res://scenes/gameplay/trash.tscn")
 
 var items: Array[OceanTrash] = []
 var _rod: FishingRod
-var _caught: OceanTrash
+var _caught: Array[OceanTrash] = []
 var _initialized: bool = false
 
 
@@ -27,6 +27,7 @@ func initialize(rod: FishingRod, shore_start: Vector2, shore_end: Vector2) -> vo
 	_rod.hook_landed.connect(_on_hook_landed)
 	_rod.target_detected.connect(_on_target_detected)
 	_rod.retrieval_completed.connect(_on_retrieval_completed)
+	_rod.retrieval_advanced.connect(_on_retrieval_advanced)
 	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 	rng.seed = spawn_seed
 	var margin: float = item_catch_radius + 8.0
@@ -59,6 +60,7 @@ func initialize(rod: FishingRod, shore_start: Vector2, shore_end: Vector2) -> vo
 		item.bob_phase = rng.randf_range(0.0, TAU)
 		add_child(item)
 		item.global_position = point
+		item.configure_drift(Vector2(top, bottom), rng.randf_range(4.0, 8.0), rng.randf_range(0.0, TAU))
 		items.append(item)
 	if items.size() < required:
 		push_warning("Spawn region fits %d of %d requested items; pollution uses the actual batch." % [items.size(), required])
@@ -72,7 +74,7 @@ func initial_pollution_values() -> Dictionary[int, int]:
 
 
 func _on_hook_landed(point: Vector2) -> void:
-	if _rod.state != FishingRod.State.WAITING or is_instance_valid(_caught):
+	if _rod.state != FishingRod.State.WAITING or not _caught.is_empty():
 		return
 	# Resolve exact landing geometry synchronously; physics overlap caches can lag a frame.
 	var nearest: OceanTrash
@@ -83,9 +85,30 @@ func _on_hook_landed(point: Vector2) -> void:
 			if distance < nearest_distance:
 				nearest = item
 				nearest_distance = distance
-	if nearest != null and nearest.attach_to(_rod.get_hook_attachment()):
-		_caught = nearest
-		trash_hooked.emit(nearest.display_name())
+	if nearest != null:
+		_attach_item(nearest)
+
+
+func _attach_item(item: OceanTrash) -> void:
+	var columns: Array[float] = [0.0, -22.0, 22.0, -44.0, 44.0]
+	var index: int = _caught.size()
+	var offset: Vector2 = Vector2(columns[index % 5], 14.0 + floorf(index / 5.0) * 24.0)
+	if item.attach_to(_rod.get_hook_attachment(), offset):
+		_caught.append(item)
+		trash_hooked.emit(item.display_name())
+
+
+func _on_retrieval_advanced(from: Vector2, to: Vector2, hook_radius: float) -> void:
+	if _rod.state != FishingRod.State.RETRIEVING:
+		return
+	for item: OceanTrash in items:
+		if item.hooked or item.collected:
+			continue
+		var nearest: Vector2 = Geometry2D.get_closest_point_to_segment(item.global_position, from, to)
+		# Physical hook disk must intersect the item's catch disk, not just the line.
+		var radius: float = item.catch_radius + hook_radius
+		if item.global_position.distance_squared_to(nearest) <= radius * radius:
+			_attach_item(item)
 
 
 func _on_target_detected(_target: Area2D) -> void:
@@ -95,11 +118,12 @@ func _on_target_detected(_target: Area2D) -> void:
 
 
 func _on_retrieval_completed(_water_position: Vector2) -> void:
-	if _rod.state != FishingRod.State.IDLE or not is_instance_valid(_caught):
+	if _rod.state != FishingRod.State.IDLE or _caught.is_empty():
 		return
-	var item: OceanTrash = _caught
-	_caught = null
-	if not item.finish_collection():
-		return
-	items.erase(item)
-	trash_collected.emit(item.get_instance_id(), item.display_name())
+	var returned: Array[OceanTrash] = _caught.duplicate()
+	_caught.clear()
+	for item: OceanTrash in returned:
+		if not is_instance_valid(item) or not item.finish_collection():
+			continue
+		items.erase(item)
+		trash_collected.emit(item.get_instance_id(), item.display_name())
