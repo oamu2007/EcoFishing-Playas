@@ -1,0 +1,17 @@
+# Godot 4+ specific ignores
+.godot/
+/android/
+
+# Generated exports and local editor/runtime state
+/build/
+/exports/
+export.cfg
+
+# Local IDE and operating-system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Godot 3 source-adjacent import metadata (Godot 4 uses .godot/imported/)
+*.import
