@@ -93,7 +93,7 @@ displayed = mix(start_displayed, target_pollution, w)
 
 This reaches the target exactly without overshoot. Retargeting during collection starts from the displayed value, avoiding a discontinuity in color/opacity (velocity can change when a transition restarts). Initial scene load, empty scenes, dependency rebinding, and scene reloads synchronize immediately. GPU TIME keeps animating after the controller stops its idle CPU processing.
 
-The controller owns one private ShaderMaterial duplicated once on readiness. Only the scalar uniform changes during interpolation. `displayed_pollution_changed(value)` is available for future synchronized visual effects; the true model signal remains the interface for immediate gameplay rules.
+The controller owns one private ShaderMaterial duplicated once on readiness. Only the scalar uniform changes during interpolation. In gameplay, `AmbientFish` reads `displayed_pollution` when configured and follows `displayed_pollution_changed(value)` for tint and opacity. The standalone preview compares the shader and seabed. See [Milestone 6](implementation-plan.md#milestone-6-ambient-fish-return).
 
 ## Draw order and scope
 
@@ -101,6 +101,7 @@ The controller owns one private ShaderMaterial duplicated once on readiness. Onl
 | --- | --- | --- |
 | Seabed | -10 | Static submerged geometry |
 | Surface and shader foam | -9 | Color, waves, murkiness, transparency |
+| Ambient fish | -8 | Decorative silhouettes with pollution-driven tint and opacity |
 | Beach / player / floating trash | 0 | Existing gameplay presentation |
 | Rod / line / hook / aim marker | +5 relative to player | Fishing feedback |
 | HUD | CanvasLayer | Existing compact counters/help |
@@ -124,7 +125,7 @@ godot --path . --script res://tests/water_render_check.gd
 The brief window closes automatically and writes ignored, reproducible captures under `.godot/water_captures/`:
 
 - `comparison.png`: the labeled three-panel study.
-- `dirty.png`, `midway.png`, `clean.png`: identical gameplay framing, a visible landed hook/line and trash, fixed wave time, and a label identifying the visual-only preview. Actual pollution/trash counts are unchanged by capture.
+- `dirty.png`, `midway.png`, `clean.png` show identical gameplay framing, a landed hook and line, floating trash, ambient fish where water is clearer, and fixed wave time. The caption identifies the visual preview. Actual pollution and trash counts are unchanged by capture.
 
 For slides, use comparison.png first, then the three full-scene images in pollution order. Copy these generated files somewhere permanent before clearing the Godot cache. For a live animated demonstration, open the preview scene and press F6. Capture a short video there, then switch to F5 to demonstrate actual retrieval, immediate HUD accounting, and the 1.6-second water transition.
 
@@ -132,8 +133,10 @@ For slides, use comparison.png first, then the three full-scene images in pollut
 
 `water_smoke_test.gd` checks initial state, model changes, immediate numerical HUD updates, finite interpolation/clamping, material isolation/reuse, rebinding, reset, and empty-level behavior. Previous fishing, cleanup, and refinement tests remain intact.
 
+`fish_smoke_test.gd` checks the default reveal counts, smooth retargeting, full silhouette bounds, and independent fresh and empty levels. The M6 GPU checks and manual verification status are recorded in the [implementation plan](implementation-plan.md#milestone-6-ambient-fish-return).
+
 `water_render_check.gd` checks image differences among palettes, stronger visibility of actual seabed as pollution falls (by temporarily hiding the bed), animation at both endpoints, and unchanged gameplay state. The sampled image difference is an RGB regression check, not a physical turbidity measurement. On the tested Intel Iris Xe OpenGL device, the dirty/mid/clean seabed differences were approximately 0.0017 / 0.0200 / 0.0384, with zero render-check failures. Screenshots were visually inspected.
 
 The shader uses one transparent surface pass, four value-noise evaluations (16 inexpensive corner hashes), two ripple sine components, and two shoreline sine components per fragment. It needs no external textures, screen reads, render targets, compute shaders, particles, or renderer changes. Seabed commands are cached; there is no CPU-side per-pixel work during gameplay. Screenshot pixel sampling occurs only in the developer render check.
 
-Cost scales with visible water pixels/window resolution and transparent overdraw; 4K windows or very low-end devices still need profiling. A warmed-up 90-frame observation at 960×540 on the tested Iris Xe averaged approximately 8.3 ms wall time per frame, including display pacing; this is not isolated GPU timing or a portable benchmark. The render check verifies the existing GL Compatibility path on one device, not all GPUs or a guaranteed frame rate. Gameplay assumes the existing axis-aligned rectangular shoreline; there is no physical refraction or water simulation. Fish and particles are intentionally deferred.
+Cost scales with visible water pixels/window resolution and transparent overdraw; 4K windows or very low-end devices still need profiling. A warmed-up 90-frame observation at 960×540 on the tested Iris Xe averaged approximately 8.3 ms wall time per frame, including display pacing; this is not isolated GPU timing or a portable benchmark. The render check verifies the existing GL Compatibility path on one device, not all GPUs or a guaranteed frame rate. Gameplay assumes the existing axis-aligned rectangular shoreline; there is no physical refraction or water simulation.

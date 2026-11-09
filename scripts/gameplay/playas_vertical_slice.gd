@@ -1,5 +1,7 @@
 extends Node2D
 
+const AmbientFishScript = preload("res://scripts/gameplay/ambient_fish.gd")
+
 var shore_start: Vector2
 var shore_end: Vector2
 
@@ -9,6 +11,7 @@ var shore_end: Vector2
 @onready var _rod: FishingRod = $Player/FishingRod
 @onready var _player: CharacterBody2D = $Player
 @onready var _water: WaterVisuals = $Environment/Water
+@onready var _fish: AmbientFishScript = $Environment/AmbientFish
 
 
 func _ready() -> void:
@@ -33,6 +36,7 @@ func _ready() -> void:
 	_water.global_position = bounds.position
 	_water.configure_size(bounds.size)
 	_water.bind_pollution(pollution)
+	_fish.configure(bounds, _water)
 
 
 func _shape_bounds(collider: CollisionShape2D) -> Rect2:
