@@ -1,8 +1,10 @@
 # Vertical slice implementation plan
 
+The GitHub `main` gameplay baseline includes the beach, fishing, trash collection, pollution tracking, and HUD refinements through M4.5. M5 and M6 are implemented on `feature/dynamic-water`. Run their acceptance steps and test commands from a checkout that includes those features. M7 and M8 are planned.
+
 ## Definition of done
 
-A player can launch the project into one small Playas de Tijuana shoreline, move in four directions, cast and retrieve a fishing line, collect visible trash from the water, and see pollution decrease. Water clarity and fish presence respond clearly to cleanup progress. The slice can be restarted and has no parser errors or broken resource references.
+A first-time player can launch the project into one small Playas de Tijuana shoreline, learn to cast and retrieve, and complete the finite trash cleanup. Clearer water and returning fish make recovery visible. The player can start a fresh session in-game after completion. The main scene and graphics preview run without parser errors or broken resource references.
 
 ## Milestone 1: Project bootstrap
 
@@ -13,7 +15,7 @@ A player can launch the project into one small Playas de Tijuana shoreline, move
 - [x] Create the main scene and one test shoreline level.
 - [x] Add a simple controls HUD and establish collision layers/masks in project settings.
 - [x] Set the main scene for F5 project runs.
-- [ ] Add fishing and restart input actions when their systems are implemented.
+- [x] Add a fishing input action (implemented in Milestone 3).
 
 **Exit check:** Running the project opens the test shoreline at the expected aspect ratio with no errors.
 
@@ -27,7 +29,7 @@ A player can launch the project into one small Playas de Tijuana shoreline, move
 - [x] Add a clear placeholder fisherman assembled from procedural shapes.
 - [x] Support both WASD and arrow-key movement.
 
-**Exit check:** Keyboard/controller input moves the player smoothly, collisions hold, and diagonal movement is not faster.
+**Exit check:** WASD and arrow keys move the player smoothly, collisions hold, and diagonal movement is not faster.
 
 ## Milestone 3: Fishing interaction
 
@@ -120,27 +122,85 @@ Manual acceptance:
 godot --headless --path . --script res://tests/refinement_smoke_test.gd
 ```
 
-Limitations: initial spawn spacing is enforced, but drifting objects may pass through one another. Sweeps use the current item position per segment, suitable for these slow currents. This level still uses axis-aligned rectangular water; shader, fish, and particles remain future work.
+Limitations: initial spawn spacing is enforced, but drifting objects may pass through one another. Sweeps use the current item position per segment, suitable for these slow currents. This level still uses axis-aligned rectangular water; fish and particles remain future work.
 
 ## Milestone 5: Environmental response
 
-- Create a water presentation that interpolates between polluted and clear states.
-- Define a few cleanliness thresholds for fish visibility/activity.
-- Add lightweight fish movement/presentation and collection feedback effects.
-- Make changes gradual and legible without coupling visuals to the HUD.
+**Status: Implemented.** The four baseline smoke tests and the OpenGL render check passed again on Godot 4.7.2 / GL Compatibility before M6 edits. A scripted GPU playthrough on an isolated copy of the M5 revision reached 24/24, exercised three mid-transition retargets, checked resizing and help, and verified a fresh start and the standalone preview. Dirty, intermediate, and clean gameplay captures were reviewed. No blocking baseline regression was found. The Windows desktop-control approval timed out, so the manual F5/F8/F6 editor playthrough remains pending.
 
-**Exit check:** Cleaning the level visibly clears the water and causes fish to appear, including correct behavior at boundary values.
+- [x] Add a CanvasItem shader with pollution_level, clean/dirty artist palettes, depth gradient, layered smooth value noise, sediment, two slow travelling waves, restrained highlights, and animated shoreline foam.
+- [x] Add real procedural seabed geometry beneath a continuously varying transparent surface.
+- [x] Bind a dedicated typed water controller to the existing pollution model; smooth visuals over 1.6 seconds while numerical HUD updates remain immediate.
+- [x] Keep one private material per instance, initialize/rebind/reset correctly, and stop idle CPU updates while GPU animation continues.
+- [x] Preserve beach geometry, collisions, fishing/spawn bounds, player/trash physics, pollution calculations, and compact HUD. Retain the hidden Ocean polygon as the bounds source.
+- [x] Add a separate live three-state preview and reproducible full-scene screenshots without changing game state.
+- [x] Document all shader equations, explicit draw order, tuning, renderer compatibility, and performance limits in `docs/water-rendering.md`.
+- [x] Add headless water-state tests and a real OpenGL render check; retain the previous three smoke tests.
 
-## Milestone 6: Vertical-slice polish and verification
+Automated checks: editor/import, fishing/cleanup/refinement/water smoke tests, headless main startup, and `git diff --check`. Real-render checks compile the shader on Intel Iris Xe / OpenGL Compatibility, compare dirty/midway/clean images and actual seabed visibility, confirm animation at both endpoints, and write captures under `.godot/water_captures/`. Screenshots were visually reviewed; cross-device performance still requires profiling.
 
-- Add a concise tutorial prompt and feedback for cast, miss, catch, and cleanup progress.
-- Add a completion state when the target cleanliness is reached and a reliable restart path.
-- Test input, collision edge cases, rapid casting, final-item collection, and scene reloads.
-- Review node ownership, signal cleanup, typed-script warnings, and resource paths.
-- Document controls and update architecture notes to match the implemented structure.
+Manual acceptance:
 
-**Exit check:** A new player can complete the loop without explanation, and repeated runs produce no errors or orphan-node/resource warnings.
+1. Press F5. At 100% the water should be muted/murky with almost invisible sand/rocks, but moving waves/foam and all trash remain visible.
+2. Approach the same shoreline and cast/retrieve. The HUD percentage changes on return immediately; water smoothly approaches the new state over approximately 1.6 seconds, without a jump or change to beach collision.
+3. Retrieve another batch during a transition. Confirm the new target is approached continuously, and the line/hook/trash/aim marker remain readable.
+4. At roughly halfway, expect subdued turquoise and partially visible seabed. At completion, expect cyan/blue, clearly visible submerged details, and continuing wave motion. Empty casts must not change water pollution.
+5. Stop/re-run (F8/F5). Water starts dirty again with fresh counts. Confirm the compact HUD and H-help still behave normally after resizing.
+6. Open `scenes/levels/water_preview.tscn`, press F6, and compare all three continuously animated states. Use the separate non-headless render harness for fixed-phase screenshots; see the graphics study document.
+
+```sh
+godot --headless --path . --script res://tests/water_smoke_test.gd
+godot --path . --script res://tests/water_render_check.gd
+```
+
+**Exit check:** Cleanup continuously changes water color/opacity, reveals the real seabed, and preserves ongoing surface animation at 100%, 50%, and 0%, with no gameplay regression.
+
+## Milestone 6: Ambient fish return
+
+**Status: Implemented.** The level-owned `AmbientFish` scene follows the local `WaterVisuals` value after initial synchronization. See [architecture](architecture.md#ambient-fish) for the route and reveal settings.
+
+- [x] Add six bounded, deterministic nearshore swim routes using one silhouette style.
+- [x] Fade fish with displayed pollution, with zero at 100%, three at 50%, and six at 0% by default.
+- [x] Draw decorative fish at effective Z -8, below beach and fishing feedback. Keep the water-only preview and gameplay accounting intact.
+- [x] Verify dirty, intermediate, and clean states, mid-transition retargeting, swim bounds, fresh instances, and initially clean/empty worlds.
+
+Godot 4.7.2 verification passed with no errors or warnings in the final editor import, all five smoke tests, or 120-frame headless main-scene startup. The existing non-headless render check passed with zero failures on Intel Iris Xe / OpenGL 3.3 Compatibility. The full-scene captures show distinct water and fish states while the hook, line, and trash retain contrast. The three-panel capture remains a water and seabed comparison.
+
+An additional local GPU playthrough drove movement and mouse clicks through the game’s input API. It reached 24/24 from the default seed, observed three mid-transition retargets, and confirmed that an empty cast left pollution unchanged and a fresh scene reset to 100%. It verified zero, three, and six active fish silhouettes across the shore at 100%, 54%, and 0% respectively. Captures at 1280 × 720 and 800 × 450 showed readable aim markers, hooks, lines, and trash. Help toggled after the resize. This run used scripted input, so the manual editor playthrough is still pending.
+
+```sh
+godot --headless --path . --editor --import --quit
+godot --headless --path . --script res://tests/fish_smoke_test.gd
+godot --path . --script res://tests/water_render_check.gd
+```
+
+The [README](../README.md#headless-verification) lists the full set of smoke and startup commands.
+
+**Exit check:** During a normal cleanup, fish are hidden at the dirty start, clearly present partway through, and most abundant at completion. Cast targets and floating trash remain readable at default and reduced window sizes.
+
+## Milestone 7: Onboarding and in-game replay
+
+**Status: Planned.** Start after Milestone 6 so replay can be checked against the full environmental response.
+
+- Carry the M6 review finding into the next executor prompt. In `tests/water_render_check.gd`, freeze ambient fish motion during paired seabed and shader animation captures so fish movement cannot contribute to the pixel differences. Preserve fish visibility in the screenshots and rerun the OpenGL render check.
+- Keep the compact HUD and H-help. Make the first successful loop discoverable with concise shoreline, cast, and retrieve cues. Give an empty return a distinct message and retain the existing batch feedback.
+- Use the existing zero-remaining-trash rule for completion. Keep the clean shoreline visible and expose a single, labeled replay control in the completion UI.
+- Have the HUD request replay and the main scene own the reload. Guard against repeat activation while reloading, and ensure clicking the control cannot also cast. A fresh session restores the seeded batch, spawn, rod state, HUD, dirty water, and hidden fish for the default level.
+- Test an empty return, final multi-item return, repeated replay input, an initially empty batch, and two consecutive replay cycles. Check that UI mouse handling still permits fishing away from the replay control.
+
+**Exit check:** A first-time player can make a successful return with the on-screen cues, tell a miss from a catch, finish the batch, and start a fresh session from the completion UI.
+
+## Milestone 8: Playtest and stabilize the slice
+
+**Status: Planned.** Verify the integrated game before expanding scope.
+
+- Observe a first-time player from spawn through the first catch, then run two full default-seed sessions through completion and replay. Check the last remaining item, edge-of-range aiming, rapid clicks, camera follow, and H-help.
+- Check legibility and mouse aiming at the default window size and a smaller resized window. Confirm distinct dirty, intermediate, and clean states in gameplay and run the standalone water preview.
+- Run editor import, all smoke tests, main-scene startup, and the non-headless water render check. Record the Godot version, renderer, and any skipped checks or known limitations. Fix issues that block the core loop, legibility, or replay.
+- Update README controls and the architecture to reflect the shipped slice. Keep generated captures and local editor data out of Git.
+
+**Exit check:** The complete loop works across repeated sessions, the preview runs independently, and the editor/debugger reports no parser, resource, or orphan-node errors during verification.
 
 ## Scope guardrails
 
-Defer inventory, upgrades, multiple levels, dialogue, quests, save files, catchable fish, procedural worlds, and production art/audio until the vertical slice is stable. Placeholder assets are acceptable when they make the interaction and environmental change readable.
+Defer inventory, upgrades, multiple levels, dialogue, quests, save files, catchable fish, particle effects, procedural worlds, and production art/audio until the vertical slice is stable. Placeholder assets are acceptable when they make the interaction and environmental change readable.

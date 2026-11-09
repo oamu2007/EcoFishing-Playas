@@ -2,7 +2,9 @@
 
 EcoFishing Playas is a 2D top-down environmental fishing game set in Playas de Tijuana. Instead of catching fish, the player removes ocean trash; as pollution falls, the water clears and marine life returns.
 
-The project includes a playable beach, fisherman movement, mouse-aimed fishing, and a complete trash cleanup loop. Retrieve bottles, cans, and bags to reduce pollution and finish the finite cleanup session. Water clarity and fish presentation are planned next.
+On `main`, the playable slice includes a beach, fisherman movement, mouse-aimed fishing, and a finite trash cleanup loop. Retrieve bottles, cans, and bags to reduce pollution and finish the session.
+
+Milestones 5 and 6, pollution-responsive water and ambient fish, are implemented on `feature/dynamic-water`. Milestones 7 and 8 cover onboarding, replay, and integrated playtesting. See the [implementation plan](docs/implementation-plan.md) for branch status, acceptance checks, and the next executor follow-up.
 
 ## Requirements
 
@@ -32,7 +34,7 @@ Aim at or near a trash item's center to hook one item on landing. During retriev
 
 The default session spawns 24 initially separated, reachable items using seed 2026. Trash drifts gently up/down with seeded variation and smooth turnarounds inside reachable water. Mint bottles remove 10 pollution units, orange cans 15, and cream bags 20. The compact HUD shows collected/total and pollution percentage; **H** toggles detailed controls. Catch notifications and completion use small text. Collect all items to finish; items do not respawn. Stop with **F8** and run with **F5** to reset.
 
-The level's `TrashManager` node exposes batch count/cap, seed, spacing, shoreline clearance, and catch-radius settings in the Inspector. Pollution totals use the actual spawned batch, including an empty batch. The [architecture notes](docs/architecture.md) document `PollutionSystem.normalized_pollution` and `pollution_changed` for future water-shader/fish presentation.
+The level's `TrashManager` node exposes batch count/cap, seed, spacing, shoreline clearance, and catch-radius settings in the Inspector. Pollution totals use the actual spawned batch, including an empty batch. The [architecture notes](docs/architecture.md) cover the pollution model and its visual consumers on the feature branch.
 
 The command-line equivalent is:
 
@@ -62,4 +64,4 @@ Visual clarity, mouse aiming after resizing, and the feel of the full cleanup lo
 - `ui/` — shared interface themes and styles
 - `docs/` — architecture and implementation planning
 
-See [docs/architecture.md](docs/architecture.md) for the proposed system design and [docs/implementation-plan.md](docs/implementation-plan.md) for vertical-slice milestones. Contributor conventions are in [AGENTS.md](AGENTS.md).
+See the [water-rendering study](docs/water-rendering.md) for the M5–M6 graphics implementation and its feature-branch commands. Contributor conventions are in [AGENTS.md](AGENTS.md).
