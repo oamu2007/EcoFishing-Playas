@@ -176,10 +176,24 @@ The [README](../README.md#headless-verification) lists the full set of smoke and
 
 **Exit check:** During a normal cleanup, fish are hidden at the dirty start, clearly present partway through, and most abundant at completion. Cast targets and floating trash remain readable at default and reduced window sizes.
 
+## Visual polish following M6
+
+**Status: Implemented on feature/dynamic-water in `2589291`, reviewed November 18, 2026.** This adds beach and landing feedback ahead of the planned onboarding/replay work.
+
+- [x] Add a sand shader with grain, dune variation, and wind marks.
+- [x] Add seeded pebble clusters, shells, and wind arcs.
+- [x] Add alternating movement-driven footprints with an eight-second fade and an 80-print cap.
+- [x] Add pollution-tinted hook-landing droplets and staggered expanding ripples, with lifetime cleanup.
+
+Review on Godot 4.7.2 / Intel Iris Xe / OpenGL Compatibility passed all five existing smoke tests, main-scene startup, and the non-headless water render check. A temporary local harness exercised player movement and rod landing, confirmed footprint creation/expiration, confirmed two rings and one particle emitter on landing, verified their removal after the effect, and checked that landing left pollution unchanged. Gameplay captures were visually reviewed for sand, footprints, and splash/line readability. The editor import completed with a local safe-save permission error, without script or import errors. This verification used scripted gameplay rather than a manual full-session playthrough.
+
+The review found no blocking gameplay regression. The new effects still use hard-coded tuning and map dimensions, and the transient effect nodes redraw while idle. Those limitations are documented in the architecture notes. M7 onboarding and replay remain planned.
+
 ## Milestone 7: Onboarding and in-game replay
 
 **Status: Planned.** Start after Milestone 6 so replay can be checked against the full environmental response.
 
+- Include the render-test finding in the next milestone executor prompt. Freeze ambient fish motion during paired image comparisons in `tests/water_render_check.gd`. Also settle or suppress the new landing splash, which the harness triggers before captures. Fish movement, droplets, and rings can contribute to pixel differences currently attributed to seabed visibility and shader animation.
 - Keep the compact HUD and H-help. Make the first successful loop discoverable with concise shoreline, cast, and retrieve cues. Give an empty return a distinct message and retain the existing batch feedback.
 - Use the existing zero-remaining-trash rule for completion. Keep the clean shoreline visible and expose a single, labeled replay control in the completion UI.
 - Have the HUD request replay and the main scene own the reload. Guard against repeat activation while reloading, and ensure clicking the control cannot also cast. A fresh session restores the seeded batch, spawn, rod state, HUD, dirty water, and hidden fish for the default level.
@@ -200,4 +214,4 @@ The [README](../README.md#headless-verification) lists the full set of smoke and
 
 ## Scope guardrails
 
-Defer inventory, upgrades, multiple levels, dialogue, quests, save files, catchable fish, particle effects, procedural worlds, and production art/audio until the vertical slice is stable. Placeholder assets are acceptable when they make the interaction and environmental change readable.
+Defer inventory, upgrades, multiple levels, dialogue, quests, save files, catchable fish, additional particle systems, procedural worlds, and production art/audio until the vertical slice is stable. The implemented landing splash is the current particle effect. Placeholder assets are acceptable when they make the interaction and environmental change readable.

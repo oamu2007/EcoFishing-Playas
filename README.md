@@ -4,6 +4,8 @@ EcoFishing Playas is a 2D top-down environmental fishing game set in Playas de T
 
 The project includes a playable beach, fisherman movement, mouse-aimed fishing, and a complete trash cleanup loop. Retrieve bottles, cans, and bags to reveal the seabed and bring ambient fish back to the shoreline.
 
+The beach also has procedural sand grain, wind marks, pebbles, and shells. Walking leaves alternating footprints that fade over eight seconds. Hook landings produce a brief droplet burst and two expanding ripples, tinted by the current pollution.
+
 ## Requirements
 
 - Godot Engine 4.7 or another compatible Godot 4 release
