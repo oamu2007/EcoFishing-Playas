@@ -69,5 +69,5 @@ func _apply_displayed(value: float) -> void:
 	displayed_pollution_changed.emit(value)
 
 
-func _on_pollution_changed(normalized: float, _collected: int, _remaining: int) -> void:
+func _on_pollution_changed(normalized: float) -> void:
 	set_visual_target(normalized)

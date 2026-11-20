@@ -39,7 +39,7 @@ theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
 theme_override_constants/shadow_offset_x = 1
 theme_override_constants/shadow_offset_y = 2
 theme_override_font_sizes/font_size = 14
-text = "CONTROLS                         H to close\nMove: WASD / Arrow keys\nAim: Mouse (green = valid target)\nCast / Retrieve: Left click\nSweep through trash on the return path.\nMovement locks until the hook returns."
+text = "CONTROLS                         H to close\nMove: WASD / Arrow keys\nAim: Mouse (green = valid target)\nCast / Retrieve: Left click\nStarter rod: one piece per cast.\nNew trash drifts in from offshore."
 
 [node name="ProgressPanel" type="PanelContainer" parent="."]
 offset_left = 12.0
@@ -59,7 +59,7 @@ theme_override_constants/margin_bottom = 16
 [node name="Progress" type="Label" parent="ProgressPanel/Margin"]
 mouse_filter = 2
 theme_override_font_sizes/font_size = 14
-text = "TRASH  0/24     POLLUTION  100%"
+text = "POLLUTION  100%"
 
 [node name="PollutionBar" type="ProgressBar" parent="."]
 offset_left = 22.0
@@ -81,22 +81,7 @@ theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
 theme_override_constants/shadow_offset_x = 1
 theme_override_constants/shadow_offset_y = 1
 
-[node name="Completion" type="Label" parent="."]
-visible = false
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_left = 14.0
-offset_top = -32.0
-offset_right = 360.0
-offset_bottom = -10.0
-grow_vertical = 0
-mouse_filter = 2
-theme_override_font_sizes/font_size = 15
-theme_override_colors/font_color = Color(0.65, 1, 0.81, 1)
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
-theme_override_constants/shadow_offset_x = 1
-theme_override_constants/shadow_offset_y = 1
-text = "Beach cleanup complete!"
+
 
 [node name="Notification" type="Label" parent="."]
 offset_left = 14.0

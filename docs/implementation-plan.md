@@ -1,6 +1,6 @@
 # Vertical slice implementation plan
 
-The GitHub `main` gameplay baseline includes the beach, fishing, trash collection, pollution tracking, and HUD refinements through M4.5. M5 and M6 are implemented on `feature/dynamic-water`. Run their acceptance steps and test commands from a checkout that includes those features. M7–M12 cover the planned gameplay progression.
+The `roadmap-implementation` branch starts from playable revision `f812046` on `feature/dynamic-water`. It includes M1–M6 and the sand, footprints, and splash polish. The sections below record the verification and progression checkpoints for M7–M12.
 
 ## Definition of done
 
@@ -8,7 +8,7 @@ A first-time player can start a session from the menu, learn to collect recurrin
 
 ## Next milestone
 
-Start with [Milestone 7](#milestone-7--continuous-trash-and-two-source-pollution). Catch opportunities and the pollution model determine what the starter rod can reach, how reliably trash can fund the shop, and when catchable fish can return. Establishing those rules first lets the Sack, shack, and fish build on a playable loop with measurable inputs.
+Continue with [Milestone 8](#milestone-8--sack-shack-and-gear-upgrades). Use the recurring starter catches to tune Sack trips and trash-funded gear.
 
 ## Completed baseline
 
@@ -201,7 +201,7 @@ The review found no blocking gameplay regression. The new effects still use hard
 
 ## Milestone 7 — Continuous trash and two-source pollution
 
-**Next.** A player can keep finding trash along the shore and use the starter rod to remove one piece per cast. The pollution meter can fall on retrieval and rise as new trash arrives.
+**Verified November 19, 2026.** The starter rod returns one piece per cast and the meter responds to both returns and live arrivals.
 
 - Replace the finite spawn in [TrashManager](../scripts/systems/trash_manager.gd) with recurring, testable arrivals. Each piece starts offscreen, moves inward into view, then switches at a randomized stop point to the existing gentle drift. Use bands based on castable distances from the actual shoreline collider. Keep recurring starter opportunities and reserve farther stops for later rod tiers. Bound the active population so a buildup offshore cannot shut off starter supply.
 - Tune the [starter rod](../scripts/gameplay/fishing_rod.gd) for short range and slower casting and retrieval than upgraded tiers. Apply one shared per-cast trash limit across landing, waiting, and retrieval sweep so the current multi-item behavior can become an upgrade. Keep valid misses, aim feedback, movement lock, and exactly-once removal after a successful return.
@@ -216,10 +216,13 @@ With a fixed test seed, watch pieces enter from outside the visible shoreline vi
 
 Adapt the cleanup, refinement, water, and ambient-fish smoke tests that assume a 24-piece batch. Keep the fishing lifecycle checks and use explicit 100%, 50%, and 0% fixtures for the ambient-fish reveal and water states. In the [GPU water check](../tests/water_render_check.gd), pause arrivals and fixture trash motion, keep ambient fish visually fixed or hidden during water-only comparisons, and settle or suppress the landing splash. Preserve the palette, seabed visibility, and endpoint animation checks. Keep a separate landed-hook capture for gameplay contrast. Compare true pollution and active and collected trash before and after visual overrides, run live arrivals in a separate check, and open the standalone preview with F6.
 
-**Decisions for this milestone**
+**Checkpoint results**
 
-- Choose the floating-trash formula and when an arriving piece starts contributing. Decide the starting load and when the meter can reach exactly 0% after all permanent projects while arrivals continue. Confirm that behavior in Milestone 9.
-- Tune arrival cadence, behavior at the active cap, offscreen entry paths for supported shoreline camera views, near and far stopping bands, and starter reach and timings together. Use the default and resized windows and verify repeatable starter catches before setting shop prices.
+- Six starter pieces begin in water. A piece contributes five points from the instant its center crosses into the authored water rectangle through successful retrieval. The floating total caps at 30 points. The initial permanent contribution is 70. A running session can reach 0% when all permanent projects are complete and there is no trash contributing floating points. M9 verifies that the next arrival lifts the meter from zero.
+- The ten-second cadence and four-second ingress are configurable. Eight of twelve slots are reserved for starter trash. Stop bands are 110–205 and 310–545 world pixels from the collider-derived rod origin. The base rod reaches 240 pixels, casts in 1.05 seconds, and retrieves in 0.85 seconds.
+- Godot 4.7.2 editor import, 120-frame main startup, all five smoke tests, and `git diff --check` passed. Seeded checks covered repeatable starter catches, fast sweeps, re-entry after clearing a starter slot at cap, one-time collection, immediate HUD updates, both easing directions, and ambient fish following the final target.
+- OpenGL 3.3 Compatibility on Intel Iris Xe passed the water comparison, endpoint animation, seabed visibility, and separate landed-hook capture. The standalone preview ran directly for 120 rendered frames. A rendered shoreline harness at 1280 × 720 and 800 × 450 confirmed all six sampled pieces started offscreen and all five with stops in view crossed into view before settling. This verification used scripted gameplay and direct scene launch. The manual editor-key playthrough remains pending.
+- Next action is to connect catches to the Sack and tune trash-funded gear at a nearby shack.
 
 ## Milestone 8 — Sack, shack, and gear upgrades
 

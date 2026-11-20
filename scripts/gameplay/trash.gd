@@ -1,10 +1,12 @@
 class_name OceanTrash
 extends Area2D
 
+signal entered_water
+
 enum Kind { BOTTLE, CAN, BAG }
 
 @export var kind: Kind = Kind.BOTTLE
-@export_range(1, 100) var pollution_value: int = 10
+@export_range(1, 30) var pollution_value: int = 5
 @export_range(8.0, 60.0) var catch_radius: float = 24.0
 @export var bob_amplitude: float = 2.5
 @export var bob_phase: float = 0.0
@@ -12,6 +14,14 @@ enum Kind { BOTTLE, CAN, BAG }
 
 var hooked: bool = false
 var collected: bool = false
+var in_water: bool = true
+var is_arriving: bool = false
+var _entry_x: float
+var _stop: Vector2
+var _travel_time: float
+var _arrival_elapsed: float
+var _water_edge: float
+var _arrival_drift_limits: Vector2
 var _elapsed: float = 0.0
 var _drift_center: float = 0.0
 var _drift_amplitude: float = 0.0
@@ -46,8 +56,38 @@ func configure_drift(limits: Vector2, speed: float, phase: float) -> void:
 	_drift_center = global_position.y - _drift_amplitude * cosine
 
 
+func configure_arrival(entry_x: float, stop: Vector2, travel_time: float, water_edge: float, drift_limits: Vector2, speed: float, phase: float) -> void:
+	_entry_x = entry_x
+	_stop = stop
+	_travel_time = travel_time
+	_water_edge = water_edge
+	_arrival_drift_limits = drift_limits
+	drift_speed = speed
+	_drift_phase = phase
+	in_water = false
+	is_arriving = true
+	global_position = Vector2(entry_x, stop.y)
+
+
+func drift_stop_position() -> Vector2:
+	return _stop if is_arriving else global_position
+
+
 func _physics_process(delta: float) -> void:
-	if hooked or _drift_amplitude < 0.01:
+	if hooked:
+		return
+	if is_arriving:
+		_arrival_elapsed += delta
+		var progress: float = minf(_arrival_elapsed / _travel_time, 1.0)
+		global_position.x = lerpf(_entry_x, _stop.x, smoothstep(0.0, 1.0, progress))
+		if not in_water and global_position.x <= _water_edge:
+			in_water = true
+			entered_water.emit()
+		if progress >= 1.0:
+			is_arriving = false
+			configure_drift(_arrival_drift_limits, drift_speed, _drift_phase)
+		return
+	if _drift_amplitude < 0.01:
 		return
 	# Cosine turns with zero velocity at the boundaries; no reflection/teleport.
 	_drift_phase = fposmod(_drift_phase + delta * drift_speed / _drift_amplitude, TAU)
@@ -66,11 +106,11 @@ func display_name() -> String:
 
 
 func can_hook_at(water_position: Vector2) -> bool:
-	return not hooked and not collected and global_position.distance_to(water_position) <= catch_radius
+	return in_water and not hooked and not collected and global_position.distance_to(water_position) <= catch_radius
 
 
 func attach_to(anchor: Node2D, offset: Vector2 = Vector2(0, 14)) -> bool:
-	if hooked or collected:
+	if not in_water or hooked or collected:
 		return false
 	hooked = true
 	set_deferred("monitorable", false)

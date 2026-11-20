@@ -13,12 +13,14 @@ const FishingLineScript = preload("res://scripts/gameplay/fishing_line.gd")
 
 @export var shoreline_distance: float = 140.0
 @export var minimum_cast_range: float = 60.0
-@export var maximum_cast_range: float = 420.0
-@export_range(0.1, 3.0) var cast_duration: float = 0.8
-@export_range(0.1, 3.0) var retrieval_duration: float = 0.65
+@export var maximum_cast_range: float = 240.0
+@export_range(0.1, 3.0) var cast_duration: float = 1.05
+@export_range(0.1, 3.0) var retrieval_duration: float = 0.85
+@export_range(1, 10) var trash_per_cast: int = 1
 @export var cast_height: float = 100.0
 
 var state: State = State.IDLE
+var cast_number: int = 0
 var water_bounds: Rect2 = Rect2()
 var _elapsed: float = 0.0
 var _start: Vector2 = Vector2.ZERO
@@ -136,6 +138,7 @@ func _draw() -> void:
 
 
 func _start_cast(target: Vector2) -> void:
+	cast_number += 1
 	_target = target
 	_pivot.look_at(target)
 	_start = _tip.global_position

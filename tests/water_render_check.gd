@@ -1,6 +1,7 @@
 extends SceneTree
 
 const OUTPUT: String = "res://.godot/water_captures/"
+const WorldScript = preload("res://scripts/gameplay/playas_vertical_slice.gd")
 
 var _failures: int = 0
 
@@ -48,24 +49,29 @@ func _run() -> void:
 	_check(triptych.save_png(OUTPUT + "comparison.png") == OK, "Cannot save comparison screenshot")
 	preview.free()
 	var main: Node = load("res://scenes/gameplay/main.tscn").instantiate()
+	var world: WorldScript = main.get_node("World")
+	var manager: TrashManager = world.get_node("TrashManager")
+	manager.arrivals_enabled = false
 	root.add_child(main)
 	main.get_node("HUD").hide()
-	var player: CharacterBody2D = main.get_node("World/Player")
+	var player: CharacterBody2D = world.get_node("Player")
 	player.position = Vector2(790, 450)
 	player.set_physics_process(false)
-	player.get_node("FishingRod").set_process(false)
 	(player.get_node("Camera2D") as Camera2D).reset_smoothing()
-	var manager: TrashManager = main.get_node("World/TrashManager")
 	for item: OceanTrash in manager.items:
 		item.set_physics_process(false)
 		item.set_process(false)
-	# Keep a real landed hook/line in all captures to review gameplay contrast.
 	var rod: FishingRod = player.get_node("FishingRod")
-	rod._start_cast(Vector2(1110, 450))
-	rod._process(rod.cast_duration)
-	var water: WaterVisuals = main.get_node("World/Environment/Water")
-	var model: PollutionSystem = main.get_node("World/PollutionSystem")
+	rod.set_process(false)
+	var ambient_fish: Node2D = world.get_node("Environment/AmbientFish")
+	ambient_fish.hide()
+	ambient_fish.set_process(false)
+	var water: WaterVisuals = world.get_node("Environment/Water")
+	var model: PollutionSystem = world.get_node("PollutionSystem")
 	var pollution_before: int = model.current_pollution
+	var collected_before: int = model.trash_collected
+	var remaining_before: int = model.remaining_trash
+	var items_before: Array[OceanTrash] = manager.items.duplicate()
 	water.surface_material.set_shader_parameter("use_time_override", true)
 	water.surface_material.set_shader_parameter("time_override", 5.0)
 	var captions: CanvasLayer = CanvasLayer.new()
@@ -82,7 +88,7 @@ func _run() -> void:
 	var names: Array[String] = ["dirty", "midway", "clean"]
 	for index: int in range(levels.size()):
 		water.set_visual_target(levels[index], true)
-		caption.text = "WATER PREVIEW | %d%% pollution | gameplay state unchanged" % roundi(levels[index] * 100.0)
+		caption.text = "WATER PREVIEW | %d%% pollution" % roundi(levels[index] * 100.0)
 		var image: Image = await _frame()
 		_check(image.save_png(OUTPUT + names[index] + ".png") == OK, "Cannot save state screenshot")
 		images.append(image)
@@ -101,7 +107,21 @@ func _run() -> void:
 		water.surface_material.set_shader_parameter("time_override", 11.0)
 		var after: Image = await _frame()
 		_check(_difference(before, after) > 0.0005, "Water stops animating at pollution endpoint")
-	_check(model.current_pollution == pollution_before and model.trash_collected == 0 and manager.items.size() == 24, "Preview modified gameplay state")
+	_check(model.current_pollution == pollution_before and model.trash_collected == collected_before, "Preview modified pollution or collected trash")
+	_check(model.remaining_trash == remaining_before and manager.items == items_before, "Preview modified active trash")
+	# Capture the landed hook separately so the palette samples stay stable.
+	water.set_visual_target(model.normalized_pollution, true)
+	ambient_fish.show()
+	var landing: Vector2 = Vector2(rod.water_bounds.position.x + 90.0, rod.global_position.y)
+	_check(rod.invalid_target_reason(landing).is_empty(), "Gameplay capture target is outside starter reach")
+	rod.hook_landed.disconnect(world._on_hook_landed)
+	rod._start_cast(landing)
+	rod._process(rod.cast_duration)
+	_check(rod.state == FishingRod.State.WAITING and rod.get_hook_water_position().is_equal_approx(landing), "Gameplay capture did not land the hook")
+	water.surface_material.set_shader_parameter("time_override", 5.0)
+	caption.text = "LANDED HOOK | %d%% pollution" % model.current_pollution
+	var gameplay: Image = await _frame()
+	_check(gameplay.save_png(OUTPUT + "gameplay.png") == OK, "Cannot save landed-hook screenshot")
 	water.surface_material.set_shader_parameter("use_time_override", false)
 	# Let screenshot readback/compilation settle before observing live frame pacing.
 	for frame: int in range(60):

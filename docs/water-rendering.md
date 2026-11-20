@@ -127,7 +127,8 @@ godot --path . --script res://tests/water_render_check.gd
 The brief window closes automatically and writes ignored, reproducible captures under `.godot/water_captures/`:
 
 - `comparison.png`: the labeled three-panel study.
-- `dirty.png`, `midway.png`, `clean.png` show identical gameplay framing, a landed hook and line, floating trash, ambient fish where water is clearer, and fixed wave time. The caption identifies the visual preview. Actual pollution and trash counts are unchanged by capture.
+- `dirty.png`, `midway.png`, and `clean.png` show identical gameplay framing, stationary trash, and fixed wave time with visual-only pollution overrides. The harness checks true pollution and both active and collected trash counts across the overrides.
+- `gameplay.png` shows a real landed hook, line, and floating trash at the actual water pollution level.
 
 For slides, use comparison.png first, then the three full-scene images in pollution order. Copy these generated files somewhere permanent before clearing the Godot cache. For a live animated demonstration, open the preview scene and press F6. Capture a short video there, then switch to F5 to demonstrate actual retrieval, immediate HUD accounting, and the 1.6-second water transition.
 
@@ -137,7 +138,7 @@ For slides, use comparison.png first, then the three full-scene images in pollut
 
 `fish_smoke_test.gd` checks the default reveal counts, smooth retargeting, full silhouette bounds, and independent fresh and empty levels. The M6 GPU checks and manual verification status are recorded in the [implementation plan](implementation-plan.md#milestone-6-ambient-fish-return).
 
-The November 18 polish update adds sand detail, footprints, and a pollution-tinted landing splash in gameplay. The standalone three-panel preview remains a water/seabed study. The render harness triggers a real hook landing before full-scene captures, so the splash may appear in those captures. Fish movement and the transient splash are currently active during paired pixel comparisons. Isolating those effects is a recorded follow-up for the next executor prompt. Until then, the measured differences include those effects as well as the intended water/seabed changes.
+The November 18 polish update adds sand detail, footprints, and a pollution-tinted landing splash in gameplay. The standalone three-panel preview remains a water/seabed study. The render harness pauses arrivals and trash motion and hides ambient fish for water-only pixel comparisons. It triggers a real hook landing with splash suppressed for the separate gameplay capture.
 
 `water_render_check.gd` checks image differences among palettes, stronger visibility of actual seabed as pollution falls (by temporarily hiding the bed), animation at both endpoints, and unchanged gameplay state. The sampled image difference is an RGB regression check, not a physical turbidity measurement. On the tested Intel Iris Xe OpenGL device, the dirty/mid/clean seabed differences were approximately 0.0017 / 0.0200 / 0.0384, with zero render-check failures. Screenshots were visually inspected.
 

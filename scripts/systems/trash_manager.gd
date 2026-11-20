@@ -1,82 +1,141 @@
 class_name TrashManager
 extends Node2D
 
+signal trash_arrived(item_id: int, pollution_points: int)
 signal trash_hooked(type_name: String)
 signal trash_collected(item_id: int, type_name: String)
+signal trash_returned(count: int, type_name: String)
 
 const TRASH_SCENE: PackedScene = preload("res://scenes/gameplay/trash.tscn")
 
-@export_range(0, 100) var initial_item_count: int = 24
-@export_range(0, 100) var maximum_active_items: int = 24
+@export_range(0, 100) var initial_item_count: int = 6
+@export_range(0, 100) var maximum_active_items: int = 12
+@export_range(1, 100) var starter_slots: int = 8
+@export_range(1, 10) var offshore_every: int = 3
 @export var spawn_seed: int = 2026
+@export var arrivals_enabled: bool = true
+@export_range(0.1, 60.0) var arrival_interval: float = 10.0
+@export_range(0.1, 20.0) var arrival_travel_time: float = 4.0
+@export var offscreen_margin: float = 100.0
+@export var starter_band: Vector2 = Vector2(110.0, 205.0)
+@export var offshore_band: Vector2 = Vector2(310.0, 545.0)
 @export var minimum_spacing: float = 72.0
-@export var shoreline_clearance: float = 70.0
 @export_range(8.0, 60.0) var item_catch_radius: float = 24.0
+@export_range(1, 30) var pollution_per_item: int = 5
 
 var items: Array[OceanTrash] = []
 var _rod: FishingRod
+var _shore_x: float
+var _drift_limits: Vector2
+var _near_stops: Vector2
+var _far_stops: Vector2
+var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var _caught: Array[OceanTrash] = []
-var _initialized: bool = false
+var _starter_items: Array[OceanTrash] = []
+var _clock: float = 0.0
+var _arrival_turn: int = 0
+var _spawned_count: int = 0
+var _last_returned_cast: int = 0
 
 
 func initialize(rod: FishingRod, shore_start: Vector2, shore_end: Vector2) -> void:
-	if _initialized:
+	if _rod != null:
 		return
-	_initialized = true
 	_rod = rod
 	_rod.hook_landed.connect(_on_hook_landed)
 	_rod.target_detected.connect(_on_target_detected)
 	_rod.retrieval_completed.connect(_on_retrieval_completed)
 	_rod.retrieval_advanced.connect(_on_retrieval_advanced)
-	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
-	rng.seed = spawn_seed
+	_rng.seed = spawn_seed
+	_shore_x = shore_start.x
 	var margin: float = item_catch_radius + 8.0
-	var left: float = _rod.water_bounds.position.x + maxf(shoreline_clearance, margin)
-	var right: float = minf(_rod.water_bounds.end.x - margin, shore_start.x + _rod.maximum_cast_range - margin)
-	var top: float = maxf(_rod.water_bounds.position.y + margin, shore_start.y)
-	var bottom: float = minf(_rod.water_bounds.end.y - margin, shore_end.y)
-	if right <= left or bottom <= top:
-		push_warning("No reachable trash spawn region; starting an empty cleanup session.")
+	var water: Rect2 = _rod.water_bounds.grow(-margin)
+	_near_stops = Vector2(
+		maxf(water.position.x, _shore_x + maxf(starter_band.x, _rod.minimum_cast_range)),
+		minf(water.end.x, _shore_x + minf(starter_band.y, _rod.maximum_cast_range - margin))
+	)
+	_far_stops = Vector2(
+		maxf(water.position.x, _shore_x + maxf(offshore_band.x, _rod.maximum_cast_range + margin)),
+		minf(water.end.x, _shore_x + offshore_band.y)
+	)
+	_drift_limits = Vector2(maxf(water.position.y, shore_start.y), minf(water.end.y, shore_end.y))
+	for index: int in range(mini(initial_item_count, _starter_limit())):
+		_spawn(true, false)
+
+
+func _physics_process(delta: float) -> void:
+	if not arrivals_enabled or _rod == null:
 		return
-	var required: int = mini(initial_item_count, maximum_active_items)
-	for attempt: int in range(required * 200):
-		if items.size() >= required:
-			break
-		var point: Vector2 = Vector2(rng.randf_range(left, right), rng.randf_range(top, bottom))
-		var origin: Vector2 = Vector2(shore_start.x, clampf(point.y, shore_start.y, shore_end.y))
-		if not _rod.invalid_target_reason_from(origin, point).is_empty():
-			continue
-		var separated: bool = true
-		for other: OceanTrash in items:
-			if point.distance_to(other.global_position) < maxf(minimum_spacing, item_catch_radius + other.catch_radius + 4.0):
-				separated = false
-				break
-		if not separated:
-			continue
-		var item: OceanTrash = TRASH_SCENE.instantiate()
-		item.kind = (items.size() % 3) as OceanTrash.Kind
-		item.pollution_value = [10, 15, 20][items.size() % 3]
-		item.catch_radius = item_catch_radius
-		item.bob_phase = rng.randf_range(0.0, TAU)
-		add_child(item)
-		item.global_position = point
-		item.configure_drift(Vector2(top, bottom), rng.randf_range(4.0, 8.0), rng.randf_range(0.0, TAU))
-		items.append(item)
-	if items.size() < required:
-		push_warning("Spawn region fits %d of %d requested items; pollution uses the actual batch." % [items.size(), required])
+	_clock += delta
+	if _clock < arrival_interval:
+		return
+	_clock = fmod(_clock, arrival_interval)
+	_arrival_turn += 1
+	var offshore_turn: bool = _arrival_turn % offshore_every == 0
+	if offshore_turn:
+		if not _spawn(false, true):
+			_spawn(true, true)
+	elif not _spawn(true, true):
+		_spawn(false, true)
 
 
-func initial_pollution_values() -> Dictionary[int, int]:
-	var values: Dictionary[int, int] = {}
+func _starter_limit() -> int:
+	return mini(starter_slots, maximum_active_items)
+
+
+func _spawn(starter: bool, incoming: bool) -> bool:
+	var limit: int = _starter_limit() if starter else maximum_active_items - _starter_limit()
+	var count: int = _starter_items.size() if starter else items.size() - _starter_items.size()
+	var band: Vector2 = _near_stops if starter else _far_stops
+	if count >= limit or band.x > band.y or _drift_limits.x >= _drift_limits.y:
+		return false
+	for attempt: int in range(40):
+		var point: Vector2 = Vector2(_rng.randf_range(band.x, band.y), _rng.randf_range(_drift_limits.x, _drift_limits.y))
+		if _stop_is_clear(point):
+			_add_item(point, starter, incoming)
+			return true
+	return false
+
+
+func _stop_is_clear(point: Vector2) -> bool:
+	var spacing: float = maxf(minimum_spacing, item_catch_radius * 2.0 + 4.0)
 	for item: OceanTrash in items:
-		values[item.get_instance_id()] = item.pollution_value
-	return values
+		if not item.hooked and point.distance_to(item.drift_stop_position()) < spacing:
+			return false
+	return true
+
+
+func _add_item(point: Vector2, starter: bool, incoming: bool) -> void:
+	var item: OceanTrash = TRASH_SCENE.instantiate()
+	item.kind = (_spawned_count % OceanTrash.Kind.size()) as OceanTrash.Kind
+	item.pollution_value = pollution_per_item
+	item.catch_radius = item_catch_radius
+	item.bob_phase = _rng.randf_range(0.0, TAU)
+	_spawned_count += 1
+	add_child(item)
+	items.append(item)
+	if starter:
+		_starter_items.append(item)
+	var speed: float = _rng.randf_range(4.0, 8.0)
+	if incoming:
+		var entry_x: float = _rod.water_bounds.end.x + offscreen_margin
+		var phase: float = PI if point.y < (_drift_limits.x + _drift_limits.y) * 0.5 else 0.0
+		item.entered_water.connect(_on_item_arrived.bind(item))
+		item.configure_arrival(entry_x, point, arrival_travel_time, _rod.water_bounds.end.x, _drift_limits, speed, phase)
+	else:
+		item.global_position = point
+		item.configure_drift(_drift_limits, speed, _rng.randf_range(0.0, TAU))
+		_on_item_arrived(item)
+
+
+func _on_item_arrived(item: OceanTrash) -> void:
+	trash_arrived.emit(item.get_instance_id(), item.pollution_value)
 
 
 func _on_hook_landed(point: Vector2) -> void:
 	if _rod.state != FishingRod.State.WAITING or not _caught.is_empty():
 		return
-	# Resolve exact landing geometry synchronously; physics overlap caches can lag a frame.
+	# Physics overlap caches can lag by a frame on landing.
 	var nearest: OceanTrash
 	var nearest_distance: float = INF
 	for item: OceanTrash in items:
@@ -90,8 +149,10 @@ func _on_hook_landed(point: Vector2) -> void:
 
 
 func _attach_item(item: OceanTrash) -> void:
-	var columns: Array[float] = [0.0, -22.0, 22.0, -44.0, 44.0]
+	if _caught.size() >= _rod.trash_per_cast:
+		return
 	var index: int = _caught.size()
+	var columns: Array[float] = [0.0, -22.0, 22.0, -44.0, 44.0]
 	var offset: Vector2 = Vector2(columns[index % 5], 14.0 + floorf(index / 5.0) * 24.0)
 	if item.attach_to(_rod.get_hook_attachment(), offset):
 		_caught.append(item)
@@ -102,10 +163,11 @@ func _on_retrieval_advanced(from: Vector2, to: Vector2, hook_radius: float) -> v
 	if _rod.state != FishingRod.State.RETRIEVING:
 		return
 	for item: OceanTrash in items:
-		if item.hooked or item.collected:
+		if _caught.size() >= _rod.trash_per_cast:
+			break
+		if item.hooked or item.collected or not item.in_water:
 			continue
 		var nearest: Vector2 = Geometry2D.get_closest_point_to_segment(item.global_position, from, to)
-		# Physical hook disk must intersect the item's catch disk, not just the line.
 		var radius: float = item.catch_radius + hook_radius
 		if item.global_position.distance_squared_to(nearest) <= radius * radius:
 			_attach_item(item)
@@ -113,17 +175,29 @@ func _on_retrieval_advanced(from: Vector2, to: Vector2, hook_radius: float) -> v
 
 func _on_target_detected(_target: Area2D) -> void:
 	if _rod.state == FishingRod.State.WAITING:
-		# Reparenting a caught Area2D must happen outside physics signal flushing.
-		_on_hook_landed.call_deferred(_rod.get_hook_water_position())
+		# Reparent outside physics signal flushing, and ignore stale casts.
+		_check_waiting_target.call_deferred(_rod.cast_number)
+
+
+func _check_waiting_target(cast_number: int) -> void:
+	if _rod.cast_number == cast_number:
+		_on_hook_landed(_rod.get_hook_water_position())
 
 
 func _on_retrieval_completed(_water_position: Vector2) -> void:
-	if _rod.state != FishingRod.State.IDLE or _caught.is_empty():
+	if _rod.state != FishingRod.State.IDLE or _last_returned_cast == _rod.cast_number:
 		return
+	_last_returned_cast = _rod.cast_number
 	var returned: Array[OceanTrash] = _caught.duplicate()
 	_caught.clear()
+	var type_name: String
+	var count: int = 0
 	for item: OceanTrash in returned:
 		if not is_instance_valid(item) or not item.finish_collection():
 			continue
 		items.erase(item)
-		trash_collected.emit(item.get_instance_id(), item.display_name())
+		_starter_items.erase(item)
+		type_name = item.display_name()
+		count += 1
+		trash_collected.emit(item.get_instance_id(), type_name)
+	trash_returned.emit(count, type_name)

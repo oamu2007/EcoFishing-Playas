@@ -8,4 +8,4 @@ const HudScript = preload("res://scripts/ui/hud.gd")
 
 
 func _ready() -> void:
-	_hud.bind_cleanup(_world.pollution, _world.trash_manager)
+	_hud.bind_cleanup(_world.pollution, _world.trash_manager, _world.rod)
