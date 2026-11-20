@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/gameplay/fishing_rod.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/gameplay/fishing_hook.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/gameplay/fishing_line.tscn" id="3"]
 [ext_resource type="Texture2D" path="res://assets/rods/starter.svg" id="4_starter"]
+[ext_resource type="Theme" path="res://ui/themes/coastal_field_guide.tres" id="5_theme"]
 
 [node name="FishingRod" type="Node2D"]
 z_index = 5
@@ -28,6 +29,8 @@ visible = false
 offset_left = -100.0
 offset_top = -76.0
 mouse_filter = 2
+theme = ExtResource("5_theme")
+theme_override_colors/font_color = Color(1, 0.96, 0.86, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
 theme_override_constants/shadow_offset_x = 1
 theme_override_constants/shadow_offset_y = 1

@@ -69,6 +69,7 @@ mouse_filter = 2
 theme_override_constants/separation = 4
 
 [node name="Progress" type="Label" parent="ProgressPanel/Margin/Readouts"]
+theme_type_variation = &"FieldReadout"
 mouse_filter = 2
 theme_override_font_sizes/font_size = 15
 text = "POLLUTION  100%"
@@ -82,6 +83,7 @@ show_percentage = false
 value = 100.0
 
 [node name="Inventory" type="Label" parent="ProgressPanel/Margin/Readouts"]
+theme_type_variation = &"FieldReadout"
 mouse_filter = 2
 theme_override_font_sizes/font_size = 14
 

@@ -8,89 +8,73 @@
 layer = 20
 script = ExtResource("1")
 
-[node name="Backdrop" type="ColorRect" parent="."]
+[node name="Shoreline" type="Control" parent="."]
+unique_name_in_owner = true
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-color = Color(0.064, 0.130, 0.133, 1)
+clip_contents = true
+script = ExtResource("3_coast")
+full_bleed = true
 
-[node name="Center" type="CenterContainer" parent="Backdrop"]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-mouse_filter = 1
-
-[node name="Panel" type="PanelContainer" parent="Backdrop/Center"]
-layout_mode = 2
+[node name="Body" type="VBoxContainer" parent="."]
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 64.0
+offset_top = -192.0
+offset_right = 506.0
+offset_bottom = 192.0
+mouse_filter = 2
 theme = ExtResource("2_theme")
-
-[node name="Margin" type="MarginContainer" parent="Backdrop/Center/Panel"]
-layout_mode = 2
-theme_override_constants/margin_left = 34
-theme_override_constants/margin_top = 22
-theme_override_constants/margin_right = 22
-theme_override_constants/margin_bottom = 22
-
-[node name="Layout" type="HBoxContainer" parent="Backdrop/Center/Panel/Margin"]
-layout_mode = 2
-theme_override_constants/separation = 32
-
-[node name="Body" type="VBoxContainer" parent="Backdrop/Center/Panel/Margin/Layout"]
-custom_minimum_size = Vector2(346, 0)
-layout_mode = 2
-theme_override_constants/separation = 13
+theme_override_constants/separation = 16
 alignment = 1
 
-[node name="Title" type="Label" parent="Backdrop/Center/Panel/Margin/Layout/Body"]
+[node name="Title" type="Label" parent="Body"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"FieldTitle"
-theme_override_constants/line_spacing = -2
+theme_type_variation = &"FieldHero"
 text = "EcoFishing\nPlayas"
 
-[node name="Introduction" type="Label" parent="Backdrop/Center/Panel/Margin/Layout/Body"]
+[node name="Introduction" type="Label" parent="Body"]
 unique_name_in_owner = true
 layout_mode = 2
-autowrap_mode = 2
-text = "Fish for trash and fund cleanup.\nBring fish back to Playas."
+theme_override_colors/font_color = Color(0.86, 0.93, 0.88, 1)
+theme_override_font_sizes/font_size = 19
+text = "Fish for trash. Restore the coast."
 
-[node name="Actions" type="VBoxContainer" parent="Backdrop/Center/Panel/Margin/Layout/Body"]
+[node name="Actions" type="VBoxContainer" parent="Body"]
+custom_minimum_size = Vector2(302, 0)
 layout_mode = 2
-theme_override_constants/separation = 8
+size_flags_horizontal = 0
+theme_override_constants/separation = 10
 
-[node name="StartSession" type="Button" parent="Backdrop/Center/Panel/Margin/Layout/Body/Actions"]
+[node name="StartSession" type="Button" parent="Body/Actions"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 45)
+custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
-theme_type_variation = &"FieldPrimary"
+theme_type_variation = &"TitlePrimary"
 text = "New Game"
 
-[node name="FutureActions" type="HBoxContainer" parent="Backdrop/Center/Panel/Margin/Layout/Body/Actions"]
+[node name="FutureActions" type="HBoxContainer" parent="Body/Actions"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Save" type="Button" parent="Backdrop/Center/Panel/Margin/Layout/Body/Actions/FutureActions"]
+[node name="Save" type="Button" parent="Body/Actions/FutureActions"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 38)
+custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
+theme_type_variation = &"TitleQuiet"
 disabled = true
 text = "Save · Coming later"
 
-[node name="Load" type="Button" parent="Backdrop/Center/Panel/Margin/Layout/Body/Actions/FutureActions"]
+[node name="Load" type="Button" parent="Body/Actions/FutureActions"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 38)
+custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
+theme_type_variation = &"TitleQuiet"
 disabled = true
 text = "Load · Coming later"
-
-[node name="Shoreline" type="Control" parent="Backdrop/Center/Panel/Margin/Layout"]
-unique_name_in_owner = true
-clip_contents = true
-custom_minimum_size = Vector2(302, 340)
-layout_mode = 2
-mouse_filter = 2
-script = ExtResource("3_coast")

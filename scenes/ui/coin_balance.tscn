@@ -28,6 +28,7 @@ stretch_mode = 5
 mouse_filter = 2
 
 [node name="Amount" type="Label" parent="Badge/Readout"]
+theme_type_variation = &"FieldReadout"
 unique_name_in_owner = true
 mouse_filter = 2
 text = "0 gold"

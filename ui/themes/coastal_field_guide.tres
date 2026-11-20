@@ -1,7 +1,19 @@
-[gd_resource type="Theme" load_steps=10 format=3]
+[gd_resource type="Theme" load_steps=18 format=3]
 
-[sub_resource type="SystemFont" id="HeadingFont"]
-font_names = PackedStringArray("Georgia", "Liberation Serif", "DejaVu Serif")
+[ext_resource type="FontFile" path="res://assets/fonts/atkinson_hyperlegible_next.ttf" id="1_text"]
+[ext_resource type="FontFile" path="res://assets/fonts/bricolage_grotesque.ttf" id="2_display"]
+
+[sub_resource type="FontVariation" id="HeadingFont"]
+base_font = ExtResource("2_display")
+variation_opentype = {"wght": 650}
+
+[sub_resource type="FontVariation" id="HeroFont"]
+base_font = ExtResource("2_display")
+variation_opentype = {"opsz": 72, "wght": 820}
+
+[sub_resource type="FontVariation" id="ReadoutFont"]
+base_font = ExtResource("1_text")
+variation_opentype = {"wght": 700}
 
 [sub_resource type="StyleBoxFlat" id="Paper"]
 content_margin_left = 0.0
@@ -112,7 +124,60 @@ corner_radius_top_right = 5
 corner_radius_bottom_left = 5
 corner_radius_bottom_right = 5
 
+[sub_resource type="StyleBoxFlat" id="TitleButton"]
+content_margin_left = 17.0
+content_margin_top = 9.0
+content_margin_right = 17.0
+content_margin_bottom = 9.0
+bg_color = Color(0.99, 0.80, 0.51, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_left = 8
+corner_radius_bottom_right = 8
+
+[sub_resource type="StyleBoxFlat" id="TitleButtonHover"]
+content_margin_left = 17.0
+content_margin_top = 9.0
+content_margin_right = 17.0
+content_margin_bottom = 9.0
+bg_color = Color(1, 0.88, 0.66, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_left = 8
+corner_radius_bottom_right = 8
+
+[sub_resource type="StyleBoxFlat" id="TitleQuiet"]
+content_margin_left = 12.0
+content_margin_right = 12.0
+bg_color = Color(0.052, 0.15, 0.165, 0.83)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.62, 0.75, 0.71, 0.54)
+corner_radius_top_left = 7
+corner_radius_top_right = 7
+corner_radius_bottom_left = 7
+corner_radius_bottom_right = 7
+
+[sub_resource type="StyleBoxFlat" id="TitleFocus"]
+draw_center = false
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.95, 0.82, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_left = 8
+corner_radius_bottom_right = 8
+expand_margin_left = 4.0
+expand_margin_top = 4.0
+expand_margin_right = 4.0
+expand_margin_bottom = 4.0
+
 [resource]
+default_font = ExtResource("1_text")
 default_font_size = 16
 PanelContainer/styles/panel = SubResource("Paper")
 Label/colors/font_color = Color(0.157, 0.208, 0.202, 1)
@@ -120,6 +185,13 @@ FieldTitle/base_type = &"Label"
 FieldTitle/colors/font_color = Color(0.163, 0.224, 0.218, 1)
 FieldTitle/font_sizes/font_size = 42
 FieldTitle/fonts/font = SubResource("HeadingFont")
+FieldHero/base_type = &"Label"
+FieldHero/colors/font_color = Color(1, 0.955, 0.837, 1)
+FieldHero/constants/line_spacing = -8
+FieldHero/font_sizes/font_size = 88
+FieldHero/fonts/font = SubResource("HeroFont")
+FieldReadout/base_type = &"Label"
+FieldReadout/fonts/font = SubResource("ReadoutFont")
 FieldSection/base_type = &"Label"
 FieldSection/colors/font_color = Color(0.387, 0.268, 0.183, 1)
 FieldSection/font_sizes/font_size = 22
@@ -144,3 +216,13 @@ FieldPrimary/colors/font_pressed_color = Color(0.998, 0.961, 0.874, 1)
 FieldPrimary/styles/normal = SubResource("TealButton")
 FieldPrimary/styles/hover = SubResource("TealHover")
 FieldPrimary/styles/pressed = SubResource("TealButton")
+TitlePrimary/base_type = &"Button"
+TitlePrimary/fonts/font = SubResource("ReadoutFont")
+TitlePrimary/font_sizes/font_size = 21
+TitlePrimary/styles/normal = SubResource("TitleButton")
+TitlePrimary/styles/hover = SubResource("TitleButtonHover")
+TitlePrimary/styles/pressed = SubResource("TitleButton")
+TitlePrimary/styles/focus = SubResource("TitleFocus")
+TitleQuiet/base_type = &"Button"
+TitleQuiet/colors/font_disabled_color = Color(0.82, 0.88, 0.83, 1)
+TitleQuiet/styles/disabled = SubResource("TitleQuiet")

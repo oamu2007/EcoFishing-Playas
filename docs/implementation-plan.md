@@ -12,7 +12,7 @@ In the next pass, incoming trash keeps moving inward until it reaches the equipp
 
 ## Next milestone
 
-Continue with [Milestone 23](#milestone-23--title-screen-and-ui-typography). Use the verified M18 build as the comparison baseline and follow [AGENTS.md](../AGENTS.md) for the existing roadmap execution workflow. The independent first-time-player run and graphics verification on another device carry forward to M25.
+Continue with [Milestone 24](#milestone-24--continuous-music-and-action-sound-effects). Use the verified M18 build as the comparison baseline and follow [AGENTS.md](../AGENTS.md) for the existing roadmap execution workflow. The independent first-time-player run and graphics verification on another device carry forward to M25.
 
 ## Completed baseline
 
@@ -521,7 +521,7 @@ Check Esc from shore, an active fishing challenge, and each trader page. Verify 
 
 ## Milestone 23 — Title screen and UI typography
 
-**Planned.** The title has a large game name over full-screen animated art of the Playas setting, with clear game menu actions.
+**Verified November 20, 2026.** The title has a large game name over full-screen animated art of the Playas setting, with clear game menu actions.
 
 - Keep and expand the existing coastal artwork and animation into a full-bleed background. Use the broad title-over-setting composition suggested by Poly Bridge as inspiration for an original EcoFishing layout. Give the game name visual prominence and arrange the controls where the art leaves room for legible text. Keep New Game working and keep the existing future Save and Load controls inactive.
 - Review fonts across the title, pause menu, HUD, shop, inventory, and help. Pick a distinctive display face where it fits and readable text and numeric faces for functional UI. Use assets with suitable permissions, include required attribution, and ask the user if access or a download is needed. Continue typography and layout work that can proceed with existing assets while waiting.
@@ -529,6 +529,10 @@ Check Esc from shore, an active fishing challenge, and each trader page. Verify 
 **Verification**
 
 Check the title and pause menu side by side at default and reduced window sizes. Verify the title reads clearly over moving artwork, focus remains visible, button labels and prices fit, and instructions and inventory values are legible at gameplay scale. Recheck New Game and the inactive Save and Load controls.
+
+- The title expands the original coastline into a full-screen composition with dark water behind the game name and animated foam, schools of fish, and a flag by the shack. Pause keeps the compact panel over the running shoreline. Bricolage Grotesque sets display headings. Atkinson Hyperlegible Next handles controls, prices, counts, and help. Both font licenses and sources are in [asset credits](asset-credits.md).
+- OpenGL captures at 1280 × 720 and 800 × 450 showed the title at two animation phases and the pause, Help, Sell, and Buy screens. The title focus ring and inactive controls remained visible. The reduced capture fit the inventory names, prices, and Sell All value. The Godot session flow, trader, and HUD refinement checks passed, including New Game and inactive Save and Load.
+- Cross-device typography and first-time discovery remain for M25. Next is continuous music and action sound in M24.
 
 ## Milestone 24 — Continuous music and action sound effects
 
