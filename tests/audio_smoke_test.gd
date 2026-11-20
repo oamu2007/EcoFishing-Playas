@@ -86,8 +86,8 @@ func _run() -> void:
 	_check_music(main, music, stream, trader_at)
 	_check(_seen(AudioScript.Cue.CONFIRM) >= 3 and _seen(AudioScript.Cue.CANCEL) >= 1 and _seen(AudioScript.Cue.NAVIGATE) >= 1, "Menu controls lost distinct cues")
 	_check(audio.get_node("Effects").stream.polyphony == 8, "The effects player lost its voice limit")
+	await audio.prepare_shutdown()
 	main.free()
-	await create_timer(0.1).timeout
 	print("Audio smoke test: %d failures. Driver: %s." % [_failures, AudioServer.get_driver_name()])
 	quit(0 if _failures == 0 else 1)
 

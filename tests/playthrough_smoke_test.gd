@@ -4,6 +4,7 @@ const MainScene: PackedScene = preload("res://scenes/gameplay/main.tscn")
 const LevelScript = preload("res://scripts/gameplay/playas_vertical_slice.gd")
 const PlayerScript = preload("res://scripts/gameplay/player.gd")
 const CleanupSite = preload("res://scripts/gameplay/cleanup_site.gd")
+const AudioScript = preload("res://scripts/gameplay/game_audio.gd")
 
 var _failures: int = 0
 var _main: Node
@@ -25,6 +26,7 @@ var _intentionally_fishing: bool
 var _sale_trips: int
 var _first_threshold_time: float
 var _start_ticks: int
+var _sale_count: int
 var _starter_range: float
 var _seen_starter_items: Dictionary[int, bool]
 var _new_starter_times: Array[float]
@@ -59,6 +61,16 @@ func _run() -> void:
 		await process_frame
 		if _check(_pause.visible, "Pause menu did not open after the first session") and await _start_session(true):
 			await _play_session("800 x 450")
+			_key(KEY_ESCAPE)
+			await process_frame
+			_click_button(_pause.get_node("%QuitToTitle"))
+			await process_frame
+			_click_button(_pause.get_node("%ConfirmDiscard"))
+			await process_frame
+			if _check(_menu.visible and not _main.has_node("Session"), "Quit after the second route did not return to title"):
+				await _start_session()
+	var audio: AudioScript = _main.get_node("GameAudio")
+	await audio.prepare_shutdown()
 	_main.free()
 	for frame: int in 4:
 		await process_frame
@@ -92,6 +104,7 @@ func _start_session(restarting: bool = false) -> bool:
 	_fish_sale_value = 0
 	_intentionally_fishing = false
 	_sale_trips = 0
+	_sale_count = 0
 	_first_threshold_time = -1.0
 	_cleanup_cues = 0
 	_starter_range = _rod.maximum_cast_range
@@ -102,6 +115,9 @@ func _start_session(restarting: bool = false) -> bool:
 	_world.pollution.pollution_changed.connect(_record_threshold)
 	_world.cleanup_work.work_started.connect(_count_cleanup_cue)
 	_check(_sack.item_count == 0 and _sack.capacity == 3 and _shop.coins == 0 and _coin_amount.text == "0 gold" and _shop.rod_tier == 0 and _shop.sack_tier == 0, "Fresh session retained Sack, gold, or gear progress")
+	for tier: int in range(_shop.rod_upgrades.size() + 1):
+		for add_on: int in _shop.rod_add_ons.size():
+			_check(not _shop.owns_rod_add_on(tier, add_on), "Fresh session retained a rod add-on")
 	for index: int in _shop.cleanup_projects.size():
 		var site: CleanupSite = _world.cleanup_work.site_for_project(_shop.cleanup_projects[index])
 		_check(not _shop.is_cleanup_complete(index) and not site.has_started, "Fresh session retained completed cleanup or crew work")
@@ -132,6 +148,8 @@ func _play_session(window: String) -> void:
 			return
 		project_index += 1
 	_check(_world.pollution.current_pollution <= 50 and _shop.rod_tier == 1 and _shop.sack_tier == 1, "Trash-funded gear and projects did not unlock fish")
+	print("Stable fish threshold secured at %.1fs after %d projects" % [_seconds_since(_start_ticks), project_index])
+	_check(is_equal_approx(_rod.equipped_cast_duration(), _rod.cast_duration) and not _shop.owns_rod_add_on(1, 0) and not _shop.owns_rod_add_on(1, 1), "The first fish attempt used an add-on")
 	_intentionally_fishing = true
 	if not await _catch_fish():
 		return
@@ -142,8 +160,17 @@ func _play_session(window: String) -> void:
 	_check(_first_threshold_time >= 0.0, "The playthrough did not record a true 50% crossing")
 	print("First 50%% crossing %.1fs, first fish sale %.1fs (+%d gold), pollution %d%%" % [_first_threshold_time, first_fish_sale_time, _fish_sale_value, _world.pollution.current_pollution])
 
+	var spool_index: int = 1
+	var spool: RodAddOn = _shop.rod_add_ons[spool_index]
+	if not await _buy("RodAddOns", spool_index, spool.cost):
+		return
+	_check(_shop.owns_rod_add_on(1, spool_index) and is_equal_approx(_rod.equipped_cast_duration(), _rod.cast_duration * (1.0 - spool.duration_discount)), "The Shore rod did not apply its own Quick spool")
 	if not await _buy("Gear", 1, _shop.rod_upgrades[1].cost):
 		return
+	_check(_shop.owns_rod_add_on(1, spool_index) and not _shop.owns_rod_add_on(2, spool_index) and is_equal_approx(_rod.equipped_cast_duration(), _rod.cast_duration), "The Offshore rod inherited its predecessor's Quick spool")
+	if not await _buy("RodAddOns", spool_index, spool.cost):
+		return
+	_check(_shop.owns_rod_add_on(2, spool_index) and is_equal_approx(_rod.equipped_retrieval_duration(), _rod.retrieval_duration * (1.0 - spool.duration_discount)), "The Offshore rod did not apply its own Quick spool")
 	for index: int in range(project_index, _shop.cleanup_projects.size()):
 		if not await _buy("Cleanup", index, _shop.cleanup_projects[index].cost):
 			return
@@ -267,21 +294,19 @@ func _sell() -> bool:
 		print("First full Sack walk to the shack: %.2fs" % travel)
 	_click_button(_panel.get_node("%Sell"))
 	await process_frame
-	var items: Control = _panel.get_node("%SackItems")
-	for index: int in _sack.item_count:
-		var item: Button = items.get_child(0) as Button
-		if not _check(item != null, "An item could not be added to the sale tray"):
-			return false
-		_click_button(item)
-		await process_frame
-	var sell: Button = _panel.get_node("%ConfirmSale")
+	var sell: Button = _panel.get_node("%SellAll")
 	var payout: int = _sack.sale_total()
 	var before: int = _shop.coins
 	var fish_in_load: bool = _sack.fish_count > 0
 	_check(_intentionally_fishing or not fish_in_load, "A pre-threshold upgrade or project used fish income")
-	_check(not sell.disabled and sell.text.contains(str(payout)), "Shack did not show the earned payout")
-	_click_button(sell)
-	_click_button(sell)
+	_check(not sell.disabled and sell.text.contains(str(payout)), "Sell All did not show the full Sack payout")
+	if _sale_count % 2 == 0:
+		_key(KEY_F)
+		_key(KEY_F)
+	else:
+		_click_button(sell)
+		_click_button(sell)
+	_sale_count += 1
 	_check(_shop.coins == before + payout and _sack.item_count == 0 and _coin_amount.text == "%d gold" % _shop.coins, "Sale did not update the Sack and visible balance exactly once")
 	if fish_in_load:
 		_fish_sale_value = payout

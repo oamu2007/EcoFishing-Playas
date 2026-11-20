@@ -10,9 +10,9 @@ After the follow-up, trash arrives at a gentler pace, upgrades take several trip
 
 In the next pass, incoming trash keeps moving inward until it reaches the equipped rod's horizontal range. Fish take more precise timing to land, optional add-ons are bought for individual rods, and more cleanup purchases deliver smaller improvements. The title and pause screens have separate layouts, contextual help stays hidden until requested, the trader supports a one-action sale, and music and sound effects cover the full session.
 
-## Next milestone
+## Current checkpoint
 
-Continue with [Milestone 25](#milestone-25--integrated-playtest-and-stabilization). Use the verified M18 build as the comparison baseline and follow [AGENTS.md](../AGENTS.md) for the existing roadmap execution workflow. The independent first-time-player run, human listening pass, and graphics verification on another device carry forward to M25.
+M19–M25 are implemented and verified against the M18 checkpoint. The next checks are an independent first-time-player run, a human listening pass, and graphics and performance verification on another device. See [Milestone 25](#milestone-25--integrated-playtest-and-stabilization) for measurements and pending checks.
 
 ## Completed baseline
 
@@ -552,10 +552,42 @@ Listen through a full loop and switch between title, gameplay, pause, trader, an
 
 ## Milestone 25 — Integrated playtest and stabilization
 
-**Planned.** A new session demonstrates slower arrivals, the expanded economy, the harder fish challenge, the revised screens, and continuous audio.
+**Verified November 20, 2026.** A new session demonstrates slower arrivals, the expanded economy, the harder fish challenge, the revised screens, and continuous audio.
 
 - Run a seeded playthrough from New Game through the first rod purchase, a timed fish catch without add-ons, a Sell All transaction, and full cleanup. Test an optional add-on on two different rods. Compare arrival speed and progression timings with M18, verify 0% and the live rebound, and confirm session reset.
 - Run Godot import, main-scene startup, relevant smoke tests, and the graphics preview and GPU checks. Verify the UI at default and reduced window sizes. Record automated results, listening and visual checks, and any pending first-time-player or cross-device checks. Update the README and architecture notes for changed controls and scene ownership.
+
+**Comparison with M18**
+
+Each game clock starts when New Game or Start fresh opens the session. The main route reproduced the same checkpoints at 1280 × 720 and 800 × 450, headless and with Intel Iris Xe / OpenGL 3.3 Compatibility.
+
+| Checkpoint | M18 (`97b5709`) | M25 |
+| --- | ---: | ---: |
+| Seeded trash crossing of world X 1360–1100 | 2.42 s | 5.92 s |
+| Seeded Starter arrival from spawn to settle | 9.00 s | 15.62 s |
+| Arrival cadence while a slot is available | 8.0 s | 8.0 s |
+| New opportunities in the Starter's original range, mean / longest gap | 11.2 / 24.8 s (31 arrivals) | 8.0 / 8.0 s (4 arrivals) |
+| First full-Sack walk to the shack | 1.65 s | 1.65 s |
+| First rod purchase | 46.0 s, 3 trips | 47.2 s, 3 trips |
+| First true 50% threshold crossing | 273.3 s | 166.6 s |
+| First fish sale with stock gear | 284.1 s, 10 gold | 252.5 s, 13 gold |
+| Full catalog funded and displayed pollution at 0% | 447.7 s | 482.1 s on a stock route, 546.0 s with two optional purchases |
+
+The range sample uses the Starter rod's original boundary throughout. In M25, equipping the Shore rod moves incoming stops outward, so the four measured opportunities came before the first upgrade. Seven trash-funded projects secured the stable fish threshold at 249.0 seconds even with a full floating load. The main test alternated selling by F and button, secured a timed fish before fitting any add-on, and bought Quick spool separately for the Shore and Offshore rods. Those optional purchases added 30 gold to the route. The stock comparison followed the same final route with those purchases skipped.
+
+Both routes left all eleven sites complete and showed six ambient fish at 0% before the next floating arrival restored 5%. Restart and New Game after Quit to title restored the starting catch, gear, balance, add-on ownership, cleanup, and pollution state.
+
+**Verification**
+
+- Godot 4.7.2 passed a fresh editor import, 120-frame main startup, and all twelve smoke tests. The integrated route passed again with rendering enabled. A native window close now stops audio before quitting. The startup check follows that path. Godot's forced `--quit-after` can still report audio references at process exit. [Godot issue #76745](https://github.com/godotengine/godot/issues/76745)
+- The standalone water preview ran for 120 rendered frames. All three panes changed across captures using live shader time, and the water render check confirmed progressive seabed visibility. Captures at 1280 × 720 and 800 × 450 covered the moving title, pause, Help, Sell and Buy, and second-stage and secured fish cues.
+- The supplied track wrapped naturally after 117.39 seconds on WASAPI. Transition checks tracked one uninterrupted playback instance. Fixture actions produced the expected effects and the recorded master peak stayed below clipping.
+
+**Outstanding manual checks**
+
+- Run an independent first-time playthrough to assess discovery of Help, the trader, and two-stage fishing, and how the first three trips feel.
+- Listen through the full music transition and overlapping gameplay and interface sounds to judge the seam, clarity, and balance by ear.
+- Check graphics, frame pacing, UI legibility, and audio on another device.
 
 ## Scope guardrails
 

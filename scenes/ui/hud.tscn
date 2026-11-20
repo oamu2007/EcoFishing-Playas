@@ -47,7 +47,7 @@ text = "Controls"
 [node name="Instructions" type="Label" parent="ControlsPanel/MarginContainer/Controls"]
 mouse_filter = 2
 theme_override_font_sizes/font_size = 14
-text = "Move with WASD or arrow keys.\nAim with the mouse. Green means in range.\nLeft click to cast. Left click again to reel in.\nFor fish, click or press Space inside the green arc first.\nPress E at the shack to sell, upgrade, or fund cleanup.\nPress Esc for the session menu.\nPress H to close these controls."
+text = "Move with WASD or arrow keys.\nAim with the mouse. Green means in range.\nLeft click to cast. Left click again to reel in.\nFor fish, click or press Space in the green arc.\nRarer fish need two successful checks.\nPress E at the shack to trade.\nPress F on Sell to sell the entire Sack.\nPress Esc to go back or pause. Press H to hide Help."
 
 [node name="ProgressPanel" type="PanelContainer" parent="."]
 offset_left = 14.0

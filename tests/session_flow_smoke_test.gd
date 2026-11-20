@@ -5,6 +5,7 @@ const LevelScript = preload("res://scripts/gameplay/playas_vertical_slice.gd")
 const PlayerScript = preload("res://scripts/gameplay/player.gd")
 const TraderFixture = preload("res://tests/trader_fixture.gd")
 const CleanupSite = preload("res://scripts/gameplay/cleanup_site.gd")
+const AudioScript = preload("res://scripts/gameplay/game_audio.gd")
 
 var _failures: int = 0
 var _main: Node
@@ -42,7 +43,7 @@ func _run() -> void:
 	var session: Node = _main.get_node_or_null("Session")
 	if session == null:
 		_check(false, "Start click did not open a session")
-		_finish()
+		await _finish()
 		return
 	var world: LevelScript = session.get_node("World")
 	var opening_positions: Array[Vector2] = []
@@ -81,7 +82,7 @@ func _run() -> void:
 			world.pollution.remove_permanent(55)
 			world.trash_manager._physics_process(world.trash_manager.arrival_interval)
 	await _verify_quit_to_title()
-	_finish()
+	await _finish()
 
 
 func _check_placeholder(button: Button) -> void:
@@ -285,6 +286,8 @@ func _key(code: Key) -> void:
 
 
 func _finish() -> void:
+	var audio: AudioScript = _main.get_node("GameAudio")
+	await audio.prepare_shutdown()
 	_main.free()
 	print("Session flow smoke test: %d failures" % _failures)
 	quit(0 if _failures == 0 else 1)

@@ -2,6 +2,7 @@ extends SceneTree
 
 const MAIN: PackedScene = preload("res://scenes/gameplay/main.tscn")
 const World = preload("res://scripts/gameplay/playas_vertical_slice.gd")
+const AudioScript = preload("res://scripts/gameplay/game_audio.gd")
 
 var _failures: int
 var _pointer: Vector2
@@ -24,6 +25,8 @@ func _run() -> void:
 		root.add_child(main)
 		await process_frame
 		await _play(main)
+		var audio: AudioScript = main.get_node("GameAudio")
+		await audio.prepare_shutdown()
 		main.free()
 		await process_frame
 	print("Trader smoke test: %d failures" % _failures)

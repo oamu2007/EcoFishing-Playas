@@ -35,6 +35,7 @@ const CUE_GAIN: Dictionary[Cue, float] = {
 	Cue.SALE: 2.0,
 }
 const MINIMUM_GAP_MS: Dictionary[Cue, int] = {Cue.NAVIGATE: 65, Cue.MISS: 110, Cue.FOOTSTEP: 100}
+const SHUTDOWN_GRACE_MS: int = 150
 
 @export var tracks: Array[AudioStreamMP3] = []
 @export_range(0, 15) var starting_track: int = 0
@@ -60,6 +61,18 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
+	_stop_all()
+
+
+func prepare_shutdown() -> void:
+	_stop_all()
+	# The mixer releases stopped streams on its own clock, even in fixed-FPS tests.
+	var release_at: int = Time.get_ticks_msec() + SHUTDOWN_GRACE_MS
+	while Time.get_ticks_msec() < release_at:
+		await get_tree().process_frame
+
+
+func _stop_all() -> void:
 	_music.stop()
 	_effects.stop()
 	_voices = null

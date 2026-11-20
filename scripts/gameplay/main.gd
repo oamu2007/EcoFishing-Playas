@@ -8,6 +8,7 @@ const AudioScript = preload("res://scripts/gameplay/game_audio.gd")
 
 var _session: SessionScript
 var _starting_session: bool = false
+var _closing_game: bool = false
 
 @onready var _menu: MenuScript = $SessionMenu
 @onready var _pause: PauseScript = $PauseMenu
@@ -15,12 +16,21 @@ var _starting_session: bool = false
 
 
 func _ready() -> void:
+	get_tree().set_auto_accept_quit(false)
 	_menu.start_requested.connect(_request_start)
 	_pause.resume_requested.connect(_resume)
 	_pause.restart_requested.connect(_request_start)
 	_pause.title_requested.connect(_request_title)
 	_pause.discard_cancelled.connect(_audio.play_cue.bind(AudioScript.Cue.CANCEL))
 	_menu.open()
+
+
+func _notification(what: int) -> void:
+	if what != NOTIFICATION_WM_CLOSE_REQUEST or _closing_game:
+		return
+	_closing_game = true
+	await _audio.prepare_shutdown()
+	get_tree().quit()
 
 
 func _input(event: InputEvent) -> void:
