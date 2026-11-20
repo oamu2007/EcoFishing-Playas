@@ -17,6 +17,7 @@ Main (Node)
     │   │   │   ├── Seabed (Node2D)
     │   │   │   └── Surface (ColorRect)
     │   │   └── AmbientFish (Node2D)
+    │   ├── CleanupWork (Node2D)
     │   ├── WorldBounds (StaticBody2D)
     │   ├── Player (CharacterBody2D)
     │   │   └── FishingRod (Node2D)
@@ -28,10 +29,11 @@ Main (Node)
     │   ├── CatchResolver (Node)
     │   └── PollutionSystem (Node)
     ├── HUD (CanvasLayer)
-    └── ShackPanel (CanvasLayer)
+    ├── ShackPanel (CanvasLayer)
+    └── CoinBalance (CanvasLayer)
 ```
 
-The tree omits decorative nodes. The entry point owns the menu and running session. The session composes the world, HUD, and shop. The level owns local gameplay and environmental presentation.
+The tree omits decorative nodes. The entry point owns the menu and running session. The session composes the world, HUD, trader, and coin balance. The level owns local gameplay and environmental presentation.
 
 The level also creates footprint and splash nodes at runtime, plus a shader-backed sand overlay and static sand-detail node under `Environment`.
 
@@ -43,9 +45,9 @@ The level also creates footprint and splash nodes at runtime, plus a shader-back
 
 The level derives an axis-aligned water rectangle from its rectangular ocean polygon and injects it into the rod. Translation/scaling is supported; rotated or nonrectangular water needs a polygon-based validator. Validation checks distance to water (140 px), a water target, and range (60–240 px for the starter rod), measured from the rod origin.
 
-States are `IDLE -> CASTING -> WAITING -> RETRIEVING -> IDLE`. The target is fixed on cast. Hook ground position interpolates toward it while only the visual child receives `-4 * height * t * (1 - t)` on screen Y. Height is zero at both endpoints. Collision stays on the water plane; retrieval interpolates back to the tip. Clicks during casting/retrieval are ignored.
+The normal cast follows `IDLE -> CASTING -> WAITING -> RETRIEVING -> IDLE`. A fish latch enters `TIMING` from `WAITING`. Success returns to `WAITING` with the fish secured, and a miss or timeout returns to `IDLE`. The target is fixed on cast. Hook ground position interpolates toward it while only the visual child receives `-4 * height * t * (1 - t)` on screen Y. Height is zero at both endpoints. Collision stays on the water plane. Retrieval interpolates back to the tip. Clicks during casting and retrieval are ignored.
 
-Typed rod signals: `state_changed`, `hook_landed`, `retrieval_advanced(previous_position, current_position, hook_radius)`, `retrieval_completed`, and `target_detected`. The hook queries monitorable `Area2D` targets on layer 3 (`FishingTarget`); only waiting overlaps emit detection. `CatchResolver` subscribes to these events and selects, attaches, and finalizes `FishingTarget` nodes. No autoloads are needed.
+The rod emits `state_changed`, `hook_landed`, `fish_timing_finished`, `retrieval_advanced(previous_position, current_position, hook_radius)`, `retrieval_completed`, and `target_detected`. The hook queries monitorable `Area2D` targets on layer 3 (`FishingTarget`) and emits detection for waiting overlaps. `CatchResolver` observes the lifecycle to select, attach, and finalize targets.
 
 ### Implemented cleanup composition
 
@@ -62,7 +64,7 @@ Typed rod signals: `state_changed`, `hook_landed`, `retrieval_advanced(previous_
 
 ### Compact interface
 
-The compact HUD shows live pollution, Sack usage, gold, and gear tiers. Short prompts follow movement, cast state, the Sack, and affordability. Rejected casts and results appear in a separate note. H or the clickable Help control toggles detailed controls without pausing. Informational controls ignore mouse input and the Menu button consumes its own clicks.
+The compact HUD shows live pollution, Sack usage, and gear tiers. The coin display sits above it. Short prompts follow movement, cast state, the Sack, and affordability. Rejected casts and results appear in a separate note. H or the clickable Help control toggles detailed controls without pausing. Informational controls ignore mouse input and the Menu button consumes its own clicks.
 
 Swept detection samples each item's current physics position rather than solving continuous relative motion for moving trash. At the configured gentle current speed this keeps the implementation small; unusually fast currents would need relative-motion sweeps. The shoreline/water validator still assumes this axis-aligned rectangular level.
 
@@ -117,7 +119,7 @@ The sand overlay and detail positions derive from the authored Beach polygon. Th
 
 `Main` starts at `SessionMenu` and owns a single instanced `session.tscn`. The menu activates its looping shoreline illustration while visible and owns focus and button feedback. New Game creates the first session. The HUD Menu button and Esc open the pause menu, with Esc closing an open trader first. Pause suspends the session and hides the HUD. The GPU water clock continues. Resume or Esc restores the session and HUD. Start fresh detaches and disposes of the old tree before adding a fresh instance. The entry point guards queued activation, and Save and Load are disabled buttons with no handlers. Gameplay fixtures can instantiate the session scene directly.
 
-The menu, HUD, and shack panel share `ui/themes/coastal_field_guide.tres`. It defines sand-colored panels, brown borders and focus, ink text, and teal actions. The menu's static shoreline illustration is a local Control. Shop and session menu panels capture pointer input before the rod's unhandled-input phase. The rod transforms mouse button event coordinates through the active viewport's canvas transform for aim accuracy after resizing.
+The menu, HUD, and trader share `ui/themes/coastal_field_guide.tres`. It defines sand-colored panels, brown borders and focus, ink text, and teal actions. The trader uses the menu's shoreline illustration with motion disabled. Trader and session menu controls capture pointer input before the rod's unhandled-input phase. The rod transforms mouse button event coordinates through the active viewport's canvas transform for aim accuracy after resizing.
 
 ## Systems and data flow
 
@@ -129,6 +131,9 @@ CatchResolver completed return -> Sack
 TrashManager.trash_arrived -> PollutionSystem.register_trash(item_id, points)
 TrashManager.trash_collected -> PollutionSystem.collect(item_id)
 CatchResolver hook and return events -> HUD notifications
+FishingRod fish timing state -> HUD dial and outcome notification
+ShackShop.purchases_changed -> CoinBalance and trader catalog
+ShackShop.cleanup_funded -> CleanupWork -> HUD watch cue
 PollutionSystem.pollution_changed -> HUD and WaterVisuals
 WaterVisuals.displayed_pollution_changed -> AmbientFish
 FishingRod.hook_landed -> Level -> WaterSplash (true pollution tint)
@@ -140,7 +145,7 @@ The rod reports lifecycle and hook positions. The resolver chooses and finalizes
 ## State ownership
 
 - Session pollution belongs to `PollutionSystem`, with a clear initial and minimum value.
-- Fishing state belongs to `FishingRod` (IDLE, CASTING, WAITING, RETRIEVING).
+- Fishing state belongs to `FishingRod` (IDLE, CASTING, WAITING, TIMING, RETRIEVING).
 - Movement state belongs to `Player`. `Sack` provides the load multiplier and owns carried items. `ShackShop` owns coins and purchased tiers.
 - Water clarity and ambient silhouettes follow an eased value. Catchable fish arrival probability uses true normalized pollution.
 - Collectible configuration should move into typed custom `Resource` data only when multiple variants make that worthwhile.

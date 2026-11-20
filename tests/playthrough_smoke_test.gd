@@ -3,6 +3,7 @@ extends SceneTree
 const MainScene: PackedScene = preload("res://scenes/gameplay/main.tscn")
 const LevelScript = preload("res://scripts/gameplay/playas_vertical_slice.gd")
 const PlayerScript = preload("res://scripts/gameplay/player.gd")
+const CleanupSite = preload("res://scripts/gameplay/cleanup_site.gd")
 
 var _failures: int = 0
 var _main: Node
@@ -16,6 +17,7 @@ var _sack: Sack
 var _shop: ShackShop
 var _shack: FishingShack
 var _water: WaterVisuals
+var _coin_amount: Label
 var _return_checked: bool
 var _fish_sale_value: int
 var _intentionally_fishing: bool
@@ -25,6 +27,7 @@ var _start_ticks: int
 var _starter_range: float
 var _seen_starter_items: Dictionary[int, bool]
 var _new_starter_times: Array[float]
+var _cleanup_cues: int
 
 
 func _initialize() -> void:
@@ -78,18 +81,25 @@ func _start_session() -> bool:
 	_rod = _world.rod
 	_sack = _world.sack
 	_shop = _world.shop
+	_coin_amount = _session.get_node("CoinBalance").get_node("%Amount")
 	_return_checked = false
 	_fish_sale_value = 0
 	_intentionally_fishing = false
 	_sale_trips = 0
 	_first_threshold_time = -1.0
+	_cleanup_cues = 0
 	_starter_range = _rod.maximum_cast_range
 	_seen_starter_items.clear()
 	_new_starter_times.clear()
 	for item: OceanTrash in _world.trash_manager.items:
 		_seen_starter_items[item.get_instance_id()] = true
 	_world.pollution.pollution_changed.connect(_record_threshold)
-	return _check(_world.pollution.current_pollution == 100 and _sack.item_count == 0 and _shop.coins == 0 and _shop.rod_tier == 0, "Fresh session retained progress")
+	_world.cleanup_work.work_started.connect(_count_cleanup_cue)
+	_check(_sack.item_count == 0 and _sack.capacity == 3 and _shop.coins == 0 and _coin_amount.text == "0 gold" and _shop.rod_tier == 0 and _shop.sack_tier == 0, "Fresh session retained Sack, gold, or gear progress")
+	for index: int in _shop.cleanup_projects.size():
+		var site: CleanupSite = _world.cleanup_work.get_child(index)
+		_check(not _shop.is_cleanup_complete(index) and not site.has_started, "Fresh session retained completed cleanup or crew work")
+	return _check(_world.pollution.current_pollution == 100 and is_equal_approx(_water.displayed_pollution, 1.0), "Fresh session retained pollution or water clarity")
 
 
 func _play_session(window: String) -> void:
@@ -147,6 +157,7 @@ func _play_session(window: String) -> void:
 		await physics_frame
 	_check(is_equal_approx(_water.displayed_pollution, rebound_target) and _visible_ambient_count() == zero_ambient, "Water and ambient fish did not settle after the rebound")
 	print("Clean-water window at %.1fs, live rebound to %d%%, %d ambient fish" % [clean_time, _world.pollution.current_pollution, _visible_ambient_count()])
+	await _check_cleanup_sites()
 	var longest_gap: float = 0.0
 	for index: int in range(1, _new_starter_times.size()):
 		longest_gap = maxf(longest_gap, _new_starter_times[index] - _new_starter_times[index - 1])
@@ -170,6 +181,21 @@ func _record_threshold(normalized: float) -> void:
 		_first_threshold_time = _seconds_since(_start_ticks)
 
 
+func _count_cleanup_cue(_watch_cue: String) -> void:
+	_cleanup_cues += 1
+
+
+func _check_cleanup_sites() -> void:
+	for frame: int in 300:
+		if not _world.cleanup_work.is_processing():
+			break
+		await process_frame
+	_check(_cleanup_cues == _shop.cleanup_projects.size(), "A project work cue was missing or repeated")
+	for index: int in _shop.cleanup_projects.size():
+		var site: CleanupSite = _world.cleanup_work.get_child(index)
+		_check(_shop.is_cleanup_complete(index) and site.is_complete, "A project failed to leave a completed site")
+
+
 func _buy(catalog: String, index: int, cost: int) -> bool:
 	if not await _fund(cost) or not await _open_shop():
 		return false
@@ -181,7 +207,10 @@ func _buy(catalog: String, index: int, cost: int) -> bool:
 		return false
 	var before: int = _shop.coins
 	_click_button(button)
-	var purchased: bool = _check(_shop.coins == before - cost and button.disabled, "Click did not buy the expected item once")
+	var purchased: bool = _check(_shop.coins == before - cost and button.disabled and _coin_amount.text == "%d gold" % _shop.coins, "Purchase did not debit once and update the visible balance")
+	if catalog == "Gear" and index < _shop.rod_upgrades.size():
+		var art: Sprite2D = _rod.get_node("Pivot/Rod")
+		_check(art.texture == _shop.rod_upgrades[index].art, "Rod purchase did not change the equipped artwork")
 	_click_button(_panel.get_node("%Close"))
 	return purchased and _check(not _panel.visible and _rod.state == FishingRod.State.IDLE, "Closing the shop changed fishing state")
 
@@ -241,7 +270,7 @@ func _sell() -> bool:
 	_check(not sell.disabled and sell.text.contains(str(payout)), "Shack did not show the earned payout")
 	_click_button(sell)
 	_click_button(sell)
-	_check(_shop.coins == before + payout and _sack.item_count == 0, "Sale failed or repeated")
+	_check(_shop.coins == before + payout and _sack.item_count == 0 and _coin_amount.text == "%d gold" % _shop.coins, "Sale did not update the Sack and visible balance exactly once")
 	if fish_in_load:
 		_fish_sale_value = payout
 	else:
@@ -362,6 +391,8 @@ func _cast_and_return(target: Vector2, rapid: bool = false) -> bool:
 		_check(_menu.visible and is_equal_approx(progress, _rod.fish_timing_progress()), "Pause did not freeze the timing challenge")
 		_key(KEY_ESCAPE)
 		await process_frame
+		if not _check(not _menu.visible and _rod.state == FishingRod.State.TIMING, "Pause did not resume the visible timing challenge"):
+			return false
 		while _rod.state == FishingRod.State.TIMING and _rod.fish_timing_progress() < _rod.fish_timing_zone().x + 0.04:
 			await process_frame
 		_key(KEY_SPACE)

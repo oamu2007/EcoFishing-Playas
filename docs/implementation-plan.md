@@ -10,7 +10,7 @@ After the follow-up, trash arrives at a gentler pace, upgrades take several trip
 
 ## Next milestone
 
-Continue with [Milestone 18](#milestone-18--follow-up-playtest-and-stabilization). Run the integrated route and graphics checks and record the independent manual checks that remain.
+Milestones 13–18 are verified. The remaining checks are an independent first-time-player run and graphics verification on another device. See the [Milestone 18 results](#milestone-18--follow-up-playtest-and-stabilization) for the final pacing comparison and verification.
 
 ## Completed baseline
 
@@ -427,10 +427,29 @@ Open the menu at startup and during play. Check that animated elements loop clea
 
 ## Milestone 18 — Follow-up playtest and stabilization
 
-**Planned.** A fresh session supports the slower progression loop from the title screen through a timed fish catch, a selected sale, a visible rod upgrade, and permanent cleanup.
+**Verified November 20, 2026.** The integrated build passed the scripted route from New Game through a timed fish sale, visible rod upgrades, permanent cleanup, and replay.
 
 - Play from New Game through the first upgrade, first fish sale, and full permanent cleanup. Record the M13 pacing checkpoints against the M12 baseline, exercise the new trader and timing challenge, confirm the live pollution rebound, and check a fresh-session reset.
 - Run the relevant Godot import, startup, smoke, and GPU rendering checks. Verify the standalone graphics preview and the new visuals at default and reduced sizes. Seek an independent human onboarding playthrough and record the result or any pending manual or cross-device checks. Update the README and architecture notes where behavior or scene ownership changed.
+
+**Checkpoint results**
+
+The seeded route starts the clock when the session opens. The M18 headless and rendered runs each used 1280 × 720 and 800 × 450 and reproduced the same checkpoints.
+
+| Checkpoint | M12 (`0ee166b`) | M13 | M18 |
+| --- | ---: | ---: | ---: |
+| Offshore ingress / arrival cadence | 4 / 10 s | 9 / 8 s | 9 / 8 s |
+| New starter-range opportunities, mean / longest gap | 14.5 / 20.1 s | 10.6 / 24.8 s | 11.2 / 24.8 s |
+| First full-Sack walk to the shack | 1.65 s | 1.65 s | 1.65 s |
+| First gear upgrade | 1 trip, 15.7 s | 3 trips, 46.1 s | 3 trips, 46.0 s |
+| First true 50% threshold crossing | 60.5 s | 273.5 s | 273.3 s |
+| First fish sale | 143.3 s, 29 gold | 282.7 s, 10 gold | 284.1 s, 10 gold |
+| All projects funded and displayed pollution at 0% | 164.6 s | 449.3 s | 447.7 s |
+
+- Each session drove movement and viewport input from New Game or Start fresh through the first equipped rod upgrade, trash-funded threshold, timed fish, confirmed trader sales, and all three cleanup projects. The runs verified the updated coin balance, saw six ambient fish at displayed 0%, and observed the next floating arrival rebound to 5%. Completed work stayed visible and Start fresh restored the original gear, Sack, balance, sites, and pollution.
+- The player could pause during fish timing and resume the same challenge. Focused tests also exercised a partial mixed sale with separate identical catches, invalid drops, a full Sack, repeated input, cap access, and cleanup queueing. A separate keyboard check scrolled to the eighth Cargo Sack entry and selected it at 800 × 450.
+- Godot 4.7.2.stable.official.ed1daf0bf passed editor import, 120-frame main startup, and all 11 smoke tests. The full route also passed with Intel Iris Xe / OpenGL 3.3 Compatibility. The checks reported no parser, resource, or orphan-node errors. The standalone water preview ran for 120 rendered frames, and its 100%, 50%, and 0% panes changed across true shader-time captures. The water render check passed, including progressive seabed visibility. The title, trader, fish dial, rod tiers, and cleanup stages were visually reviewed at both window sizes during their milestone checks.
+- An independent first-time human playthrough remains pending, including discovery of menu, fishing, trader, and timing cues and whether the three starter trips feel productive. Cross-device graphics and performance checks also remain pending. Save and Load are visibly inactive, and session progress is in memory.
 
 ## Scope guardrails
 

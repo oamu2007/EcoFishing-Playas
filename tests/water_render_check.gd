@@ -54,6 +54,7 @@ func _run() -> void:
 	manager.arrivals_enabled = false
 	root.add_child(session)
 	session.get_node("HUD").hide()
+	session.get_node("CoinBalance").hide()
 	var player: CharacterBody2D = world.get_node("Player")
 	player.position = Vector2(790, 450)
 	player.set_physics_process(false)

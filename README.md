@@ -32,7 +32,7 @@ Press **F5**, then choose **New Game**. Move with **WASD or arrow keys**. Approa
 
 Aim at or near a trash item's center to hook one item on landing. During retrieval, the hook also collects trash crossed along its return path, with small offsets for held items. Upgraded rods can collect several aligned objects in one return, subject to the space in the Sack. All held items count only after returning to the fisherman. An empty return leaves the Sack and cleanup progress unchanged. New trash can still raise the meter independently. Walk along the shoreline to find more targets.
 
-The session starts with six reachable pieces. New trash drifts in from offshore, and the starter rod returns one piece per cast. Each piece contributes five floating points while in the water. Floating pollution caps at 30 points and the session starts with 70 permanent points.
+The session starts with six reachable pieces. New trash drifts in over nine seconds, with an arrival scheduled every eight seconds when a slot is available. With one piece per starter cast and three slots in the starter Sack, three full trips fund the first gear upgrade. Each piece contributes five floating points while in the water. Floating pollution caps at 30 points and the session starts with 70 permanent points.
 
 With the rod idle, press **E** near the fishing shack. On the Sell screen, drag items into the sale tray or select them with the mouse or keyboard, then choose **Sell selected**. Open Buy for rods, Sacks, and permanent cleanup. **E**, **Esc**, and **Return to shore** close the trader. After funding a cleanup project, return to shore and follow the cue to see the crew at work. Your gold balance stays at the top left.
 
@@ -68,7 +68,7 @@ godot --headless --path . --fixed-fps 60 --script res://tests/playthrough_smoke_
 godot --headless --path . --quit-after 120
 ```
 
-To compile and render the shader on the GPU and write comparison images, also run `godot --path . --script res://tests/water_render_check.gd` without `--headless`. Captures go to the ignored `.godot/water_captures/` directory. The [implementation plan](docs/implementation-plan.md) records the playthroughs, GPU checks, and known limitations.
+The playthrough test drives two seeded sessions at 1280 × 720 and 800 × 450 and reports the pacing checkpoints. Omit `--headless` to run the same route with rendering enabled. To compile the water shader and capture comparison images, run `godot --path . --script res://tests/water_render_check.gd`. Captures go to the ignored `.godot/water_captures/` directory. The [implementation plan](docs/implementation-plan.md) records the playthroughs, GPU checks, and remaining manual checks.
 
 ## Project layout
 
