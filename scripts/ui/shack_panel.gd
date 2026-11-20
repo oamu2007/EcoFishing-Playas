@@ -1,6 +1,9 @@
 extends CanvasLayer
 
 signal close_requested
+signal inventory_picked_up
+signal inventory_dropped
+signal cancelled
 
 enum Page { HOME, SELL, BUY }
 
@@ -41,7 +44,7 @@ var _rod_add_on_buttons: Array[Button] = []
 func _ready() -> void:
 	_sell.pressed.connect(_show_page.bind(Page.SELL))
 	_buy.pressed.connect(_show_page.bind(Page.BUY))
-	_back.pressed.connect(_show_page.bind(Page.HOME))
+	_back.pressed.connect(cancel_page)
 	_confirm.pressed.connect(_sell_selected)
 	_sell_all.pressed.connect(_sell_entire_sack)
 	_close.pressed.connect(close_requested.emit)
@@ -91,6 +94,7 @@ func open() -> void:
 func close() -> void:
 	hide()
 	_selection.clear()
+	cancelled.emit()
 
 
 func cancel_page() -> void:
@@ -98,6 +102,7 @@ func cancel_page() -> void:
 		close_requested.emit()
 	else:
 		_show_page(Page.HOME)
+		cancelled.emit()
 
 
 func handle_sell_all(event: InputEvent) -> bool:
@@ -186,6 +191,7 @@ func _start_drag(_position: Vector2, entry: Sack.Entry) -> Variant:
 	preview.modulate.a = 0.92
 	preview.position = Vector2(10.0, 10.0)
 	_sell_screen.set_drag_preview(preview)
+	inventory_picked_up.emit()
 	return entry
 
 
@@ -195,16 +201,20 @@ func _can_drop(_position: Vector2, data: Variant, on_tray: bool) -> bool:
 
 func _drop(position: Vector2, data: Variant, on_tray: bool) -> void:
 	if _can_drop(position, data, on_tray):
-		_move_entry(data, on_tray)
+		_move_entry(data, on_tray, true)
 
 
-func _move_entry(entry: Sack.Entry, to_tray: bool) -> void:
+func _move_entry(entry: Sack.Entry, to_tray: bool, from_drag: bool = false) -> void:
 	if not _can_drop(Vector2.ZERO, entry, to_tray):
 		return
 	if to_tray:
 		_selection.append(entry)
 	else:
 		_selection.erase(entry)
+	if from_drag or not to_tray:
+		inventory_dropped.emit()
+	else:
+		inventory_picked_up.emit()
 	_feedback.text = ""
 	_render_sale_items()
 	_focus_sale_item(not to_tray)

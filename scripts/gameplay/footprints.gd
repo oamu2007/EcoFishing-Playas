@@ -1,5 +1,7 @@
 extends Node2D
 
+signal stepped(left_foot: bool)
+
 # Huellas en la arena: aparecen al caminar y se desvanecen con el tiempo.
 
 const STEP_DISTANCE: float = 26.0
@@ -42,6 +44,7 @@ func _process(delta: float) -> void:
 
 func _add_print(direction: Vector2) -> void:
 	var side: float = -1.0 if _left_foot else 1.0
+	stepped.emit(_left_foot)
 	_left_foot = not _left_foot
 	# Perpendicular a la dirección: rotamos 90 grados
 	var sideways: Vector2 = direction.rotated(PI / 2.0) * FOOT_OFFSET * side

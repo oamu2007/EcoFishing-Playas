@@ -3,6 +3,7 @@ extends CanvasLayer
 signal resume_requested
 signal restart_requested
 signal title_requested
+signal discard_cancelled
 
 enum Confirmation { NONE, RESTART, TITLE }
 
@@ -66,6 +67,7 @@ func _ask_to_discard(choice: Confirmation) -> void:
 
 func _cancel_discard() -> void:
 	_show_actions(_restart if _confirmation == Confirmation.RESTART else _quit)
+	discard_cancelled.emit()
 
 
 func _confirm_discard() -> void:

@@ -1,11 +1,13 @@
 extends Node
 
 signal menu_requested
+signal drag_cancelled
 
 const LevelScript = preload("res://scripts/gameplay/playas_vertical_slice.gd")
 const HudScript = preload("res://scripts/ui/hud.gd")
 const ShackPanelScript = preload("res://scripts/ui/shack_panel.gd")
 const CoinBalanceScript = preload("res://scripts/ui/coin_balance.gd")
+const AudioScript = preload("res://scripts/gameplay/game_audio.gd")
 
 @onready var _world: LevelScript = $World
 @onready var _hud: HudScript = $HUD
@@ -23,6 +25,14 @@ func _ready() -> void:
 	_shack_panel.close_requested.connect(_close_shop)
 
 
+func bind_audio(audio: AudioScript) -> void:
+	_world.bind_audio(audio)
+	_shack_panel.inventory_picked_up.connect(audio.play_cue.bind(AudioScript.Cue.PICKUP))
+	_shack_panel.inventory_dropped.connect(audio.play_cue.bind(AudioScript.Cue.DROP))
+	_shack_panel.cancelled.connect(audio.play_cue.bind(AudioScript.Cue.CANCEL))
+	drag_cancelled.connect(audio.play_cue.bind(AudioScript.Cue.CANCEL))
+
+
 func _input(event: InputEvent) -> void:
 	if _shack_panel.visible and _shack_panel.handle_sell_all(event):
 		get_viewport().set_input_as_handled()
@@ -31,6 +41,7 @@ func _input(event: InputEvent) -> void:
 		viewport.set_input_as_handled()
 		if viewport.gui_is_dragging():
 			viewport.gui_cancel_drag()
+			drag_cancelled.emit()
 		elif _shack_panel.visible:
 			_shack_panel.cancel_page()
 		else:

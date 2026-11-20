@@ -12,7 +12,7 @@ In the next pass, incoming trash keeps moving inward until it reaches the equipp
 
 ## Next milestone
 
-Continue with [Milestone 24](#milestone-24--continuous-music-and-action-sound-effects). Use the verified M18 build as the comparison baseline and follow [AGENTS.md](../AGENTS.md) for the existing roadmap execution workflow. The independent first-time-player run and graphics verification on another device carry forward to M25.
+Continue with [Milestone 25](#milestone-25--integrated-playtest-and-stabilization). Use the verified M18 build as the comparison baseline and follow [AGENTS.md](../AGENTS.md) for the existing roadmap execution workflow. The independent first-time-player run, human listening pass, and graphics verification on another device carry forward to M25.
 
 ## Completed baseline
 
@@ -536,7 +536,7 @@ Check the title and pause menu side by side at default and reduced window sizes.
 
 ## Milestone 24 — Continuous music and action sound effects
 
-**Planned.** One background track loops throughout the game and actions have distinct sound feedback.
+**Verified November 20, 2026.** One background track loops throughout the game and actions have distinct sound feedback.
 
 - Use the user-provided `geoffharvey-tropical-coconut-island-367671.mp3` from Downloads. Keep one playback owner across title, gameplay, pause, trader, and fresh-session transitions so the music loops without restarting or doubling as screens change. Leave room for additional tracks later.
 - Add short, distinct effects for gameplay and UI actions. Cover footsteps, cast, splash, reel, catch, miss, timing success and failure, menu navigation, confirm and cancel, inventory pickup and drop, sales, purchases, and cleanup work. Trigger effects on the corresponding action or transaction outcome. Balance effects against the music and manage repeated sounds such as footsteps.
@@ -545,6 +545,10 @@ Check the title and pause menu side by side at default and reduced window sizes.
 **Verification**
 
 Listen through a full loop and switch between title, gameplay, pause, trader, and New Game. Check that exactly one music stream continues and that the restart point sounds clean. Play the fishing, shop, and cleanup paths and verify that sounds match their outcomes and stay distinguishable during rapid input. Record any listening checks that need a human ear.
+
+- The root audio scene owns one playlist-backed music player and a separate eight-voice effects player. The imported MP3 matches the supplied file. The 117.39-second track completed a natural wrap on WASAPI at original speed. The mixer recorded a quiet ending and music resumed after the wrap without a playback restart from scene logic.
+- The audio smoke test passed with Dummy and WASAPI drivers. It tracked the same music playback through title, gameplay, pause, trader, restart, quit to title, and New Game. It verified distinct cues for fishing outcomes, successful sales and purchases, the cleanup crew, and menu and inventory actions. The rendered route measured a 0.576 linear master peak, below clipping. Footfalls alternate pitch, and rapid focus and miss sounds are rate-limited.
+- Godot imported the assets without errors using a portable editor. Music and effects sources are in [asset credits](asset-credits.md). A human listening pass remains for the track seam and the balance and clarity of overlapping cues. Next is the M25 integrated comparison.
 
 ## Milestone 25 — Integrated playtest and stabilization
 

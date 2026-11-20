@@ -3,6 +3,8 @@ extends Node
 
 signal purchases_changed
 signal cleanup_funded(project: CleanupProject)
+signal sale_completed
+signal purchase_completed
 
 @export var rod_upgrades: Array[RodUpgrade] = []
 @export var rod_add_ons: Array[RodAddOn] = []
@@ -38,6 +40,7 @@ func sell_selected(selection: Array[Sack.Entry]) -> int:
 	coins += earned
 	_sack.remove_entries(selection)
 	purchases_changed.emit()
+	sale_completed.emit()
 	return earned
 
 
@@ -56,6 +59,7 @@ func buy_rod(index: int) -> bool:
 	_rod.set_rod_art(upgrade.art)
 	_apply_rod_add_ons()
 	purchases_changed.emit()
+	purchase_completed.emit()
 	return true
 
 
@@ -78,6 +82,7 @@ func buy_rod_add_on(index: int) -> bool:
 	_owned_rod_add_ons[Vector2i(rod_tier, index)] = true
 	_apply_rod_add_ons()
 	purchases_changed.emit()
+	purchase_completed.emit()
 	return true
 
 
@@ -101,6 +106,7 @@ func buy_sack(index: int) -> bool:
 	sack_tier += 1
 	_sack.expand(upgrade.capacity)
 	purchases_changed.emit()
+	purchase_completed.emit()
 	return true
 
 
@@ -123,5 +129,6 @@ func buy_cleanup(index: int) -> bool:
 	_completed_projects[index] = true
 	_pollution.remove_permanent(project.pollution_reduction)
 	purchases_changed.emit()
+	purchase_completed.emit()
 	cleanup_funded.emit(project)
 	return true

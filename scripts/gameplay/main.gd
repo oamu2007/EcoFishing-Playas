@@ -4,12 +4,14 @@ const SESSION_SCENE: PackedScene = preload("res://scenes/gameplay/session.tscn")
 const SessionScript = preload("res://scripts/gameplay/session.gd")
 const MenuScript = preload("res://scripts/ui/session_menu.gd")
 const PauseScript = preload("res://scripts/ui/pause_menu.gd")
+const AudioScript = preload("res://scripts/gameplay/game_audio.gd")
 
 var _session: SessionScript
 var _starting_session: bool = false
 
 @onready var _menu: MenuScript = $SessionMenu
 @onready var _pause: PauseScript = $PauseMenu
+@onready var _audio: AudioScript = $GameAudio
 
 
 func _ready() -> void:
@@ -17,6 +19,7 @@ func _ready() -> void:
 	_pause.resume_requested.connect(_resume)
 	_pause.restart_requested.connect(_request_start)
 	_pause.title_requested.connect(_request_title)
+	_pause.discard_cancelled.connect(_audio.play_cue.bind(AudioScript.Cue.CANCEL))
 	_menu.open()
 
 
@@ -30,6 +33,7 @@ func _request_start() -> void:
 	if _starting_session or not (_menu.visible or _pause.visible):
 		return
 	_starting_session = true
+	_audio.play_cue(AudioScript.Cue.CONFIRM)
 	if _menu.visible:
 		_menu.set_transition_pending()
 	_start_session.call_deferred()
@@ -40,6 +44,7 @@ func _start_session() -> void:
 	_session = SESSION_SCENE.instantiate()
 	_session.menu_requested.connect(_open_pause)
 	add_child(_session)
+	_session.bind_audio(_audio)
 	_menu.dismiss()
 	_pause.hide()
 	_starting_session = false
@@ -49,6 +54,7 @@ func _request_title() -> void:
 	if _starting_session or not _pause.visible:
 		return
 	_starting_session = true
+	_audio.play_cue(AudioScript.Cue.CONFIRM)
 	_return_to_title.call_deferred()
 
 
@@ -77,6 +83,7 @@ func _open_pause() -> void:
 func _resume() -> void:
 	if _starting_session or not _pause.visible or _session == null:
 		return
+	_audio.play_cue(AudioScript.Cue.CANCEL)
 	_pause.hide()
 	_session.process_mode = Node.PROCESS_MODE_INHERIT
 	_session.set_hud_visible(true)

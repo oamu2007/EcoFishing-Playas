@@ -4,7 +4,8 @@ const AmbientFishScript = preload("res://scripts/gameplay/ambient_fish.gd")
 const WaterSplashScript = preload("res://scripts/gameplay/water_splash.gd")
 var _splash: Node2D
 const FootprintsScript = preload("res://scripts/gameplay/footprints.gd")
-var _footprints: Node2D
+const AudioScript = preload("res://scripts/gameplay/game_audio.gd")
+var _footprints: FootprintsScript
 const SandDetailsScript = preload("res://scripts/gameplay/sand_details.gd")
 const PlayerScript = preload("res://scripts/gameplay/player.gd")
 const CatchResolverScript = preload("res://scripts/systems/catch_resolver.gd")
@@ -80,6 +81,20 @@ func _process(_delta: float) -> void:
 
 func can_open_shack() -> bool:
 	return not rod.is_active() and not rod.input_locked and _shack.is_near(_player.global_position)
+
+
+func bind_audio(audio: AudioScript) -> void:
+	_footprints.stepped.connect(audio.on_footstep)
+	rod.state_changed.connect(audio.on_rod_state_changed)
+	rod.hook_landed.connect(audio.play_cue.bind(AudioScript.Cue.SPLASH).unbind(1))
+	rod.cast_rejected.connect(audio.play_cue.bind(AudioScript.Cue.MISS).unbind(1))
+	rod.fish_timing_advanced.connect(audio.play_cue.bind(AudioScript.Cue.TIMING_SUCCESS))
+	rod.fish_timing_saved.connect(audio.play_cue.bind(AudioScript.Cue.TIMING_FAILURE))
+	rod.fish_timing_finished.connect(audio.on_fish_timing_finished)
+	catches.catches_returned.connect(audio.on_catches_returned)
+	cleanup_work.work_started.connect(audio.play_cue.bind(AudioScript.Cue.CLEANUP).unbind(1))
+	shop.sale_completed.connect(audio.play_cue.bind(AudioScript.Cue.SALE))
+	shop.purchase_completed.connect(audio.play_cue.bind(AudioScript.Cue.PURCHASE))
 
 
 func set_shop_open(value: bool) -> void:

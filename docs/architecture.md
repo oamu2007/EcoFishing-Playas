@@ -8,6 +8,7 @@ The first vertical slice should support a compact Playas de Tijuana shoreline wh
 
 ```text
 Main (Node)
+├── GameAudio (Node)
 ├── SessionMenu (CanvasLayer)
 ├── PauseMenu (CanvasLayer)
 └── Session (Node, created when a session starts)
@@ -121,6 +122,10 @@ The sand overlay and detail positions derive from the authored Beach polygon. Th
 `Main` starts at `SessionMenu`, which owns the title illustration and New Game. `PauseMenu` appears over the live session and owns focus and discard confirmation. Esc cancels the active drag or steps back through the trader pages before it can pause gameplay. Pause suspends the session and hides the HUD. The GPU water clock continues. Resume or Esc restores the session and HUD. After confirmation, Start fresh replaces the session and Quit to title removes it. The entry point guards queued activation, and Save and Load are disabled buttons with no handlers. Gameplay fixtures can instantiate the session scene directly.
 
 The menu, HUD, and trader share `ui/themes/coastal_field_guide.tres`. It defines sand-colored panels, brown borders and focus, ink text, and teal actions. The trader uses the menu's shoreline illustration with motion disabled. Trader and session menu controls capture pointer input before the rod's unhandled-input phase. The rod transforms mouse button event coordinates through the active viewport's canvas transform for aim accuracy after resizing.
+
+### Audio
+
+`Main` owns `GameAudio` for the lifetime of the application. Its music player starts the selected track once, and its eight-voice player handles short effects on a separate bus. The session binds rod, catch, footprint, trader, transaction, and cleanup signals when it starts. Replacing the session removes those signal sources while music playback continues. The mixer and stream selection are set in `scenes/components/game_audio.tscn` and `default_bus_layout.tres`. [Asset credits](asset-credits.md) lists the music source and effects.
 
 ## Systems and data flow
 
