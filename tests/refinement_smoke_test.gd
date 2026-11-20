@@ -27,8 +27,7 @@ func _run() -> void:
 	var rod: FishingRod = world.rod
 	manager.set_physics_process(false)
 	var stops: Dictionary[Vector2, bool] = {}
-	var far_count: int = 0
-	for turn: int in range(18):
+	for turn: int in range(25):
 		var size_before: int = manager.items.size()
 		manager._physics_process(manager.arrival_interval)
 		if manager.items.size() == size_before:
@@ -38,18 +37,19 @@ func _run() -> void:
 		var stop: Vector2 = item.drift_stop_position()
 		_check(item.global_position.x > rod.water_bounds.end.x and not item.in_water, "Arrival did not begin offshore")
 		_check(world.pollution.remaining_trash == size_before, "Offscreen trash polluted before entering water")
-		for step: int in range(240):
+		for step: int in range(600):
 			var before: Vector2 = item.global_position
-			item._physics_process(item._travel_time / 239.0)
+			item._physics_process(0.1)
 			_check(item.global_position.x <= before.x + 0.001 and absf(item.global_position.x - before.x) < 10.0, "Arrival jumped or moved offshore")
+			if not item.is_arriving:
+				break
 		_check(item.global_position.is_equal_approx(stop) and item.in_water and not item.is_arriving, "Arrival did not settle into drift")
 		_check(world.pollution.remaining_trash == size_before + 1, "Arrival failed to register exactly once")
 		_check(rod.water_bounds.grow(-item.catch_radius).has_point(stop), "Arrival stop outside water")
 		stops[stop] = true
 		var origin: Vector2 = Vector2(world.shore_start.x, stop.y)
-		if not rod.invalid_target_reason_from(origin, stop).is_empty():
-			far_count += 1
-	_check(stops.size() == manager.maximum_active_items and far_count == manager.maximum_active_items - manager.starter_slots, "Cap did not preserve distinct starter and offshore supply")
+		_check(rod.invalid_target_reason_from(origin, stop).is_empty(), "Arrival stopped beyond the starter's reach")
+	_check(stops.size() == manager.maximum_active_items, "Settled population did not fill the cap")
 
 	for step: int in range(600):
 		for item: OceanTrash in manager.items:
@@ -83,7 +83,11 @@ func _run() -> void:
 	rod._process(rod.retrieval_duration)
 	_check(world.pollution.trash_collected == 1 and not near.collected, "Fast sweep exceeded starter limit or caught a near miss")
 	manager._physics_process(manager.arrival_interval)
-	_check(manager.items.size() == manager.maximum_active_items and manager._starter_items.size() == manager.starter_slots, "Offshore buildup blocked starter replenishment")
+	_check(manager.items.size() == manager.maximum_active_items and manager.items.back().is_arriving, "An incoming item did not reclaim the freed slot")
+	manager._physics_process(manager.arrival_interval)
+	_check(manager.items.size() == manager.maximum_active_items, "Arrivals and settled trash exceeded their shared cap")
+	_check(world.pollution.floating_points == PollutionSystem.MAX_FLOATING_POINTS, "Mixed population changed the floating pollution cap")
+	_check_rod_boundaries(world)
 
 	var help: PanelContainer = hud.get_node("ControlsPanel")
 	var help_event: InputEventKey = InputEventKey.new()
@@ -103,3 +107,40 @@ func _run() -> void:
 	session.free()
 	print("Refinement smoke test: %d failures" % _failures)
 	quit(0 if _failures == 0 else 1)
+
+
+func _check_rod_boundaries(world: LevelScript) -> void:
+	var manager: TrashManager = world.trash_manager
+	var rod: FishingRod = world.rod
+	var approaching: OceanTrash = manager.items.back()
+	var settled: OceanTrash = manager.items.front()
+	var settled_x: float = settled.global_position.x
+	world.shop.coins = 100
+	for tier: int in 3:
+		if tier > 0:
+			var position_before: Vector2 = approaching.global_position
+			_check(world.shop.buy_rod(tier - 1), "An in-transit rod upgrade could not be bought")
+			manager._physics_process(0.0)
+			_check(approaching.global_position == position_before and settled.global_position.x == settled_x, "A rod upgrade moved an existing piece")
+		var edge: float = world.shore_start.x + rod.maximum_cast_range
+		var origin: Vector2 = Vector2(world.shore_start.x, approaching.global_position.y)
+		var step: float = 1.0 / 60.0
+		var start_x: float = approaching.global_position.x
+		while approaching.global_position.x > edge and approaching.is_arriving:
+			var previous_x: float = approaching.global_position.x
+			approaching._physics_process(step)
+			_check(approaching.global_position.x < previous_x and previous_x - approaching.global_position.x <= manager.arrival_speed * step + 0.001, "Arrival reversed or jumped on its way to the equipped rod's boundary")
+		var crossing_x: float = approaching.global_position.x
+		_check(crossing_x <= edge and edge - crossing_x <= manager.arrival_speed * step + 0.001 and rod.invalid_target_reason_from(origin, approaching.global_position).is_empty(), "First reachable point did not match the equipped rod's horizontal boundary")
+		_check(approaching.is_arriving and approaching.drift_stop_position().x < crossing_x, "Arrival did not continue to a valid stop inside the band")
+		print("Rod %d, boundary %.1f, first reachable X %.2f, %.2fs from sampled start" % [tier, edge, crossing_x, (start_x - crossing_x) / manager.arrival_speed])
+		approaching._physics_process(60.0)
+		_check(not approaching.is_arriving and rod.invalid_target_reason_from(origin, approaching.global_position).is_empty(), "Arrival settled outside equipped rod reach")
+		if tier < 2:
+			# Free one slot and start the next specimen before upgrading.
+			approaching.attach_to(rod.get_hook_attachment(), Vector2.ZERO)
+			approaching.finish_collection()
+			manager._physics_process(manager.arrival_interval)
+			approaching = manager.items.back()
+			_check(approaching.is_arriving, "A slot freed at the cap did not start another arrival")
+			approaching._physics_process(3.0)

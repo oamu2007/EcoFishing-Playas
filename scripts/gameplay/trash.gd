@@ -13,10 +13,8 @@ enum Kind { BOTTLE, CAN, BAG }
 
 var in_water: bool = true
 var is_arriving: bool = false
-var _entry_x: float
 var _stop: Vector2
-var _travel_time: float
-var _arrival_elapsed: float
+var _arrival_speed: float
 var _water_edge: float
 var _arrival_drift_limits: Vector2
 var _elapsed: float = 0.0
@@ -48,10 +46,9 @@ func configure_drift(limits: Vector2, speed: float, phase: float) -> void:
 	_drift_center = global_position.y - _drift_amplitude * cosine
 
 
-func configure_arrival(entry_x: float, stop: Vector2, travel_time: float, water_edge: float, drift_limits: Vector2, speed: float, phase: float) -> void:
-	_entry_x = entry_x
+func configure_arrival(entry_x: float, stop: Vector2, ingress_speed: float, water_edge: float, drift_limits: Vector2, speed: float, phase: float) -> void:
 	_stop = stop
-	_travel_time = travel_time
+	_arrival_speed = ingress_speed
 	_water_edge = water_edge
 	_arrival_drift_limits = drift_limits
 	drift_speed = speed
@@ -59,6 +56,11 @@ func configure_arrival(entry_x: float, stop: Vector2, travel_time: float, water_
 	in_water = false
 	is_arriving = true
 	global_position = Vector2(entry_x, stop.y)
+
+
+func retarget_arrival(stop_x: float) -> void:
+	# An upgrade may put this piece inside the new band's reach already.
+	_stop.x = minf(stop_x, global_position.x)
 
 
 func drift_stop_position() -> Vector2:
@@ -69,13 +71,11 @@ func _physics_process(delta: float) -> void:
 	if hooked:
 		return
 	if is_arriving:
-		_arrival_elapsed += delta
-		var progress: float = minf(_arrival_elapsed / _travel_time, 1.0)
-		global_position.x = lerpf(_entry_x, _stop.x, smoothstep(0.0, 1.0, progress))
+		global_position.x = move_toward(global_position.x, _stop.x, _arrival_speed * delta)
 		if not in_water and global_position.x <= _water_edge:
 			in_water = true
 			entered_water.emit()
-		if progress >= 1.0:
+		if global_position.x == _stop.x:
 			is_arriving = false
 			configure_drift(_arrival_drift_limits, drift_speed, _drift_phase)
 		return

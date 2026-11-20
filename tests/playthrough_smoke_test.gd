@@ -163,7 +163,7 @@ func _play_session(window: String) -> void:
 		longest_gap = maxf(longest_gap, _new_starter_times[index] - _new_starter_times[index - 1])
 	if _check(_new_starter_times.size() >= 2, "Recurring starter-range supply was not observed"):
 		var mean_gap: float = (_new_starter_times.back() - _new_starter_times.front()) / (_new_starter_times.size() - 1)
-		print("Ingress %.1fs, cadence %.1fs. Starter arrivals %.1fs apart on average, longest %.1fs (%d observed)." % [_world.trash_manager.arrival_travel_time, _world.trash_manager.arrival_interval, mean_gap, longest_gap, _new_starter_times.size()])
+		print("Ingress %.1f px/s, cadence %.1fs. Starter arrivals %.1fs apart on average, longest %.1fs (%d observed)." % [_world.trash_manager.arrival_speed, _world.trash_manager.arrival_interval, mean_gap, longest_gap, _new_starter_times.size()])
 
 
 func _sample_starter_supply() -> void:

@@ -167,7 +167,7 @@ func _replenish(count: int) -> void:
 			break
 		_manager._physics_process(_manager.arrival_interval)
 	for item: OceanTrash in _manager.items:
-		item._physics_process(_manager.arrival_travel_time)
+		item._physics_process(60.0)
 		item.set_physics_process(false)
 
 

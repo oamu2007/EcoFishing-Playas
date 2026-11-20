@@ -132,7 +132,7 @@ func _verify_cleanup_path() -> void:
 	if _manager.items.size() == 1:
 		var newcomer: OceanTrash = _manager.items[0]
 		_check(not newcomer.in_water, "Next piece did not enter by the live arrival path")
-		newcomer._physics_process(_manager.arrival_travel_time)
+		newcomer._physics_process(60.0)
 		_check(newcomer.in_water and _pollution.permanent_points == 0 and _pollution.floating_points == newcomer.pollution_value, "Next arrival did not restore only floating pollution")
 		_check(_meter.value == float(newcomer.pollution_value), "The HUD did not rebound from zero")
 	_check_completed_projects(_shop.cleanup_projects.size())
@@ -202,7 +202,7 @@ func _earn(amount: int, max_trips: int) -> void:
 		for attempt: int in range(_sack.capacity + _manager.maximum_active_items):
 			if _sack.free_slots == 0:
 				break
-			if not _catch_reachable_trash(_starter_range):
+			if not _catch_reachable_trash():
 				_advance_arrival()
 		_check(_sack.free_slots == 0, "Recurring arrivals failed to fill a starter Sack")
 		_sell_at_shack()
@@ -221,7 +221,7 @@ func _advance_arrival() -> void:
 	_manager._physics_process(_manager.arrival_interval)
 	for item: OceanTrash in _manager.items:
 		if item.is_arriving:
-			item._physics_process(_manager.arrival_travel_time)
+			item._physics_process(60.0)
 
 
 func _catch_reachable_trash(maximum_distance: float = INF) -> bool:

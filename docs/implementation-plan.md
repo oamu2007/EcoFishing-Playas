@@ -12,7 +12,7 @@ In the next pass, incoming trash keeps moving inward until it reaches the equipp
 
 ## Next milestone
 
-Start with [Milestone 19](#milestone-19--slower-trash-drift-and-rod-range). Use the verified M18 build as the baseline and follow [AGENTS.md](../AGENTS.md) for the existing roadmap execution workflow. The independent first-time-player run and graphics verification on another device carry forward to M25.
+Continue with [Milestone 20](#milestone-20--harder-fish-timing-and-optional-rod-add-ons). Use the verified M18 build as the comparison baseline and follow [AGENTS.md](../AGENTS.md) for the existing roadmap execution workflow. The independent first-time-player run and graphics verification on another device carry forward to M25.
 
 ## Completed baseline
 
@@ -455,7 +455,7 @@ The seeded route starts the clock when the session opens. The M18 headless and r
 
 ## Milestone 19 — Slower trash drift and rod range
 
-**Next.** New trash takes longer to drift inward than in M18 and keeps moving until it reaches the horizontal casting boundary of the currently equipped rod.
+**Verified November 20, 2026.** New trash takes longer to drift inward than in M18 and keeps moving until it reaches the horizontal casting boundary of the currently equipped rod.
 
 - Slow visible inward motion compared with M18's nine-second ingress. Tune travel speed and arrival cadence separately so the crossing looks slower while starter gear still has a steady supply to catch.
 - Use the actual shoreline casting position and the equipped rod's maximum range to place or adjust the inward stopping band. Keep an approaching piece moving until it reaches the horizontal reach boundary, then let it settle at a randomized, valid stop at or inside that boundary. If the player buys a rod while trash is in transit, apply the new range to ongoing arrivals without jumping positions or reversing into deeper water. Keep settled pieces on their current gentle drift.
@@ -464,6 +464,11 @@ The seeded route starts the clock when the session opens. The M18 headless and r
 **Verification**
 
 Compare seeded captures with M18 at default and reduced window sizes. Check offscreen entry, visible speed, and the first reachable position for each rod tier. Upgrade mid-arrival and verify the path remains smooth. Exercise the cap with in-transit and settled pieces and record the new gap between starter-range catch opportunities.
+
+- Intel Iris Xe / OpenGL Compatibility captures at 1280 × 720 and 800 × 450 matched offscreen entry and landing in the nearshore band. The same visible world segment (X 1360–1100) took 2.42 seconds in M18 and 5.92 seconds in M19. The seeded starter arrival took 15.62 seconds from spawn to settle versus 9.00 seconds in M18. Inward speed is 44 px/s and the independent spawn cadence remains eight seconds.
+- First reachable X was 1048.85, 1198.43, and 1408.88 for Starter, Shore, and Offshore, respectively, within one physics step of each rod's measured shoreline boundary. Two purchases during ingress changed the stopping band without moving the piece on the purchase frame or reversing its path. Settled trash retained vertical drift. The twelve-slot cap held across mixed and settled populations, and floating pollution remained capped at 30 points.
+- The two-size seeded headless route took three trips and 47.4 seconds for the first rod. Its fixed starter-range sample measured average and longest gaps of 8.0 seconds across four arrivals before the rod upgrade shifted new stops outward (M18 measured 11.2 and 24.8 seconds across 31 arrivals). The route reached the fish threshold at 166.8 seconds, sold the first fish at 253.6 seconds for 12 gold, and reached displayed 0% at 482.1 seconds before rebounding to 5%.
+- Editor import, 120-frame startup, refinement, shop, cleanup project, session flow, and the complete seeded route passed on Godot 4.7.2. Human pacing and cross-device visibility remain for M25. Next is M20 timing and optional rod add-ons.
 
 ## Milestone 20 — Harder fish timing and optional rod add-ons
 

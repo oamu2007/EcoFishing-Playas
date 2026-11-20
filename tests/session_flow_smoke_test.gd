@@ -99,7 +99,6 @@ func _verify_onboarding(session: Node, world: LevelScript) -> void:
 	rod.set_process(false)
 	player.set_physics_process(false)
 	world.trash_manager.set_physics_process(false)
-	world.trash_manager.starter_slots = world.trash_manager.maximum_active_items
 	for item: OceanTrash in world.trash_manager.items:
 		item.set_physics_process(false)
 	root.size = Vector2i(800, 450)
@@ -129,7 +128,7 @@ func _verify_onboarding(session: Node, world: LevelScript) -> void:
 		for slot: int in sack.capacity:
 			if world.trash_manager.items.is_empty():
 				world.trash_manager._physics_process(world.trash_manager.arrival_interval)
-				world.trash_manager.items.front()._physics_process(world.trash_manager.arrival_travel_time)
+				world.trash_manager.items.front()._physics_process(60.0)
 			var item: OceanTrash = world.trash_manager.items.front()
 			item.set_physics_process(false)
 			var target: Vector2 = item.global_position
