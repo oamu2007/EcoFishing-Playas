@@ -28,7 +28,7 @@ On systems where the executable is versioned, use `godot4` instead of `godot`.
 
 ## Run the project
 
-Press **F5**, then choose **Start session**. Move with **WASD or arrow keys**. Approach the shoreline, aim into the ocean with the mouse, and **left click** when the target is green. After landing, **left click again** to retrieve. Movement locks until retrieval completes. A red marker and a HUD message explain rejected casts.
+Press **F5**, then choose **New Game**. Move with **WASD or arrow keys**. Approach the shoreline, aim into the ocean with the mouse, and **left click** when the target is green. After landing, **left click again** to retrieve. Movement locks until retrieval completes. A red marker and a HUD message explain rejected casts.
 
 Aim at or near a trash item's center to hook one item on landing. During retrieval, the hook also collects trash crossed along its return path, with small offsets for held items. Upgraded rods can collect several aligned objects in one return, subject to the space in the Sack. All held items count only after returning to the fisherman. An empty return leaves the Sack and cleanup progress unchanged. New trash can still raise the meter independently. Walk along the shoreline to find more targets.
 
@@ -38,7 +38,7 @@ With the rod idle, press **E** near the fishing shack. On the Sell screen, drag 
 
 New catchable fish visit at 50% pollution or below. Aim at their white split rings. When a fish latches, click or press **Space** as the marker crosses the green arc, then click to reel it into the Sack. A fish already in the water can finish its visit after a rebound. Larger and rarer fish sell for more gold. After funding every project, clearing the floating trash can bring the water to 0% between arrivals.
 
-Press **H** or click **Help** for controls. Open **Menu** or press **Esc** when the shop is closed. Use **Resume session** or **Esc** to continue, or **Start fresh** to reset the session.
+Press **H** or click **Help** for controls. Open **Menu** or press **Esc** when the trader is closed. Use **Resume session** or **Esc** to continue, or **Start fresh** to reset the session. Save and Load are inactive placeholders.
 
 The level's `TrashManager` exposes starter and offshore stop bands, arrival cadence, population limits, seed, spacing, and catch radius in the Inspector. The HUD updates immediately while water clarity and ambient fish visibility ease toward the new state over 1.6 seconds. The `AmbientFish` node exposes reveal thresholds, fade width, tint, and nearshore route width. [Architecture notes](docs/architecture.md) describe the bindings and tuning.
 

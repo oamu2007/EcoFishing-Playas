@@ -30,7 +30,9 @@ func _run() -> void:
 	_start = _menu.get_node("%StartSession")
 	_resume = _menu.get_node("%Resume")
 	await process_frame
-	_check(_menu.visible and _start.has_focus() and not _main.has_node("Session"), "Launch did not focus Start before creating gameplay")
+	_check(_menu.visible and _start.has_focus() and _start.text == "New Game" and not _main.has_node("Session"), "Launch did not focus New Game before creating gameplay")
+	_check_placeholders()
+	_check(not _main.has_node("Session"), "A startup placeholder created a session")
 	_press_button(_start)
 	_start.pressed.emit()
 	await process_frame
@@ -50,6 +52,8 @@ func _run() -> void:
 		_key(KEY_ESCAPE)
 		await process_frame
 		_check(_menu.visible and _resume.has_focus() and _start.text == "Start fresh", "Pause menu did not show labeled resume and reset actions")
+		_check_placeholders()
+		_check(_menu.visible and _main.get_node("Session") == session and _resume.has_focus(), "A pause placeholder changed the session or keyboard focus")
 		_press_button(_start)
 		_start.pressed.emit()
 		await process_frame
@@ -69,6 +73,13 @@ func _run() -> void:
 			world.pollution.remove_permanent(55)
 			world.trash_manager._physics_process(world.trash_manager.arrival_interval)
 	_finish()
+
+
+func _check_placeholders() -> void:
+	for action: String in ["Save", "Load"]:
+		var button: Button = _menu.get_node("%" + action)
+		_check(button.disabled and button.focus_mode == Control.FOCUS_NONE and button.text.contains("Coming later"), "Save or Load was not clearly inactive")
+		_press_button(button)
 
 
 func _verify_onboarding(session: Node, world: LevelScript) -> void:

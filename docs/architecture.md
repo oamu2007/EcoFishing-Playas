@@ -115,7 +115,7 @@ The sand overlay and detail positions derive from the authored Beach polygon. Th
 
 ### Menu and replay
 
-`Main` starts at `SessionMenu` and owns a single instanced `session.tscn`. The HUD Menu button and Esc open the menu. Esc closes the shack first while it is open. The pause menu suspends session processing and hides the HUD. The GPU water clock continues. Resume or Esc restores the session and HUD. Start fresh detaches and disposes of the old tree before adding a fresh instance. The entry point guards queued start and restart requests, so the same input cannot create two sessions. Gameplay fixtures can instantiate the session scene directly.
+`Main` starts at `SessionMenu` and owns a single instanced `session.tscn`. The menu activates its looping shoreline illustration while visible and owns focus and button feedback. New Game creates the first session. The HUD Menu button and Esc open the pause menu, with Esc closing an open trader first. Pause suspends the session and hides the HUD. The GPU water clock continues. Resume or Esc restores the session and HUD. Start fresh detaches and disposes of the old tree before adding a fresh instance. The entry point guards queued activation, and Save and Load are disabled buttons with no handlers. Gameplay fixtures can instantiate the session scene directly.
 
 The menu, HUD, and shack panel share `ui/themes/coastal_field_guide.tres`. It defines sand-colored panels, brown borders and focus, ink text, and teal actions. The menu's static shoreline illustration is a local Control. Shop and session menu panels capture pointer input before the rod's unhandled-input phase. The rod transforms mouse button event coordinates through the active viewport's canvas transform for aim accuracy after resizing.
 

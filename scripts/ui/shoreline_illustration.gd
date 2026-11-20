@@ -16,10 +16,30 @@ const UPLAND: Color = Color("d2b482")
 const DUNE: Color = Color("c6a879")
 const WATER_MARK: Color = Color("61958a")
 const DUNE_MARK: Color = Color("a58f64")
+const FOAM: Color = Color("d4ddbb")
+
+@export_range(4.0, 30.0, 0.5) var motion_period: float = 12.0
+
+var _motion_active: bool = false
+var _phase: float = 0.0
 
 
 func _ready() -> void:
 	resized.connect(queue_redraw)
+	set_process(_motion_active)
+
+
+func set_motion_active(active: bool) -> void:
+	if active == _motion_active:
+		return
+	_motion_active = active
+	set_process(active)
+	queue_redraw()
+
+
+func _process(delta: float) -> void:
+	_phase = fposmod(_phase + TAU * delta / motion_period, TAU)
+	queue_redraw()
 
 
 func _draw() -> void:
@@ -44,6 +64,8 @@ func _draw() -> void:
 	_draw_contour([Vector2(259, 258), Vector2(273, 253), Vector2(287, 245)], WATER_MARK)
 	_draw_contour([Vector2(171, 303), Vector2(188, 300), Vector2(207, 291)], WATER_MARK)
 	_draw_contour([Vector2(281, 175), Vector2(292, 167)], WATER_MARK)
+	if _motion_active:
+		_draw_surf()
 
 	_draw_contour([Vector2(0, 188), Vector2(20, 182), Vector2(37, 171),
 		Vector2(53, 159), Vector2(64, 148)], DUNE_MARK)
@@ -56,6 +78,8 @@ func _draw() -> void:
 	_draw_reed(Vector2(15, 228), 0.8)
 	_draw_reed(Vector2(190, 103), 0.7)
 	_draw_shack()
+	if _motion_active:
+		_draw_pennant()
 	_draw_fish()
 
 
@@ -68,6 +92,30 @@ func _draw_coast_band(offset: float, color: Color) -> void:
 
 func _draw_contour(points: PackedVector2Array, color: Color) -> void:
 	draw_polyline(points, color, 1.1, true)
+
+
+func _draw_surf() -> void:
+	_draw_foam([Vector2(31, 300), Vector2(52, 291), Vector2(72, 276), Vector2(88, 261)], 0.0)
+	_draw_foam([Vector2(110, 236), Vector2(126, 222), Vector2(142, 211), Vector2(163, 202)], 0.9)
+	_draw_foam([Vector2(212, 182), Vector2(229, 172), Vector2(249, 151), Vector2(267, 130)], 1.8)
+	_draw_glint(Vector2(115, 287), 0.5)
+	_draw_glint(Vector2(246, 283), 2.4)
+	_draw_glint(Vector2(272, 212), 4.4)
+
+
+func _draw_foam(points: PackedVector2Array, delay: float) -> void:
+	var swell: float = sin(2.0 * _phase - delay)
+	var crest: PackedVector2Array = []
+	for point: Vector2 in points:
+		crest.append(point + Vector2(1.5, 3.4) * swell)
+	_draw_contour(crest, Color(FOAM, 0.40 + 0.28 * swell))
+
+
+func _draw_glint(center: Vector2, delay: float) -> void:
+	var swell: float = sin(2.0 * _phase + delay)
+	var length: float = 3.5 + 2.0 * swell
+	var offset: Vector2 = Vector2(1.0, -0.4) * swell
+	draw_line(center + offset - Vector2(length, 0), center + offset + Vector2(length, 0), Color(FOAM, 0.36 + 0.26 * swell), 1.0, true)
 
 
 func _draw_reed(base: Vector2, scale_factor: float) -> void:
@@ -101,11 +149,25 @@ func _draw_shack() -> void:
 		draw_line(Vector2(plank_x, 106), Vector2(plank_x, 123), Color("674335"), 1.0)
 
 
+func _draw_pennant() -> void:
+	var mast: Vector2 = Vector2(115, 71)
+	var flutter: float = sin(_phase * 5.0)
+	draw_line(mast + Vector2(0, 16), mast, Color("71503a"), 1.4, true)
+	draw_colored_polygon([
+		mast, mast + Vector2(7, -1 + flutter), mast + Vector2(16, 3 + 2 * flutter),
+		mast + Vector2(7, 6 + flutter), mast + Vector2(0, 6),
+	], Color("b77458"))
+
+
 func _draw_fish() -> void:
-	var body: Color = Color("86a799")
+	var offset: Vector2 = Vector2.ZERO
+	var tail: float = 0.0
+	if _motion_active:
+		offset = Vector2(17.0 * sin(_phase), 8.0 * sin(_phase + 0.64))
+		tail = 2.0 * sin(_phase * 6.0)
 	draw_colored_polygon(PackedVector2Array([
-		Vector2(185, 262), Vector2(194, 254), Vector2(207, 250), Vector2(216, 253),
-		Vector2(208, 262), Vector2(195, 267), Vector2(185, 266), Vector2(176, 274),
-		Vector2(176, 261),
-	]), body)
-	draw_circle(Vector2(210, 254), 1.35, OCEAN, true, -1.0, true)
+		Vector2(185, 262) + offset, Vector2(194, 254) + offset, Vector2(207, 250) + offset,
+		Vector2(216, 253) + offset, Vector2(208, 262) + offset, Vector2(195, 267) + offset,
+		Vector2(185, 266) + offset, Vector2(176, 274 + tail) + offset, Vector2(176, 261 + tail) + offset,
+	]), Color("86a799"))
+	draw_circle(Vector2(210, 254) + offset, 1.35, OCEAN, true, -1.0, true)

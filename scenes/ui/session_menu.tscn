@@ -68,9 +68,32 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 45)
 layout_mode = 2
 theme_type_variation = &"FieldPrimary"
-text = "Start session"
+text = "New Game"
+
+[node name="FutureActions" type="HBoxContainer" parent="Backdrop/Center/Panel/Margin/Layout/Body/Actions"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Save" type="Button" parent="Backdrop/Center/Panel/Margin/Layout/Body/Actions/FutureActions"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+disabled = true
+text = "Save · Coming later"
+
+[node name="Load" type="Button" parent="Backdrop/Center/Panel/Margin/Layout/Body/Actions/FutureActions"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+disabled = true
+text = "Load · Coming later"
 
 [node name="Shoreline" type="Control" parent="Backdrop/Center/Panel/Margin/Layout"]
+unique_name_in_owner = true
 clip_contents = true
 custom_minimum_size = Vector2(302, 340)
 layout_mode = 2

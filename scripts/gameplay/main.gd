@@ -37,7 +37,7 @@ func _start_session() -> void:
 	_session = SESSION_SCENE.instantiate()
 	_session.menu_requested.connect(_open_menu)
 	add_child(_session)
-	_menu.hide()
+	_menu.dismiss()
 	_starting_session = false
 
 
@@ -52,6 +52,6 @@ func _open_menu() -> void:
 func _resume() -> void:
 	if _starting_session or not _menu.visible or _session == null:
 		return
-	_menu.hide()
+	_menu.dismiss()
 	_session.process_mode = Node.PROCESS_MODE_INHERIT
 	_session.set_hud_visible(true)

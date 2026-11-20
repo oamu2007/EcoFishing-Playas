@@ -10,7 +10,7 @@ After the follow-up, trash arrives at a gentler pace, upgrades take several trip
 
 ## Next milestone
 
-Continue with [Milestone 17](#milestone-17--animated-start-menu). Preserve the session reset and add inactive Save and Load controls. The outstanding independent human onboarding and cross-device graphics checks carry forward to M18.
+Continue with [Milestone 18](#milestone-18--follow-up-playtest-and-stabilization). Run the integrated route and graphics checks and record the independent manual checks that remain.
 
 ## Completed baseline
 
@@ -409,7 +409,7 @@ Buy each project through the trader, observe the crew or equipment arrive and do
 
 ## Milestone 17 — Animated start menu
 
-**Planned.** The title screen feels alive and responds clearly to interaction while keeping the existing new-game and replay flows usable.
+**Verified November 20, 2026.** The title and pause menus share an animated Coastal field guide shore illustration and responsive controls.
 
 - Build on the chosen Coastal field guide direction with a lively shoreline or shack illustration, subtle looping motion, and satisfying hover, focus, and click feedback. Keep motion and sound subordinate to legible options.
 - Present a clear, working New Game action and preserve the appropriate resume or restart controls during a session. Include clearly inactive Save and Load placeholders for future work. Defer save slots, persistence, and all Save and Load behavior.
@@ -417,6 +417,13 @@ Buy each project through the trader, observe the crew or equipment arrive and do
 **Verification**
 
 Open the menu at startup and during play. Check that animated elements loop cleanly, feedback responds to mouse and keyboard activation, repeated New Game clicks create one session, and Save and Load placeholders leave the session and files untouched. Verify focus, labels, and legibility at both window sizes.
+
+**Checkpoint results**
+
+- Surf, water glints, a fish, and the shack pennant move on a subtle 12-second loop. The scene stops updating when dismissed. The active button has distinct hover, focus, and pressed states. The title opens with New Game focused, and pause retains Resume session and Start fresh.
+- Save and Load are disabled, labeled Coming later, and skipped by keyboard focus. Their clicks have no effect on startup or session state. The existing launch guard still accepts repeated New Game or Start fresh activation only once.
+- Godot 4.7.2 passed editor import, startup, and the session, trader, and cleanup smoke tests. Render checks at 1280 × 720 and 800 × 450 on Intel Iris Xe / OpenGL verified animation, a seamless loop, hover and hold feedback, and keyboard resume. The title, pause, and both placeholders fit at both sizes.
+- Next action is the integrated M18 playtest and graphics verification.
 
 ## Milestone 18 — Follow-up playtest and stabilization
 
