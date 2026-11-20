@@ -1,6 +1,6 @@
 # Vertical slice implementation plan
 
-The `roadmap-implementation` branch starts from playable revision `f812046` on `feature/dynamic-water`. Revision `0ee166b` completes the verified M7–M12 progression slice. M13–M18 follow up on player feedback using that build as the baseline.
+The `roadmap-implementation` branch starts from playable revision `f812046` on `feature/dynamic-water`. Revision `0ee166b` completes M7–M12, and `97b5709` completes the verified M13–M18 follow-up. M19–M25 build on the M18 checkpoint.
 
 ## Definition of done
 
@@ -8,9 +8,11 @@ A first-time player can start a session from the menu, learn to collect recurrin
 
 After the follow-up, trash arrives at a gentler pace, upgrades take several trips to earn, rod tiers and fish species are recognizable by sight, and a short timing challenge must be won to land a fish. A screen-based trader handles item selection and visual purchases. The balance stays visible at the top left with a coin icon, cleanup crews visibly carry out purchased projects, and the animated start menu includes future save and load controls.
 
+In the next pass, incoming trash keeps moving inward until it reaches the equipped rod's horizontal range. Fish take more precise timing to land, optional add-ons are bought for individual rods, and more cleanup purchases deliver smaller improvements. The title and pause screens have separate layouts, contextual help stays hidden until requested, the trader supports a one-action sale, and music and sound effects cover the full session.
+
 ## Next milestone
 
-Milestones 13–18 are verified. The remaining checks are an independent first-time-player run and graphics verification on another device. See the [Milestone 18 results](#milestone-18--follow-up-playtest-and-stabilization) for the final pacing comparison and verification.
+Start with [Milestone 19](#milestone-19--slower-trash-drift-and-rod-range). Use the verified M18 build as the baseline and follow [AGENTS.md](../AGENTS.md) for the existing roadmap execution workflow. The independent first-time-player run and graphics verification on another device carry forward to M25.
 
 ## Completed baseline
 
@@ -450,6 +452,84 @@ The seeded route starts the clock when the session opens. The M18 headless and r
 - The player could pause during fish timing and resume the same challenge. Focused tests also exercised a partial mixed sale with separate identical catches, invalid drops, a full Sack, repeated input, cap access, and cleanup queueing. A separate keyboard check scrolled to the eighth Cargo Sack entry and selected it at 800 × 450.
 - Godot 4.7.2.stable.official.ed1daf0bf passed editor import, 120-frame main startup, and all 11 smoke tests. The full route also passed with Intel Iris Xe / OpenGL 3.3 Compatibility. The checks reported no parser, resource, or orphan-node errors. The standalone water preview ran for 120 rendered frames, and its 100%, 50%, and 0% panes changed across true shader-time captures. The water render check passed, including progressive seabed visibility. The title, trader, fish dial, rod tiers, and cleanup stages were visually reviewed at both window sizes during their milestone checks.
 - An independent first-time human playthrough remains pending, including discovery of menu, fishing, trader, and timing cues and whether the three starter trips feel productive. Cross-device graphics and performance checks also remain pending. Save and Load are visibly inactive, and session progress is in memory.
+
+## Milestone 19 — Slower trash drift and rod range
+
+**Next.** New trash takes longer to drift inward than in M18 and keeps moving until it reaches the horizontal casting boundary of the currently equipped rod.
+
+- Slow visible inward motion compared with M18's nine-second ingress. Tune travel speed and arrival cadence separately so the crossing looks slower while starter gear still has a steady supply to catch.
+- Use the actual shoreline casting position and the equipped rod's maximum range to place or adjust the inward stopping band. Keep an approaching piece moving until it reaches the horizontal reach boundary, then let it settle at a randomized, valid stop at or inside that boundary. If the player buys a rod while trash is in transit, apply the new range to ongoing arrivals without jumping positions or reversing into deeper water. Keep settled pieces on their current gentle drift.
+- Keep spawning offscreen, honor water bounds and shoreline clearance, and keep arrivals and settled trash within the population cap. Preserve the 30-point floating contribution and its live rebound.
+
+**Verification**
+
+Compare seeded captures with M18 at default and reduced window sizes. Check offscreen entry, visible speed, and the first reachable position for each rod tier. Upgrade mid-arrival and verify the path remains smooth. Exercise the cap with in-transit and settled pieces and record the new gap between starter-range catch opportunities.
+
+## Milestone 20 — Harder fish timing and optional rod add-ons
+
+**Planned.** Landing fish takes more precise timing, and players can buy optional upgrades for the rod they use.
+
+- Tighten the existing 1.8-second dial with a faster sweep and a smaller readable success window. Start with one faster success check for common fish and two successive checks for rarer fish. Tune the difficulty against normal mouse and Space input. Keep pause and retry behavior clear.
+- Add a small add-on selection to the trader with purchases scoped to a specific rod. Start with a safeguard that forgives one missed timing input per hooked fish and a modest cast or retrieval speed boost. Display each effect, price, and ownership by rod. Buying a new rod leaves its add-on slots empty so the player can purchase the add-ons separately for that rod.
+- Keep the full fish and cleanup progression reachable with stock rods. Treat add-ons as optional benefits and preserve Sack limits, fish escape, and trash catch flow.
+
+**Verification**
+
+Compare the timing challenge with M18. Check success, a second-stage miss, timeout, pause and resume, and recovery on the next cast. Buy the same add-on for two rods independently and check its effect only when the purchased rod is equipped. Verify duplicate purchases are rejected and complete the fish catch path with no add-ons.
+
+## Milestone 21 — More permanent cleanup projects
+
+**Planned.** The player restores the coast through more purchases, each with a smaller effect and its own visible result.
+
+- Add two or three additional purchasable instances of each existing project type, covering stranded debris, abandoned nets, and tide pool restoration. Give each instance a distinct site or work area, purchase state, and visible before-and-after result. Reuse the existing crew and equipment staging where it fits.
+- Add a small number of new cleanup types. Possible projects include clearing a blocked shore drain or skimming trapped surface debris. Choose projects that fit the compact shoreline and have a short, readable work sequence.
+- Rebalance individual reductions and prices so the catalog still removes exactly 70 permanent points in total. Keep a practical path to 50% with trash income and a complete path to 0%. Make repeat projects individual purchases with their own status and one-time charge.
+
+**Verification**
+
+Buy two instances of the same project type and confirm that they charge and complete separately and stage work at the correct sites. Fund the fish threshold using only trash sales, then buy the full catalog and verify the exact permanent total, visible completed sites, live floating-trash rebound, and reset on New Game.
+
+## Milestone 22 — Pause controls, Sell All, and help visibility
+
+**Planned.** Esc opens a compact in-game pause menu, selling a full Sack takes one action, and contextual hint text appears when Help is active.
+
+- Bind Esc to pause and resume during play. Route Esc to the active trader page or overlay first so one keypress performs one action. Retain the on-screen Menu button. Use a compact pause layout over the current session with Resume, the existing restart option, an inactive Save entry, and a clearly labeled way to quit to title. Confirm actions that discard the current session. Keep the pause screen visually distinct from the title screen.
+- Add a clearly labeled **Sell All (F)** control on the Sell screen. The button and a single fresh F press sell the full Sack in one transaction, including any staged items. Keep partial drag-and-drop sales available. Disable the action for an empty Sack and ignore key repeat and F outside the Sell screen.
+- Hide bottom-left instructional and status text and the text above the player by default. Show those text layers only while H or the Help button has enabled help. Preserve essential state through the regular HUD, shop controls, and the fish timing dial.
+
+**Verification**
+
+Check Esc from shore, an active fishing challenge, and each trader page. Verify pause freezes play and resumes the same state. Test Sell All by button and F with staged, unstaged, and identical items. Confirm the correct credit once and no sale outside the Sell page. Toggle H on and off and verify both text layers follow it while the permanent HUD remains legible.
+
+## Milestone 23 — Title screen and UI typography
+
+**Planned.** The title has a large game name over full-screen animated art of the Playas setting, with clear game menu actions.
+
+- Keep and expand the existing coastal artwork and animation into a full-bleed background. Use the broad title-over-setting composition suggested by Poly Bridge as inspiration for an original EcoFishing layout. Give the game name visual prominence and arrange the controls where the art leaves room for legible text. Keep New Game working and keep the existing future Save and Load controls inactive.
+- Review fonts across the title, pause menu, HUD, shop, inventory, and help. Pick a distinctive display face where it fits and readable text and numeric faces for functional UI. Use assets with suitable permissions, include required attribution, and ask the user if access or a download is needed. Continue typography and layout work that can proceed with existing assets while waiting.
+
+**Verification**
+
+Check the title and pause menu side by side at default and reduced window sizes. Verify the title reads clearly over moving artwork, focus remains visible, button labels and prices fit, and instructions and inventory values are legible at gameplay scale. Recheck New Game and the inactive Save and Load controls.
+
+## Milestone 24 — Continuous music and action sound effects
+
+**Planned.** One background track loops throughout the game and actions have distinct sound feedback.
+
+- Use the user-provided `geoffharvey-tropical-coconut-island-367671.mp3` from Downloads. Keep one playback owner across title, gameplay, pause, trader, and fresh-session transitions so the music loops without restarting or doubling as screens change. Leave room for additional tracks later.
+- Add short, distinct effects for gameplay and UI actions. Cover footsteps, cast, splash, reel, catch, miss, timing success and failure, menu navigation, confirm and cancel, inventory pickup and drop, sales, purchases, and cleanup work. Trigger effects on the corresponding action or transaction outcome. Balance effects against the music and manage repeated sounds such as footsteps.
+- Record asset sources and attribution as applicable. Use existing or freely licensed sound where suitable. Ask the user if an asset requires access or a download.
+
+**Verification**
+
+Listen through a full loop and switch between title, gameplay, pause, trader, and New Game. Check that exactly one music stream continues and that the restart point sounds clean. Play the fishing, shop, and cleanup paths and verify that sounds match their outcomes and stay distinguishable during rapid input. Record any listening checks that need a human ear.
+
+## Milestone 25 — Integrated playtest and stabilization
+
+**Planned.** A new session demonstrates slower arrivals, the expanded economy, the harder fish challenge, the revised screens, and continuous audio.
+
+- Run a seeded playthrough from New Game through the first rod purchase, a timed fish catch without add-ons, a Sell All transaction, and full cleanup. Test an optional add-on on two different rods. Compare arrival speed and progression timings with M18, verify 0% and the live rebound, and confirm session reset.
+- Run Godot import, main-scene startup, relevant smoke tests, and the graphics preview and GPU checks. Verify the UI at default and reduced window sizes. Record automated results, listening and visual checks, and any pending first-time-player or cross-device checks. Update the README and architecture notes for changed controls and scene ownership.
 
 ## Scope guardrails
 
