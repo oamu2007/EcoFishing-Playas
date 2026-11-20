@@ -1,14 +1,16 @@
 # Vertical slice implementation plan
 
-The `roadmap-implementation` branch starts from playable revision `f812046` on `feature/dynamic-water`. It includes M1–M6 and the sand, footprints, and splash polish. The sections below record the verification and progression checkpoints for M7–M12.
+The `roadmap-implementation` branch starts from playable revision `f812046` on `feature/dynamic-water`. Revision `0ee166b` completes the verified M7–M12 progression slice. M13–M18 follow up on player feedback using that build as the baseline.
 
 ## Definition of done
 
 A first-time player can start a session from the menu, learn to collect recurring floating trash with a starter rod, and take it to a nearby fishing shack in a shared Sack. Trash sales fund rod and Sack upgrades and permanent cleanup. Cleaner water brings back catchable fish that the player can carry and sell for more gold coins. The map supports short trips between the shoreline and shack, and the menu, HUD, and shop use a consistent visual theme. The player can start a fresh session in-game. The main scene and standalone graphics preview run without parser or resource errors.
 
+After the follow-up, trash arrives at a gentler pace, upgrades take several trips to earn, rod tiers and fish species are recognizable by sight, and a short timing challenge must be won to land a fish. A screen-based trader handles item selection and visual purchases. The balance stays visible at the top left with a coin icon, cleanup crews visibly carry out purchased projects, and the animated start menu includes future save and load controls.
+
 ## Next milestone
 
-Milestones 7–12 are verified on `roadmap-implementation`. The remaining manual check is an independent human onboarding playthrough. The results and verification commands are recorded below and in the [README](../README.md#headless-verification).
+Start with [Milestone 13](#milestone-13--trash-drift-and-progression-pacing). Establish the new catch supply and economy before laying out shop prices or judging how early fish should enter the loop. Use the existing roadmap workflow in [AGENTS.md](../AGENTS.md). The outstanding independent human onboarding and cross-device graphics checks carry forward to M18.
 
 ## Completed baseline
 
@@ -321,6 +323,72 @@ Both sessions reach a fish sale through normal play. The replay flow resets sess
 - Godot 4.7.2.stable.official.ed1daf0bf passed editor import, main startup, ten smoke tests, and both complete runs with and without GPU rendering. OpenGL 3.3 Compatibility on Intel Iris Xe passed the water render check, including seabed visibility and animation. The standalone preview ran for 120 GPU frames. All three preview panes also showed measurable animation across two captures with true shader time. The release checks reported no parser, resource, or orphan-node errors. Generated captures and logs are ignored.
 - The desktop first-look review covered the menu and visual cues. Full playthroughs used scripted game inputs. An independent human onboarding playthrough and cross-device graphics checks remain pending. Runtime progress is session-only. The shoreline is rectangular, and drifting items use bounded paths without object-to-object collision.
 
+## Milestone 13 — Trash drift and progression pacing
+
+**Next.** Floating trash moves inward more gradually, and the player makes several productive starter trips before buying a first upgrade.
+
+- Increase the ingress duration and separately tune arrival cadence, starting load, and active population if needed. Compare with M7's four-second ingress and ten-second cadence. Retain randomized stopping points, the gentle settled drift, and recurring starter-range catches even at the active cap.
+- Rebalance trash payouts, fish payouts, gear prices, and cleanup prices together. The M12 scripted run bought its first upgrade at 15.7 seconds, sold its first fish at 143.3 seconds, and reached a displayed 0% at 164.6 seconds. Use those as the comparison baseline. Aim for several starter Sack trips before the first upgrade and meaningful choices between gear and cleanup. Preserve steady opportunities to fish while earning those purchases.
+- Preserve the 30/70 pollution split, a trash-funded route to the fish threshold, and the 0% state followed by a live rebound. Keep tuning values configurable.
+
+**Verification**
+
+Compare seeded runs on the same route and record ingress duration, time between starter-range catch opportunities, trips and time to first upgrade, time to 50%, time to first fish sale, and time to full cleanup. Verify slower ingress on screen, a viable trash-only income path, and that fish sales leave room for continued progression. Recheck the live 0% rebound and starter access at cap.
+
+## Milestone 14 — Distinct fish, visible rod upgrades, and catch timing
+
+**Planned.** Players can identify a fish by its silhouette, see their rod improve after a purchase, and earn a fish catch by timing an input after it latches.
+
+- Give the existing four catchable species distinctive body shapes, fins, or markings. Make them readable at gameplay scale and reuse the same visuals for inventory cards. Use original, generated, or freely licensed assets with any required attribution. Keep size variation, rarity, and catch-target cues.
+- Give every rod tier a recognizable in-hand appearance. Start with a visibly basic rod and progressively improve its build and finish. Switch the artwork when the upgrade is applied and preserve alignment of the grip, rod tip, line, and cast origin.
+- Trigger a circular timing challenge after a catchable fish latches. Show a moving marker and a green success zone against red miss zones, with a shape or position cue for readability. A timed press in the success zone allows retrieval. A miss or timeout releases the fish and returns the player to a usable fishing state. Keep the timing window configurable, give the player a short first-use cue, and keep trash catches on their existing flow.
+
+**Verification**
+
+Identify the four fish in motion at gameplay scale and compare every rod tier equipped and casting. Exercise early, successful, late, repeated, and absent timing input. A successful catch lands once if there is Sack space. A miss or timeout adds no item or coins and leaves the next cast usable. Check trash-only casts, mixed targets, a full Sack, and opening or closing the pause menu during the challenge.
+
+## Milestone 15 — Screen-based shack trader and coin display
+
+**Planned.** Interacting at the shack opens a dedicated trader screen. The player can choose Sell or Buy and see their coin balance throughout the interaction.
+
+- Show the shack trader on a dedicated screen with Sell, Buy, and an exit back to the shoreline. The trader interaction is screen-based. Route focus, pointer, and cancel input through the trader while it is open.
+- On the Sell screen, show everything currently carried in the Sack, with item visuals and values. Let players drag items from the inventory side to a sale tray on the other side and drag them back to undo the selection. Show the pending total and confirm the sale explicitly. Confirmed sales remove only selected items and award their value once. Provide an accessible click or keyboard equivalent for selecting and removing items.
+- Open a separate Buy screen with visual cards for rod tiers, Sack upgrades, and cleanup projects. Show the item or project art, effect, price, and availability. Use the rod tier artwork from M14 and the tuned prices from M13.
+- Add a gold coin icon and a consistent top-left balance that remains visible across gameplay and all in-session menu and trader screens. Update it immediately after confirmed sales and purchases, including at small window sizes.
+
+**Verification**
+
+Enter the trader from shore, switch screens, and leave without triggering a cast. Select a mixed sale, undo an item, confirm, and verify that the unsold items remain and the top-left total is correct. Check cancel, invalid drops, repeated confirmation, unaffordable and already purchased items, and mouse and keyboard navigation at default and reduced window sizes.
+
+## Milestone 16 — Visible permanent cleanup work
+
+**Planned.** Buying a project triggers a short visible work sequence that shows what changed on the beach or in the water.
+
+- Give each permanent project a simple staged action suited to its site. For example, a shore crew can gather debris, a skiff and crew can lift a net, or workers can clear a tide pool and leave a visible improvement. Keep staging brief and show the player where to look when returning from the trader.
+- Keep the project transaction and its 70-point contribution in the existing cleanup model. Stage the presentation from a successful purchase, then show a completed state that lasts for the session. Keep the sequence safe across menu transitions, repeated input, and a new session.
+
+**Verification**
+
+Buy each project through the trader, observe the crew or equipment arrive and do the work, and confirm the visible result and pollution reduction. Reopen the trader, check that the project is complete, and verify that revisiting the site or reopening the menu does not replay the work or charge again. Confirm replay restores the initial sites, project states, and pollution.
+
+## Milestone 17 — Animated start menu
+
+**Planned.** The title screen feels alive and responds clearly to interaction while keeping the existing new-game and replay flows usable.
+
+- Build on the chosen Coastal field guide direction with a lively shoreline or shack illustration, subtle looping motion, and satisfying hover, focus, and click feedback. Keep motion and sound subordinate to legible options.
+- Present a clear, working New Game action and preserve the appropriate resume or restart controls during a session. Include clearly inactive Save and Load placeholders for future work. Defer save slots, persistence, and all Save and Load behavior.
+
+**Verification**
+
+Open the menu at startup and during play. Check that animated elements loop cleanly, feedback responds to mouse and keyboard activation, repeated New Game clicks create one session, and Save and Load placeholders leave the session and files untouched. Verify focus, labels, and legibility at both window sizes.
+
+## Milestone 18 — Follow-up playtest and stabilization
+
+**Planned.** A fresh session supports the slower progression loop from the title screen through a timed fish catch, a selected sale, a visible rod upgrade, and permanent cleanup.
+
+- Play from New Game through the first upgrade, first fish sale, and full permanent cleanup. Record the M13 pacing checkpoints against the M12 baseline, exercise the new trader and timing challenge, confirm the live pollution rebound, and check a fresh-session reset.
+- Run the relevant Godot import, startup, smoke, and GPU rendering checks. Verify the standalone graphics preview and the new visuals at default and reduced sizes. Seek an independent human onboarding playthrough and record the result or any pending manual or cross-device checks. Update the README and architecture notes where behavior or scene ownership changed.
+
 ## Scope guardrails
 
-Keep one compact, dependency-free Godot 4 shoreline. Defer multiple levels, dialogue, quests, save files, and procedural worlds. Permanent purchases last for the playthrough. Preserve the existing water study, ambient fish, sand, footprints, and landing effects for the computer graphics class. This roadmap covers gameplay and its interface. Additional rendering, effects, and art direction will be scoped separately.
+Keep one compact, dependency-free Godot 4 shoreline. Defer multiple levels, dialogue trees, quests, save files, and procedural worlds. Permanent purchases last for the playthrough. Preserve the existing water study, ambient fish, sand, footprints, and landing effects for the computer graphics class. This roadmap covers gameplay, its interface, and the visual changes listed above. Further graphics work will be scoped separately.
