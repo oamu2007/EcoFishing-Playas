@@ -1,0 +1,392 @@
+extends SceneTree
+
+const MainScene: PackedScene = preload("res://scenes/gameplay/main.tscn")
+const LevelScript = preload("res://scripts/gameplay/playas_vertical_slice.gd")
+const PlayerScript = preload("res://scripts/gameplay/player.gd")
+
+var _failures: int = 0
+var _main: Node
+var _menu: CanvasLayer
+var _session: Node
+var _panel: CanvasLayer
+var _world: LevelScript
+var _player: PlayerScript
+var _rod: FishingRod
+var _sack: Sack
+var _shop: ShackShop
+var _shack: FishingShack
+var _water: WaterVisuals
+var _return_checked: bool
+var _fish_sale_value: int
+var _intentionally_fishing: bool
+
+
+func _initialize() -> void:
+	_run.call_deferred()
+
+
+func _check(condition: bool, message: String) -> bool:
+	if not condition:
+		_failures += 1
+		push_error(message)
+	return condition
+
+
+func _run() -> void:
+	var baseline_orphans: float = Performance.get_monitor(Performance.OBJECT_ORPHAN_NODE_COUNT)
+	_main = MainScene.instantiate()
+	root.add_child(_main)
+	_menu = _main.get_node("SessionMenu")
+	root.size = Vector2i(1280, 720)
+	await process_frame
+	if await _start_session():
+		await _play_session("1280 x 720")
+		_key(KEY_ESCAPE)
+		await process_frame
+		root.size = Vector2i(800, 450)
+		await process_frame
+		if _check(_menu.visible, "Replay menu did not open after the first session") and await _start_session():
+			await _play_session("800 x 450")
+	_main.free()
+	for frame: int in 4:
+		await process_frame
+	_check(Performance.get_monitor(Performance.OBJECT_ORPHAN_NODE_COUNT) <= baseline_orphans, "Replaying left orphan nodes behind")
+	print("Complete playthrough smoke test: %d failures" % _failures)
+	quit(0 if _failures == 0 else 1)
+
+
+func _start_session() -> bool:
+	var start: Button = _menu.get_node("%StartSession")
+	_click_button(start)
+	await process_frame
+	await process_frame
+	_session = _main.get_node_or_null("Session")
+	if not _check(_session != null and not _menu.visible, "Start did not enter the playable session"):
+		return false
+	_world = _session.get_node("World")
+	_player = _world.get_node("Player")
+	_shack = _world.get_node("FishingShack")
+	_panel = _session.get_node("ShackPanel")
+	_water = _world.get_node("Environment/Water")
+	_rod = _world.rod
+	_sack = _world.sack
+	_shop = _world.shop
+	_return_checked = false
+	_fish_sale_value = 0
+	_intentionally_fishing = false
+	return _check(_world.pollution.current_pollution == 100 and _sack.item_count == 0 and _shop.coins == 0 and _shop.rod_tier == 0, "Fresh session retained progress")
+
+
+func _play_session(window: String) -> void:
+	var start_ticks: int = Engine.get_physics_frames()
+	print("Starting complete input playthrough at ", window)
+	await _walk_to_shore()
+	var edge: Vector2 = _rod.global_position + Vector2(_rod.maximum_cast_range, 0.0)
+	var old_cast: int = _rod.cast_number
+	_cast_click(edge + Vector2(10.0, 0.0))
+	_check(_rod.cast_number == old_cast and _rod.state == FishingRod.State.IDLE, "Out-of-range click started a cast")
+	if not await _cast_and_return(edge - Vector2(3.0, 0.0), true):
+		return
+	if not await _buy("Gear", 0, _shop.rod_upgrades[0].cost):
+		return
+	var first_upgrade_time: float = _seconds_since(start_ticks)
+	if not await _buy("Gear", _shop.rod_upgrades.size(), _shop.sack_upgrades[0].cost):
+		return
+	if not await _buy("Cleanup", 0, _shop.cleanup_projects[0].cost):
+		return
+	if not await _buy("Cleanup", 1, _shop.cleanup_projects[1].cost):
+		return
+	_check(_world.pollution.current_pollution <= 50 and _shop.rod_tier == 1 and _shop.sack_tier == 1, "Trash-funded gear and projects did not unlock fish")
+	_intentionally_fishing = true
+	if not await _catch_fish():
+		return
+	if not await _sell():
+		return
+	var first_fish_sale_time: float = _seconds_since(start_ticks)
+	_check(_fish_sale_value > _world.trash_manager.trash_sale_value, "The first fish sale did not pay more than trash")
+	print("First gear %.1fs, first fish sale %.1fs (+%d gold), pollution %d%%" % [first_upgrade_time, first_fish_sale_time, _fish_sale_value, _world.pollution.current_pollution])
+
+	if not await _buy("Gear", 1, _shop.rod_upgrades[1].cost):
+		return
+	if not await _buy("Cleanup", 2, _shop.cleanup_projects[2].cost):
+		return
+	if not await _reach_clean_water():
+		return
+	var clean_time: float = _seconds_since(start_ticks)
+	var zero_ambient: int = _visible_ambient_count()
+	_check(zero_ambient == 6, "Ambient fish did not return at clean water")
+	var rebounds: bool = false
+	for frame: int in 1100:
+		if _world.pollution.current_pollution > 0:
+			rebounds = true
+			break
+		await physics_frame
+	_check(rebounds and _world.pollution.permanent_points == 0 and _world.pollution.floating_points == _world.trash_manager.pollution_per_item, "Live pollution did not rebound from zero by one floating arrival")
+	var rebound_target: float = _world.pollution.normalized_pollution
+	for frame: int in 150:
+		if is_equal_approx(_water.displayed_pollution, rebound_target):
+			break
+		await physics_frame
+	_check(is_equal_approx(_water.displayed_pollution, rebound_target) and _visible_ambient_count() == zero_ambient, "Water and ambient fish did not settle after the rebound")
+	print("Clean-water window at %.1fs, live rebound to %d%%, %d ambient fish" % [clean_time, _world.pollution.current_pollution, _visible_ambient_count()])
+
+
+func _buy(catalog: String, index: int, cost: int) -> bool:
+	if not await _fund(cost) or not await _open_shop():
+		return false
+	var column: Control = _panel.get_node("%" + catalog)
+	var button: Button = column.find_children("*", "Button", true, false)[index]
+	if not _check(not button.disabled, "Funded purchase remained unavailable"):
+		return false
+	var before: int = _shop.coins
+	_click_button(button)
+	var purchased: bool = _check(_shop.coins == before - cost and button.disabled, "Click did not buy the expected item once")
+	_click_button(_panel.get_node("%Close"))
+	return purchased and _check(not _panel.visible and _rod.state == FishingRod.State.IDLE, "Closing the shop changed fishing state")
+
+
+func _fund(cost: int) -> bool:
+	for trip: int in 15:
+		if _shop.coins >= cost:
+			return true
+		while _sack.free_slots > 0:
+			if not await _catch_trash():
+				return false
+		if not _return_checked:
+			var full_count: int = _sack.item_count
+			var full_pol: int = _world.pollution.trash_collected
+			var next_item: OceanTrash = _nearest_trash()
+			if is_instance_valid(next_item):
+				await _align(next_item.global_position.y)
+				if not await _cast_and_return(next_item.global_position):
+					return false
+			_check(_sack.item_count == full_count and _world.pollution.trash_collected == full_pol, "Full Sack removed an extra target")
+		if not await _sell():
+			return false
+	return _check(_shop.coins >= cost, "Recurring trash income did not fund a purchase")
+
+
+func _sell() -> bool:
+	var walk_started: int = Engine.get_physics_frames()
+	var first_trip: bool = not _return_checked
+	if first_trip:
+		_check(_sack.item_count == _sack.capacity and _sack.sale_total() == _sack.capacity * _world.trash_manager.trash_sale_value, "First full Sack quote changed unexpectedly")
+		Input.action_press("move_left")
+		await physics_frame
+		await physics_frame
+		Input.action_release("move_left")
+		_check(is_equal_approx(_player.velocity.length(), _player.movement_speed * (1.0 - _sack.full_slowdown)), "Full load did not slow movement")
+	if not await _open_shop():
+		return false
+	if first_trip:
+		_return_checked = true
+		var travel: float = _seconds_since(walk_started)
+		_check(travel < 4.0, "Walk to the shack exceeded four seconds")
+		print("First full Sack walk to the shack: %.2fs" % travel)
+	var sell: Button = _panel.get_node("%Sell")
+	var payout: int = _sack.sale_total()
+	var before: int = _shop.coins
+	var fish_in_load: bool = _sack.fish_count > 0
+	_check(_intentionally_fishing or not fish_in_load, "A pre-threshold upgrade or project used fish income")
+	_check(not sell.disabled and sell.text.contains(str(payout)), "Shack did not show the earned payout")
+	_click_button(sell)
+	_click_button(sell)
+	_check(_shop.coins == before + payout and _sack.item_count == 0, "Sale failed or repeated")
+	if fish_in_load:
+		_fish_sale_value = payout
+	_click_button(_panel.get_node("%Close"))
+	return _check(not _panel.visible and _rod.state == FishingRod.State.IDLE, "Sale or close click reached fishing")
+
+
+func _open_shop() -> bool:
+	if not _shack.is_near(_player.global_position):
+		await _walk_axis(1, _shack.global_position.y)
+		await _walk_axis(0, _shack.global_position.x + 17.0)
+	_key(KEY_E)
+	await process_frame
+	return _check(_panel.visible and _rod.state == FishingRod.State.IDLE, "Approach or E failed to open the fishing shack")
+
+
+func _catch_trash() -> bool:
+	await _walk_to_shore()
+	for attempt: int in 90:
+		var item: OceanTrash = _nearest_trash()
+		if item == null:
+			await _wait_ticks(20)
+			continue
+		await _align(item.global_position.y)
+		var point: Vector2 = item.global_position
+		if not _rod.invalid_target_reason(point).is_empty():
+			continue
+		var before: int = _world.pollution.trash_collected
+		if not await _cast_and_return(point):
+			return false
+		if _world.pollution.trash_collected > before:
+			return true
+	return _check(false, "No reachable live trash could be landed")
+
+
+func _nearest_trash() -> OceanTrash:
+	var chosen: OceanTrash
+	var nearest: float = INF
+	for item: OceanTrash in _world.trash_manager.items:
+		if not item.can_hook():
+			continue
+		var point: Vector2 = item.global_position
+		var origin: Vector2 = Vector2(_rod.global_position.x, point.y)
+		if not _rod.invalid_target_reason_from(origin, point).is_empty() or _fish_near(point):
+			continue
+		var distance: float = _rod.global_position.distance_squared_to(point)
+		if distance < nearest:
+			chosen = item
+			nearest = distance
+	return chosen
+
+
+func _fish_near(point: Vector2) -> bool:
+	for fish: CatchableFish in _world.catchable_fish.fish:
+		if fish.can_hook() and fish.global_position.distance_to(point) < fish.catch_radius + 18.0:
+			return true
+	return false
+
+
+func _catch_fish() -> bool:
+	await _walk_to_shore()
+	for attempt: int in 160:
+		var candidates: Array[CatchableFish] = _world.catchable_fish.fish
+		if candidates.is_empty():
+			await _wait_ticks(20)
+			continue
+		var target: CatchableFish = candidates.front()
+		await _align(target.global_position.y)
+		if not is_instance_valid(target) or not target.can_hook():
+			continue
+		var point: Vector2 = target.global_position
+		if not _rod.invalid_target_reason(point).is_empty():
+			continue
+		if not await _cast_and_return(point):
+			return false
+		if _sack.fish_count > 0:
+			return true
+		if _sack.free_slots == 0 and not await _sell():
+			return false
+		if _shack.is_near(_player.global_position):
+			await _walk_to_shore()
+	return _check(false, "No catchable fish could be landed after cleanup")
+
+
+func _reach_clean_water() -> bool:
+	for attempt: int in 45:
+		if _world.pollution.current_pollution == 0:
+			for frame: int in 150:
+				if is_zero_approx(_water.displayed_pollution):
+					return true
+				if _world.pollution.current_pollution > 0:
+					break
+				await physics_frame
+		if _sack.free_slots == 0 and not await _sell():
+			return false
+		if not await _catch_trash():
+			return false
+	return _check(false, "Permanent projects and normal catches never reached fully displayed 0% pollution")
+
+
+func _cast_and_return(target: Vector2, rapid: bool = false) -> bool:
+	await process_frame
+	_cast_click(target)
+	if not _check(_rod.state == FishingRod.State.CASTING, "Valid target did not cast through viewport input"):
+		return false
+	if rapid:
+		_cast_click(target)
+		_cast_click(target)
+		_check(_rod.state == FishingRod.State.CASTING, "Repeated clicks interrupted casting")
+	if not await _wait_for_rod(FishingRod.State.WAITING):
+		return false
+	_check(_rod.get_hook_water_position().distance_to(target) < 2.0, "Hook landed away from the selected point")
+	_cast_click(target)
+	if rapid:
+		_cast_click(target)
+		_check(_rod.state == FishingRod.State.RETRIEVING, "Repeated clicks interrupted retrieval")
+	return await _wait_for_rod(FishingRod.State.IDLE)
+
+
+func _wait_for_rod(state: FishingRod.State) -> bool:
+	for frame: int in 230:
+		if _rod.state == state:
+			return true
+		await process_frame
+	return _check(false, "Fishing loop did not reach state %s" % FishingRod.State.keys()[state])
+
+
+func _walk_to_shore() -> void:
+	if _player.global_position.x < 760.0:
+		await _walk_axis(0, _world.shore_start.x - (_rod.global_position.x - _player.global_position.x) - 2.0)
+
+
+func _align(world_y: float) -> void:
+	await _walk_axis(1, world_y - (_rod.global_position.y - _player.global_position.y))
+
+
+func _walk_axis(axis: int, target: float) -> void:
+	var positive: StringName = &"move_right" if axis == 0 else &"move_down"
+	var negative: StringName = &"move_left" if axis == 0 else &"move_up"
+	var direction: float = signf(target - _player.global_position[axis])
+	if absf(target - _player.global_position[axis]) <= 5.0:
+		return
+	var action: StringName = positive if direction > 0.0 else negative
+	Input.action_press(action)
+	for frame: int in 360:
+		await physics_frame
+		if direction * (target - _player.global_position[axis]) <= 5.0:
+			break
+	Input.action_release(action)
+	await physics_frame
+	_check(absf(target - _player.global_position[axis]) < 9.0, "Movement could not reach the next shoreline or shack position")
+
+
+func _wait_ticks(ticks: int) -> void:
+	for tick: int in ticks:
+		await physics_frame
+
+
+func _seconds_since(ticks: int) -> float:
+	return float(Engine.get_physics_frames() - ticks) / Engine.physics_ticks_per_second
+
+
+func _visible_ambient_count() -> int:
+	var ambient: Node2D = _world.get_node("Environment/AmbientFish")
+	var visible_count: int = 0
+	for child: Node in ambient.get_children():
+		if child is Polygon2D and child.visible:
+			visible_count += 1
+	return visible_count
+
+
+func _cast_click(world_position: Vector2) -> void:
+	_mouse_click(_rod.get_canvas_transform() * world_position)
+
+
+func _click_button(button: Button) -> void:
+	_mouse_click(button.get_global_rect().get_center())
+
+
+func _mouse_click(point: Vector2) -> void:
+	var motion: InputEventMouseMotion = InputEventMouseMotion.new()
+	motion.position = point
+	motion.global_position = point
+	root.push_input(motion, true)
+	for is_pressed: bool in [true, false]:
+		var click: InputEventMouseButton = InputEventMouseButton.new()
+		click.position = point
+		click.global_position = point
+		click.button_index = MOUSE_BUTTON_LEFT
+		click.pressed = is_pressed
+		root.push_input(click, true)
+
+
+func _key(code: Key) -> void:
+	var key: InputEventKey = InputEventKey.new()
+	key.keycode = code
+	key.physical_keycode = code
+	key.pressed = true
+	root.push_input(key, true)

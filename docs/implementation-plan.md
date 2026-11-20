@@ -8,7 +8,7 @@ A first-time player can start a session from the menu, learn to collect recurrin
 
 ## Next milestone
 
-Continue with [Milestone 12](#milestone-12--playtest-and-stabilize-the-slice). Run two sessions through a fish sale and a 0% cleanup window, then recheck the standalone graphics preview and full regression suite.
+Milestones 7–12 are verified on `roadmap-implementation`. The remaining manual check is an independent human onboarding playthrough. The results and verification commands are recorded below and in the [README](../README.md#headless-verification).
 
 ## Completed baseline
 
@@ -304,7 +304,7 @@ Ask a first-time player to start, make a catch, exchange a load, and buy an upgr
 
 ## Milestone 12 — Playtest and stabilize the slice
 
-**Planned.** A player can go from the starter rod to a first fish sale and lasting recovery, then start a fresh session and repeat the loop.
+**Verified November 19, 2026.** Two fresh sessions made a fish sale, permanently funded all projects, reached 0% displayed pollution, and took the next live rebound.
 
 - Play through two fresh sessions from the start menu to a fish sale, including trash-funded upgrades and cleanup, a pollution rebound, and the agreed clean-water check. Observe whether a new player can find the shack and learn what to do next. Check travel time, early affordability, Sack slowdown, full inventory, rapid inputs, range edges, and small-window legibility.
 - Run Godot editor import, main-scene startup, the updated smoke tests, the standalone water preview, and the real-render water check. Record the Godot version, renderer, skipped checks, and known limitations. Check that the README controls and architecture notes match the integrated scenes and systems. Keep generated captures and editor data out of Git.
@@ -312,6 +312,14 @@ Ask a first-time player to start, make a catch, exchange a load, and buy an upgr
 **Verification**
 
 Both sessions reach a fish sale through normal play. The replay flow resets session state, water and ambient fish respond correctly to live changes, and the independent preview still shows animated dirty, intermediate, and clean states. Check the debugger for parser, resource, and orphan-node errors.
+
+**Checkpoint results**
+
+- The test started at the shipped menu, walked actual routes, cast by viewport input, and used the shop's sale and purchase buttons. Two sessions ran at 1280 × 720 and 800 × 450. Replay used Start fresh and restored the original state. The first full-load trip to the shack took 1.65 seconds of game time. The first gear purchase was at 15.7 seconds. Both sessions funded the Shore rod, Canvas Sack, and first two cleanup projects by selling trash, then made the first fish sale for 29 gold at 143.3 seconds.
+- After the Offshore rod and last project, both sessions reached a fully displayed 0% at 164.6 seconds. All six ambient fish were visible, and the next trash arrival took the meter to 5%. The permanent contribution stayed at zero and the graphics settled to the new target. The test also checked Sack slowdown, full inventory, repeat sale and casting clicks, range edges, mouse aim, and orphan counts after replay.
+- Menu and Help now sit beside the HUD readouts on the beach side to leave the far water clear for casting. The README documents the menu, shop, controls, fish visits, and verification commands. The standalone preview footer documents returning through the game menu.
+- Godot 4.7.2.stable.official.ed1daf0bf passed editor import, main startup, ten smoke tests, and both complete runs with and without GPU rendering. OpenGL 3.3 Compatibility on Intel Iris Xe passed the water render check, including seabed visibility and animation. The standalone preview ran for 120 GPU frames. All three preview panes also showed measurable animation across two captures with true shader time. The release checks reported no parser, resource, or orphan-node errors. Generated captures and logs are ignored.
+- The desktop first-look review covered the menu and visual cues. Full playthroughs used scripted game inputs. An independent human onboarding playthrough and cross-device graphics checks remain pending. Runtime progress is session-only. The shoreline is rectangular, and drifting items use bounded paths without object-to-object collision.
 
 ## Scope guardrails
 

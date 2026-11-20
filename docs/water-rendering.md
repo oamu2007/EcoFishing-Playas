@@ -2,7 +2,7 @@
 
 ## Run and demonstrate
 
-Open `scenes/levels/water_preview.tscn` and press F6 for a live, side-by-side 100% / 50% / 0% comparison. All panels use the same shader, geometry, seabed seed, and GPU animation clock. There is no pollution model or trash manager in this scene. F5 still launches the normal game.
+Open `scenes/levels/water_preview.tscn` and press F6 for a live, side-by-side 100% / 50% / 0% comparison. All panels use the same shader, geometry, seabed seed, and GPU animation clock. There is no pollution model or trash manager in this scene. F5 opens the game menu. Choose Start session to play.
 
 In gameplay, the HUD reports actual pollution immediately; the water eases toward it over 1.6 seconds. Clearing the level reveals sand patches and submerged rocks through the cyan surface. Slow waves and shoreline foam continue at both endpoints.
 
@@ -130,7 +130,7 @@ The brief window closes automatically and writes ignored, reproducible captures 
 - `dirty.png`, `midway.png`, and `clean.png` show identical gameplay framing, stationary trash, and fixed wave time with visual-only pollution overrides. The harness checks true pollution and both active and collected trash counts across the overrides.
 - `gameplay.png` shows a real landed hook, line, and floating trash at the actual water pollution level.
 
-For slides, use comparison.png first, then the three full-scene images in pollution order. Copy these generated files somewhere permanent before clearing the Godot cache. For a live animated demonstration, open the preview scene and press F6. Capture a short video there, then switch to F5 to demonstrate actual retrieval, immediate HUD accounting, and the 1.6-second water transition.
+For slides, use comparison.png first, then the three full-scene images in pollution order. Copy these generated files somewhere permanent before clearing the Godot cache. For a live animated demonstration, open the preview scene and press F6. Capture a short video there, then press F5 and choose Start session to demonstrate actual retrieval, immediate HUD accounting, and the 1.6-second water transition.
 
 ## Verification and performance
 

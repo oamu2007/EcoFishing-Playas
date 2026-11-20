@@ -28,11 +28,15 @@ On systems where the executable is versioned, use `godot4` instead of `godot`.
 
 ## Run the project
 
-Press **F5**, then choose **Start session**. Move with **WASD or arrow keys**. Approach the shoreline, aim into the ocean with the mouse, and **left click** when the target is green. After landing, **left click again** to retrieve. Movement locks until retrieval completes. A red marker/status message explains invalid casts.
+Press **F5**, then choose **Start session**. Move with **WASD or arrow keys**. Approach the shoreline, aim into the ocean with the mouse, and **left click** when the target is green. After landing, **left click again** to retrieve. Movement locks until retrieval completes. A red marker and a HUD message explain rejected casts.
 
-Aim at or near a trash item's center to hook one item on landing. During retrieval, the hook also collects trash crossed along its return path, with small offsets for held items. Upgraded rods can collect several aligned objects in one return, subject to the space in the Sack. All held items count only after returning to the fisherman. A completely empty cast/return does not change pollution. Walk along the shoreline to find more targets.
+Aim at or near a trash item's center to hook one item on landing. During retrieval, the hook also collects trash crossed along its return path, with small offsets for held items. Upgraded rods can collect several aligned objects in one return, subject to the space in the Sack. All held items count only after returning to the fisherman. An empty return leaves the Sack and cleanup progress unchanged. New trash can still raise the meter independently. Walk along the shoreline to find more targets.
 
-The session starts with six reachable pieces of trash. New trash drifts in from offshore, including pieces within starter-rod range. The starter rod returns one piece per cast. Each piece in the water contributes five floating pollution points, capped at 30, on top of the 70 permanent pollution points. The HUD shows the live percentage and catch feedback. Fill the Sack and press **E** at the fishing shack to sell the load, buy rod and Sack upgrades, or fund cleanup projects. Cleanup projects lower permanent pollution for the rest of the session. Marked fish start visiting at 50% pollution. Aim at their white rings and retrieve them into the same Sack. Larger and rarer fish sell for more gold. Once all projects are funded, the water can reach 0% between arrivals by clearing the floating trash. Press **H** for detailed controls. Open **Menu** or press **Esc**, then choose **Start fresh** to reset the session. Esc closes the fishing shack panel first if it is open.
+The session starts with six reachable pieces. New trash drifts in from offshore, and the starter rod returns one piece per cast. Each piece contributes five floating points while in the water. Floating pollution caps at 30 points and the session starts with 70 permanent points.
+
+With the rod idle, press **E** near the fishing shack to sell any load, buy gear, or fund permanent cleanup. Close the shop with **E**, **Esc**, or **Close**. New catchable fish visit at 50% pollution or below. Aim at their white split rings and retrieve them into the same Sack. A fish already in the water can finish its visit after a rebound. Larger and rarer fish sell for more gold. After funding every project, clearing the floating trash can bring the water to 0% between arrivals.
+
+Press **H** or click **Help** for controls. Open **Menu** or press **Esc** when the shop is closed. Use **Resume session** or **Esc** to continue, or **Start fresh** to reset the session.
 
 The level's `TrashManager` exposes starter and offshore stop bands, arrival cadence, population limits, seed, spacing, and catch radius in the Inspector. The HUD updates immediately while water clarity and ambient fish visibility ease toward the new state over 1.6 seconds. The `AmbientFish` node exposes reveal thresholds, fade width, tint, and nearshore route width. [Architecture notes](docs/architecture.md) describe the bindings and tuning.
 
@@ -57,10 +61,11 @@ godot --headless --path . --script res://tests/shop_smoke_test.gd
 godot --headless --path . --script res://tests/cleanup_projects_smoke_test.gd
 godot --headless --path . --script res://tests/catchable_fish_smoke_test.gd
 godot --headless --path . --script res://tests/session_flow_smoke_test.gd
+godot --headless --path . --fixed-fps 60 --script res://tests/playthrough_smoke_test.gd
 godot --headless --path . --quit-after 120
 ```
 
-To compile and render the shader on the GPU and write comparison images, also run `godot --path . --script res://tests/water_render_check.gd` without `--headless`. Captures go to the ignored `.godot/water_captures/` directory. The [implementation plan](docs/implementation-plan.md) records the rendered gameplay checks and the remaining manual editor playthrough.
+To compile and render the shader on the GPU and write comparison images, also run `godot --path . --script res://tests/water_render_check.gd` without `--headless`. Captures go to the ignored `.godot/water_captures/` directory. The [implementation plan](docs/implementation-plan.md) records the playthroughs, GPU checks, and known limitations.
 
 ## Project layout
 
@@ -72,4 +77,4 @@ To compile and render the shader on the GPU and write comparison images, also ru
 - `ui/` — shared interface themes and styles
 - `docs/` — architecture and implementation planning
 
-Milestone 6 adds ambient fish as the water clears. The next milestones cover first-time guidance and in-game replay, then a full playtest. The [implementation plan](docs/implementation-plan.md) records milestone status and verification. Contributor conventions are in [AGENTS.md](AGENTS.md).
+Milestone status and checkpoint results are in the [implementation plan](docs/implementation-plan.md). Contributor conventions are in [AGENTS.md](AGENTS.md).

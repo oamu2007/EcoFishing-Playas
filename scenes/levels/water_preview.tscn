@@ -58,4 +58,4 @@ offset_left = 24.0
 offset_top = 480.0
 theme_override_font_sizes/font_size = 14
 text = "Hermite value noise / travelling sine waves / alpha-composited seabed
-F6: preview only. F5: return to the playable cleanup scene."
+F6 opens this preview. F5 opens the game menu. Choose Start session to play."

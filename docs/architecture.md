@@ -62,7 +62,7 @@ Typed rod signals: `state_changed`, `hook_landed`, `retrieval_advanced(previous_
 
 ### Compact interface
 
-The compact HUD shows live pollution, Sack usage, gold, and gear tiers. Short prompts follow movement, cast state, the Sack, and affordability. Rejected casts and results appear in a separate note. H toggles detailed controls without pausing. Informational controls ignore mouse input and the Menu button consumes its own clicks.
+The compact HUD shows live pollution, Sack usage, gold, and gear tiers. Short prompts follow movement, cast state, the Sack, and affordability. Rejected casts and results appear in a separate note. H or the clickable Help control toggles detailed controls without pausing. Informational controls ignore mouse input and the Menu button consumes its own clicks.
 
 Swept detection samples each item's current physics position rather than solving continuous relative motion for moving trash. At the configured gentle current speed this keeps the implementation small; unusually fast currents would need relative-motion sweeps. The shoreline/water validator still assumes this axis-aligned rectangular level.
 
@@ -92,9 +92,9 @@ Tune `early_reveal_pollution`, `late_reveal_pollution`, and `fade_width` on the 
 
 ### Catchable fish
 
-`CatchableFishManager` reads true normalized pollution on each seeded spawn trial. The interval is four seconds, and the chance rises from 24% at 50% pollution to 85% at 0%. Above 50%, the manager skips arrivals and existing fish remain until their visit ends. There are at most three active visitors by default. The nearshore bounds fit each swim route within the starter rod's reach. The manager registers each visitor with the catch resolver and unregisters it on departure. Species, length ranges, rarity weights, sale bonuses, and colors are authored `FishSpecies` resources.
+`CatchableFishManager` reads true normalized pollution on each seeded spawn trial. The interval is four seconds, and the chance rises from 24% at 50% pollution to 85% at 0%. Above 50%, the manager skips arrivals and existing fish remain until their visit ends. There are at most three active visitors by default. The nearshore bounds fit each swim route within the starter rod's reach. The level connects the manager's spawn and departure signals to the catch resolver. Species, length ranges, rarity weights, sale bonuses, and colors are authored `FishSpecies` resources.
 
-A catchable fish is a bright `FishingTarget` with a split-ring cue and collision on layer 3. A cast can attach one fish by landing or waiting and can collect trash on the return path. The Sack's space is shared by all pending catches. Fish have a timed visit that pauses when hooked. On landing they leave the fish manager and enter the Sack with their species, size, and sale price. Their sales use the same wallet transaction as trash.
+A catchable fish is a bright `FishingTarget` with a split-ring cue and collision on layer 3. A cast can attach one fish by landing or waiting and can collect trash on the return path. The Sack's space is shared by all pending catches. Fish have a timed visit that pauses when hooked. On a successful return to the fisherman they leave the fish manager and enter the Sack with their species, size, and sale price. Their sales use the same wallet transaction as trash.
 
 ### Beach detail and landing effects
 
@@ -109,7 +109,7 @@ The sand overlay and detail positions derive from the authored Beach polygon. Th
 
 ### Menu and replay
 
-`Main` starts at `SessionMenu` and owns a single instanced `session.tscn`. The HUD Menu button and Esc open the menu. Esc closes the shack first while it is open. The pause menu suspends session processing and hides the HUD, and Resume restores both. Start fresh detaches and disposes of the old tree before adding a fresh instance. The entry point guards queued start and restart requests, so the same input cannot create two sessions. Gameplay fixtures can instantiate the session scene directly.
+`Main` starts at `SessionMenu` and owns a single instanced `session.tscn`. The HUD Menu button and Esc open the menu. Esc closes the shack first while it is open. The pause menu suspends session processing and hides the HUD. The GPU water clock continues. Resume or Esc restores the session and HUD. Start fresh detaches and disposes of the old tree before adding a fresh instance. The entry point guards queued start and restart requests, so the same input cannot create two sessions. Gameplay fixtures can instantiate the session scene directly.
 
 The menu, HUD, and shack panel share `ui/themes/coastal_field_guide.tres`. It defines sand-colored panels, brown borders and focus, ink text, and teal actions. The menu's static shoreline illustration is a local Control. Shop and session menu panels capture pointer input before the rod's unhandled-input phase. The rod transforms mouse button event coordinates through the active viewport's canvas transform for aim accuracy after resizing.
 
@@ -129,14 +129,14 @@ FishingRod.hook_landed -> Level -> WaterSplash (true pollution tint)
 Player position -> Footprints
 ```
 
-The rod reports lifecycle and hook positions. The resolver chooses and finalizes items. The trash manager reports each landed trash ID to the pollution model. The HUD reads the true pollution value immediately, while fish follow the visual transition.
+The rod reports lifecycle and hook positions. The resolver chooses and finalizes items. The trash manager reports each landed trash ID to the pollution model. The HUD and catchable fish manager read true pollution. Ambient fish follow the water's displayed value.
 
 ## State ownership
 
 - Session pollution belongs to `PollutionSystem`, with a clear initial and minimum value.
 - Fishing state belongs to `FishingRod` (IDLE, CASTING, WAITING, RETRIEVING).
 - Movement state belongs to `Player`. `Sack` provides the load multiplier and owns carried items. `ShackShop` owns coins and purchased tiers.
-- Water clarity follows normalized pollution, and fish visibility follows the displayed water value.
+- Water clarity and ambient silhouettes follow an eased value. Catchable fish arrival probability uses true normalized pollution.
 - Collectible configuration should move into typed custom `Resource` data only when multiple variants make that worthwhile.
 
 ## Initial technical choices
