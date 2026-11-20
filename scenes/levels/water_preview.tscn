@@ -1,0 +1,61 @@
+[gd_scene format=3 uid="uid://dyhrbc7s23hdd"]
+
+[ext_resource type="PackedScene" path="res://scenes/gameplay/water.tscn" id="1_water"]
+[ext_resource type="Script" uid="uid://c3v2me83ia7v3" path="res://scripts/gameplay/water_preview.gd" id="2_preview"]
+
+[node name="WaterPreview" type="Node2D" unique_id=2059669658]
+script = ExtResource("2_preview")
+
+[node name="Background" type="Polygon2D" parent="." unique_id=1703048945]
+z_index = -20
+color = Color(0.035, 0.075, 0.1, 1)
+polygon = PackedVector2Array(0, 0, 2000, 0, 2000, 1200, 0, 1200)
+
+[node name="Title" type="Label" parent="." unique_id=371812050]
+offset_left = 24.0
+offset_top = 18.0
+theme_override_font_sizes/font_size = 24
+text = "Ocean restoration / procedural surface study"
+
+[node name="Subtitle" type="Label" parent="." unique_id=373190688]
+offset_left = 24.0
+offset_top = 53.0
+theme_override_font_sizes/font_size = 14
+text = "Same seabed, shader and animation clock. Only pollution_level changes."
+
+[node name="DirtyLabel" type="Label" parent="." unique_id=1474061842]
+offset_left = 24.0
+offset_top = 86.0
+theme_override_font_sizes/font_size = 16
+text = "100% / MURKY"
+
+[node name="MidwayLabel" type="Label" parent="." unique_id=633756791]
+offset_left = 335.0
+offset_top = 86.0
+theme_override_font_sizes/font_size = 16
+text = "50% / RECOVERING"
+
+[node name="CleanLabel" type="Label" parent="." unique_id=312557464]
+offset_left = 646.0
+offset_top = 86.0
+theme_override_font_sizes/font_size = 16
+text = "0% / CLEAN"
+
+[node name="Dirty" parent="." unique_id=835509468 instance=ExtResource("1_water")]
+position = Vector2(24, 116)
+scale = Vector2(0.38, 0.38)
+
+[node name="Midway" parent="." unique_id=1447128776 instance=ExtResource("1_water")]
+position = Vector2(335, 116)
+scale = Vector2(0.38, 0.38)
+
+[node name="Clean" parent="." unique_id=491345863 instance=ExtResource("1_water")]
+position = Vector2(646, 116)
+scale = Vector2(0.38, 0.38)
+
+[node name="Footer" type="Label" parent="." unique_id=835170932]
+offset_left = 24.0
+offset_top = 480.0
+theme_override_font_sizes/font_size = 14
+text = "Hermite value noise / travelling sine waves / alpha-composited seabed
+F6: preview only. F5: return to the playable cleanup scene."

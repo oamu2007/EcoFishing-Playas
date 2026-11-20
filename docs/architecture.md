@@ -6,8 +6,6 @@ The first vertical slice should support a compact Playas de Tijuana shoreline wh
 
 ## Current scene tree
 
-The tree shows the M6 implementation on `feature/dynamic-water`. On `main`, the level still draws the original ocean polygons and foam, while the player, fishing rod, trash manager, pollution model, and HUD use the same ownership described below.
-
 ```text
 Main (Node)
 ├── World (Node2D)
@@ -26,6 +24,8 @@ Main (Node)
 ```
 
 The tree omits decorative nodes. `Main` instantiates the level and HUD, and the level owns local gameplay and environmental presentation.
+
+The level also creates footprint and splash nodes at runtime, plus a shader-backed sand overlay and static sand-detail node under `Environment`.
 
 ## Scene responsibilities
 
@@ -58,7 +58,7 @@ The normal HUD is a 264 × 48 px translucent corner card with collected/total an
 
 Swept detection samples each item's current physics position rather than solving continuous relative motion for moving trash. At the configured gentle current speed this keeps the implementation small; unusually fast currents would need relative-motion sweeps. The shoreline/water validator still assumes this axis-aligned rectangular level.
 
-### Pollution-responsive water (M5, feature branch)
+### Pollution-responsive water
 
 The level injects `PollutionSystem` into `Environment/Water` (`WaterVisuals`). It reads `normalized_pollution` immediately, then subscribes to `pollution_changed(normalized_pollution: float, collected_count: int, remaining_count: int)`. Values range from 0 (clean) to 1 (initial pollution). The controller smoothly displays changes over 1.6 seconds using a finite Hermite interpolation; the HUD independently receives the true model value immediately. A private material is created once per water instance and only its `pollution_level` uniform changes during transitions.
 
@@ -68,13 +68,24 @@ The CanvasItem shader uses Hermite-interpolated value noise, weighted frequency 
 
 An empty batch has zero pollution/normalized value 0 and starts with clean water. Scene reloads/rebinding synchronize immediately. Initial state is read when connecting after level readiness, avoiding missed initialization events. A separate `water_preview.tscn` demonstrates 1.0/0.5/0.0 with isolated materials and no game-state model. See [water-rendering.md](water-rendering.md) for equations, layering, tuning, capture commands, and performance limits.
 
-### Ambient fish (M6, feature branch)
+### Ambient fish
 
 The level owns `ambient_fish.tscn` alongside `Water` under `Environment`. After configuring water and binding it to the initialized pollution model, the level supplies the same authored rectangle and local `WaterVisuals` to the fish scene. The scene connects to `displayed_pollution_changed(value)` and reads `displayed_pollution` immediately, including at startup in an empty world. Fish tint and opacity follow the displayed value directly during a retarget.
 
 The scene creates six copies of one `Polygon2D` silhouette and keeps them for its lifetime. Fixed ellipse centers, periods, and phases spread routes along the shore. Routes use the first 280 px of the water by default and reserve room for the rotated silhouettes. The layer draws at effective Z -8 above the surface and below the beach, floating trash, and fishing feedback. Fish are decorative CanvasItems with no physics or cleanup state.
 
 Tune `early_reveal_pollution`, `late_reveal_pollution`, and `fade_width` on the `AmbientFish` instance. The defaults start the two groups at 0.79 and 0.43, stagger each group by 0.035 per fish, and apply a smoothstep fade over up to 0.24 pollution units. At displayed pollution 1.0, 0.5, and 0.0, the default layer shows zero, three, and six fish respectively across the shoreline. `nearshore_width`, `murky_tint`, and `clear_tint` set route width and tint/opacity endpoints.
+
+### Beach detail and landing effects
+
+Commit `2589291` adds three local presentation scripts and `shaders/sand.gdshader`. The level creates their nodes in `_ready()`. These nodes are owned by the running level's scene tree and are released with it.
+
+- `footprints.gd` receives the player reference and measures actual movement in `_process()`. Every 26 pixels it places an alternating footprint with a six-pixel lateral offset. Prints fade over eight seconds and are capped at 80. The node draws after Environment and before Player at Z 0.
+- `water_splash.gd` receives `hook_landed` through the level, with the landing position and true normalized pollution. It creates one 18-droplet `CPUParticles2D` burst with a 0.6-second lifetime and two expanding rings with a 0.18-second stagger and 0.9-second lifetime. Droplet nodes free themselves on `finished`. Rings are removed when their lifetime ends. The effect draws at Z 3 below the rod and hook at player-relative +5.
+- The sand overlay is a mouse-ignoring 840 × 900 ColorRect under Environment. Its private material combines smooth value-noise dunes, sine wind marks, and two-pixel grain with 0.32 alpha. Shader uniforms control colors, dune/grain strength, opacity, and area size.
+- `sand_details.gd` generates ten pebble clusters, twelve shells, and eighteen wind arcs once with seed 2026, then uses cached draw commands. It uses bounded placement attempts and spacing for pebble-cluster and shell centers.
+
+The sand overlay size and detail rectangle are currently fixed to this map. Future geometry changes must update them or derive them from Beach. Footprint and splash nodes continue processing/redrawing while empty. Most effect settings are script constants rather than exported Inspector controls. Extracting a reusable presentation scene and exposing tuning are follow-up maintenance work.
 
 ### Planned replay
 
@@ -89,6 +100,8 @@ TrashManager.trash_collected -> Level -> PollutionSystem.collect(item_id)
 TrashManager hook and collection events -> HUD notifications
 PollutionSystem.pollution_changed -> HUD and WaterVisuals
 WaterVisuals.displayed_pollution_changed -> AmbientFish
+FishingRod.hook_landed -> Level -> WaterSplash (true pollution tint)
+Player position -> Footprints
 ```
 
 The rod reports lifecycle and hook positions. The trash manager identifies and finalizes items, then the level passes the returned IDs to the pollution model. The HUD reads the true pollution value immediately, while fish follow the visual transition.

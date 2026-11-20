@@ -1,5 +1,13 @@
 extends Node2D
 
+const AmbientFishScript = preload("res://scripts/gameplay/ambient_fish.gd")
+const WaterSplashScript = preload("res://scripts/gameplay/water_splash.gd")
+var _splash: Node2D
+const FootprintsScript = preload("res://scripts/gameplay/footprints.gd")
+var _footprints: Node2D
+const SandDetailsScript = preload("res://scripts/gameplay/sand_details.gd")
+const SandShader: Shader = preload("res://shaders/sand.gdshader")
+
 var shore_start: Vector2
 var shore_end: Vector2
 
@@ -8,6 +16,8 @@ var shore_end: Vector2
 @onready var _ocean: Polygon2D = $Environment/Ocean
 @onready var _rod: FishingRod = $Player/FishingRod
 @onready var _player: CharacterBody2D = $Player
+@onready var _water: WaterVisuals = $Environment/Water
+@onready var _fish: AmbientFishScript = $Environment/AmbientFish
 
 
 func _ready() -> void:
@@ -29,6 +39,19 @@ func _ready() -> void:
 	trash_manager.trash_collected.connect(_on_trash_collected)
 	trash_manager.initialize(_rod, shore_start, shore_end)
 	pollution.initialize(trash_manager.initial_pollution_values())
+	_water.global_position = bounds.position
+	_water.configure_size(bounds.size)
+	_water.bind_pollution(pollution)
+	_fish.configure(bounds, _water)
+	_splash = WaterSplashScript.new()
+	_splash.z_index = 3
+	add_child(_splash)
+	_rod.hook_landed.connect(_on_hook_landed)
+	_footprints = FootprintsScript.new()
+	add_child(_footprints)
+	move_child(_footprints, $Environment.get_index() + 1)
+	_footprints.configure(_player)
+	_add_sand_details()
 
 
 func _shape_bounds(collider: CollisionShape2D) -> Rect2:
@@ -37,3 +60,20 @@ func _shape_bounds(collider: CollisionShape2D) -> Rect2:
 
 func _on_trash_collected(item_id: int, _type_name: String) -> void:
 	pollution.collect(item_id)
+
+
+func _on_hook_landed(point: Vector2) -> void:
+	_splash.play_at(point, pollution.normalized_pollution)
+
+
+func _add_sand_details() -> void:
+	# Capa de grano/lomas sobre la arena (el tamaño es el del polígono Beach)
+	var grain: ColorRect = ColorRect.new()
+	grain.size = Vector2(840, 900)
+	grain.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sand_material: ShaderMaterial = ShaderMaterial.new()
+	sand_material.shader = SandShader
+	grain.material = sand_material
+	$Environment.add_child(grain)
+	# Piedritas, conchas y marcas de viento encima del grano
+	$Environment.add_child(SandDetailsScript.new())

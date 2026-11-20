@@ -1,7 +1,5 @@
 # Pollution-responsive ocean: graphics study
 
-This study describes M5 and M6 on `feature/dynamic-water`. Use that branch to run the preview and render commands below.
-
 ## Run and demonstrate
 
 Open `scenes/levels/water_preview.tscn` and press F6 for a live, side-by-side 100% / 50% / 0% comparison. All panels use the same shader, geometry, seabed seed, and GPU animation clock. There is no pollution model or trash manager in this scene. F5 still launches the normal game.
@@ -105,6 +103,8 @@ The controller owns one private ShaderMaterial duplicated once on readiness. Onl
 | Surface and shader foam | -9 | Color, waves, murkiness, transparency |
 | Ambient fish | -8 | Decorative silhouettes with pollution-driven tint and opacity |
 | Beach / player / floating trash | 0 | Existing gameplay presentation |
+| Sand overlay, beach details, footprints | 0 | Decorative beach layers, ordered before Player |
+| Landing splash | 3 | Transient droplets and expanding rings |
 | Rod / line / hook / aim marker | +5 relative to player | Fishing feedback |
 | HUD | CanvasLayer | Existing compact counters/help |
 
@@ -136,6 +136,8 @@ For slides, use comparison.png first, then the three full-scene images in pollut
 `water_smoke_test.gd` checks initial state, model changes, immediate numerical HUD updates, finite interpolation/clamping, material isolation/reuse, rebinding, reset, and empty-level behavior. Previous fishing, cleanup, and refinement tests remain intact.
 
 `fish_smoke_test.gd` checks the default reveal counts, smooth retargeting, full silhouette bounds, and independent fresh and empty levels. The M6 GPU checks and manual verification status are recorded in the [implementation plan](implementation-plan.md#milestone-6-ambient-fish-return).
+
+The November 18 polish update adds sand detail, footprints, and a pollution-tinted landing splash in gameplay. The standalone three-panel preview remains a water/seabed study. The render harness triggers a real hook landing before full-scene captures, so the splash may appear in those captures. Fish movement and the transient splash are currently active during paired pixel comparisons. Isolating those effects is a recorded follow-up for the next executor prompt. Until then, the measured differences include those effects as well as the intended water/seabed changes.
 
 `water_render_check.gd` checks image differences among palettes, stronger visibility of actual seabed as pollution falls (by temporarily hiding the bed), animation at both endpoints, and unchanged gameplay state. The sampled image difference is an RGB regression check, not a physical turbidity measurement. On the tested Intel Iris Xe OpenGL device, the dirty/mid/clean seabed differences were approximately 0.0017 / 0.0200 / 0.0384, with zero render-check failures. Screenshots were visually inspected.
 

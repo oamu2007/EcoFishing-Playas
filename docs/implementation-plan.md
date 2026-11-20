@@ -4,11 +4,19 @@ The GitHub `main` gameplay baseline includes the beach, fishing, trash collectio
 
 ## Definition of done
 
-A first-time player can launch the project into one small Playas de Tijuana shoreline, learn to cast and retrieve, and complete the finite trash cleanup. Clearer water and returning fish make recovery visible. The player can start a fresh session in-game after completion. The main scene and graphics preview run without parser errors or broken resource references.
+A first-time player can start a session from the menu, learn to collect recurring floating trash with a starter rod, and take it to a nearby fishing shack in a shared Sack. Trash sales fund rod and Sack upgrades and permanent cleanup. Cleaner water brings back catchable fish that the player can carry and sell for more gold coins. The map supports short trips between the shoreline and shack, and the menu, HUD, and shop use a consistent visual theme. The player can start a fresh session in-game. The main scene and standalone graphics preview run without parser or resource errors.
+
+## Next milestone
+
+Start with [Milestone 7](#milestone-7--continuous-trash-and-two-source-pollution). Catch opportunities and the pollution model determine what the starter rod can reach, how reliably trash can fund the shop, and when catchable fish can return. Establishing those rules first lets the Sack, shack, and fish build on a playable loop with measurable inputs.
+
+## Completed baseline
+
+Milestones 1–6 and the subsequent visual polish describe the existing finite-batch prototype and its recorded checks. In that build, the player clears 24 drifting trash pieces to reach 0%, sees ambient fish return, and restarts from the editor. Milestones 7–12 replace the finite-batch finish with ongoing progression.
 
 ## Milestone 1: Project bootstrap
 
-**Status: Implemented (October 18, 2026); editor/runtime verification pending.**
+**Status: Implemented (October 18, 2026).** See subsequent milestones for editor and runtime verification of the integrated build.
 
 - [x] Confirm the project configuration targets Godot 4.7.
 - [x] Define a 960 × 540 viewport, responsive canvas scaling, and movement input actions.
@@ -21,7 +29,7 @@ A first-time player can launch the project into one small Playas de Tijuana shor
 
 ## Milestone 2: Player movement
 
-**Status: Implemented (October 18, 2026); editor/runtime verification pending.**
+**Status: Implemented (October 18, 2026).** See subsequent milestones for scripted movement verification. Manual playthrough remains pending.
 
 - [x] Build a modular `CharacterBody2D` player scene.
 - [x] Implement typed top-down movement with normalized diagonal input and exported speed.
@@ -122,7 +130,7 @@ Manual acceptance:
 godot --headless --path . --script res://tests/refinement_smoke_test.gd
 ```
 
-Limitations: initial spawn spacing is enforced, but drifting objects may pass through one another. Sweeps use the current item position per segment, suitable for these slow currents. This level still uses axis-aligned rectangular water; fish and particles remain future work.
+Limitations at this milestone include drifting objects passing through one another after initial spawn and sweeps sampling the current item position per segment, suitable for these slow currents. The level uses axis-aligned rectangular water. Ambient fish and landing particles were added in later milestones.
 
 ## Milestone 5: Environmental response
 
@@ -178,29 +186,98 @@ The [README](../README.md#headless-verification) lists the full set of smoke and
 
 **Exit check:** During a normal cleanup, fish are hidden at the dirty start, clearly present partway through, and most abundant at completion. Cast targets and floating trash remain readable at default and reduced window sizes.
 
-## Milestone 7: Onboarding and in-game replay
+## Visual polish following M6
 
-**Status: Planned.** Start after Milestone 6 so replay can be checked against the full environmental response.
+**Status: Implemented on feature/dynamic-water in `2589291`, reviewed November 18, 2026.** This adds beach and landing feedback to the playable prototype.
 
-- Carry the M6 review finding into the next executor prompt. In `tests/water_render_check.gd`, freeze ambient fish motion during paired seabed and shader animation captures so fish movement cannot contribute to the pixel differences. Preserve fish visibility in the screenshots and rerun the OpenGL render check.
-- Keep the compact HUD and H-help. Make the first successful loop discoverable with concise shoreline, cast, and retrieve cues. Give an empty return a distinct message and retain the existing batch feedback.
-- Use the existing zero-remaining-trash rule for completion. Keep the clean shoreline visible and expose a single, labeled replay control in the completion UI.
-- Have the HUD request replay and the main scene own the reload. Guard against repeat activation while reloading, and ensure clicking the control cannot also cast. A fresh session restores the seeded batch, spawn, rod state, HUD, dirty water, and hidden fish for the default level.
-- Test an empty return, final multi-item return, repeated replay input, an initially empty batch, and two consecutive replay cycles. Check that UI mouse handling still permits fishing away from the replay control.
+- [x] Add a sand shader with grain, dune variation, and wind marks.
+- [x] Add seeded pebble clusters, shells, and wind arcs.
+- [x] Add alternating movement-driven footprints with an eight-second fade and an 80-print cap.
+- [x] Add pollution-tinted hook-landing droplets and staggered expanding ripples, with lifetime cleanup.
 
-**Exit check:** A first-time player can make a successful return with the on-screen cues, tell a miss from a catch, finish the batch, and start a fresh session from the completion UI.
+Review on Godot 4.7.2 / Intel Iris Xe / OpenGL Compatibility passed all five existing smoke tests, main-scene startup, and the non-headless water render check. A temporary local harness exercised player movement and rod landing, confirmed footprint creation/expiration, confirmed two rings and one particle emitter on landing, verified their removal after the effect, and checked that landing left pollution unchanged. Gameplay captures were visually reviewed for sand, footprints, and splash/line readability. The editor import completed with a local safe-save permission error, without script or import errors. This verification used scripted gameplay rather than a manual full-session playthrough.
 
-## Milestone 8: Playtest and stabilize the slice
+The review found no blocking gameplay regression. The new effects still use hard-coded tuning and map dimensions, and the transient effect nodes redraw while idle. Those limitations are documented in the architecture notes.
 
-**Status: Planned.** Verify the integrated game before expanding scope.
+## Milestone 7 — Continuous trash and two-source pollution
 
-- Observe a first-time player from spawn through the first catch, then run two full default-seed sessions through completion and replay. Check the last remaining item, edge-of-range aiming, rapid clicks, camera follow, and H-help.
-- Check legibility and mouse aiming at the default window size and a smaller resized window. Confirm distinct dirty, intermediate, and clean states in gameplay and run the standalone water preview.
-- Run editor import, all smoke tests, main-scene startup, and the non-headless water render check. Record the Godot version, renderer, and any skipped checks or known limitations. Fix issues that block the core loop, legibility, or replay.
-- Update README controls and the architecture to reflect the shipped slice. Keep generated captures and local editor data out of Git.
+**Next.** A player can keep finding trash along the shore and use the starter rod to remove one piece per cast. The pollution meter can fall on retrieval and rise as new trash arrives.
 
-**Exit check:** The complete loop works across repeated sessions, the preview runs independently, and the editor/debugger reports no parser, resource, or orphan-node errors during verification.
+- Replace the finite spawn in [TrashManager](../scripts/systems/trash_manager.gd) with recurring, testable arrivals. Each piece starts offscreen, moves inward into view, then switches at a randomized stop point to the existing gentle drift. Use bands based on castable distances from the actual shoreline collider. Keep recurring starter opportunities and reserve farther stops for later rod tiers. Bound the active population so a buildup offshore cannot shut off starter supply.
+- Tune the [starter rod](../scripts/gameplay/fishing_rod.gd) for short range and slower casting and retrieval than upgraded tiers. Apply one shared per-cast trash limit across landing, waiting, and retrieval sweep so the current multi-item behavior can become an upgrade. Keep valid misses, aim feedback, movement lock, and exactly-once removal after a successful return.
+- Replace batch-relative scoring in [PollutionSystem](../scripts/systems/pollution_system.gd) with a floating contribution bounded at 0–30 percentage points and a permanent-cleanup contribution bounded at 0–70. Start the permanent contribution at 70 and keep it there in ordinary play until the shop sells cleanup. Use deterministic fixtures to exercise reductions in both contributions. Landed trash leaves the floating calculation on successful return. Exchange at the shack will handle coins in Milestone 8.
+- Update the temporary HUD and H-help for live pollution, starter limits, and catch or miss feedback. Remove the finite collected/total indicator and the empty-batch completion rule. Drive per-cast feedback from the catch lifecycle so an arrival mid-cast leaves it intact. Keep numerical pollution immediate and water and ambient fish synchronized through the existing visual easing. Changes in active count that leave pollution unchanged should leave the current transition running.
+
+**Verification**
+
+With a fixed test seed, watch pieces enter from outside the visible shoreline view and switch smoothly to bounded drift at different stops. Catch a near piece and reject a farther cast. Sweep through multiple pieces with the starter rod and confirm exactly one returns. Leave the shore alone long enough to exercise replenishment and the active cap, then confirm starter-range arrivals are still available. Check empty returns, duplicate catch events, component limits, immediate HUD updates, and smooth water retargeting in both directions. After a burst of arrivals, confirm water and ambient fish settle at the latest target. With 70 points of permanent pollution outstanding, clearing floating trash never signals completion.
+
+**Regression checks**
+
+Adapt the cleanup, refinement, water, and ambient-fish smoke tests that assume a 24-piece batch. Keep the fishing lifecycle checks and use explicit 100%, 50%, and 0% fixtures for the ambient-fish reveal and water states. In the [GPU water check](../tests/water_render_check.gd), pause arrivals and fixture trash motion, keep ambient fish visually fixed or hidden during water-only comparisons, and settle or suppress the landing splash. Preserve the palette, seabed visibility, and endpoint animation checks. Keep a separate landed-hook capture for gameplay contrast. Compare true pollution and active and collected trash before and after visual overrides, run live arrivals in a separate check, and open the standalone preview with F6.
+
+**Decisions for this milestone**
+
+- Choose the floating-trash formula and when an arriving piece starts contributing. Decide the starting load and when the meter can reach exactly 0% after all permanent projects while arrivals continue. Confirm that behavior in Milestone 9.
+- Tune arrival cadence, behavior at the active cap, offscreen entry paths for supported shoreline camera views, near and far stopping bands, and starter reach and timings together. Use the default and resized windows and verify repeatable starter catches before setting shop prices.
+
+## Milestone 8 — Sack, shack, and gear upgrades
+
+**Planned.** The player can fill a small Sack, walk it to a nearby fishing shack, trade trash for gold coins, and use those coins to improve the next trip.
+
+- Add the shared Sack with a low starting capacity and a slight, tunable movement slowdown as it fills. Landed trash uses Sack space. Leave excess items in the water when the Sack or per-cast limit is reached. Give clear feedback on a full Sack, and restore normal speed after unloading. Use the same inventory for fish in Milestone 10.
+- Expand the [shoreline map](../scenes/levels/playas_vertical_slice.tscn) slightly for the shack and any cleanup sites that need room. Keep the shack close to starter-range fishing spots. Recheck camera limits, collision shapes, casting and drift bounds, and beach-detail coverage after map edits.
+- Add the exchange and upgrade transactions in a basic shop UI. Sell rod upgrades for reach, cast and retrieval speed, and trash per cast, plus Sack capacity upgrades. Keep coins, gear, and inventory in the current session. Display Sack use, coins, and purchased tiers in the temporary interface. Tune initial payouts and prices with trash income alone.
+
+**Verification**
+
+Test with base gear and zero coins. Fill the Sack, observe the slowdown and full feedback, and confirm another cast cannot overflow inventory or remove excess trash. Walk to the shack and exchange the load once for the displayed amount. Earn and buy each upgrade using trash, then verify a previously unreachable target becomes valid, cast and retrieval get faster, a return can carry multiple pieces within free Sack space, and the Sack can hold more. Try unaffordable purchases and repeated shop clicks and check for duplicate credits, duplicate upgrades, or stray casts.
+
+## Milestone 9 — Permanent cleanup purchases
+
+**Planned.** The player can fund permanent beach and ocean improvements with trash income and see those purchases hold as more trash drifts in.
+
+- Choose a small catalog of projects, their costs, point reductions, and any map space they require. Possible projects include clearing stranded debris, removing submerged debris or abandoned nets, and restoring a tide pool. The catalog should let the player remove all 70 permanent points within the playthrough. Use simple visible state changes or completed-project feedback.
+- Set prices and reductions so reasonable starter-gear trips and early upgrade choices can bring total pollution to around 50% with trash income alone. Tune for a realistic floating load, including rebounds. Check that purchases are affordable in a practical order and that recurring starter income remains available.
+
+**Verification**
+
+Use only trash sales to buy the first meaningful upgrades and cleanup and reach the fish threshold. Confirm each project charges coins once, removes its stated permanent points, and stays complete across further arrivals and shop visits. Exercise all projects, verify only the floating component rebounds, and test the agreed 0% behavior in a running session. Confirm a new session restores the permanent contribution and the catalog.
+
+## Milestone 10 — Catchable fish and fish sales
+
+**Planned.** The player starts seeing scarce catchable fish around 50% pollution remaining, sees them more often as the water clears, and can earn more coins from larger or rarer catches.
+
+- Add catchable fish distinct from the [decorative ambient fish](../scripts/gameplay/ambient_fish.gd). Give catchable fish readable target cues. Drive their spawn chances from true total pollution, with the highest chance at 0%, while ambient silhouettes keep following the eased water visuals. Decide what happens to already-spawned catchable fish if pollution rises above the threshold.
+- Start with four or five species and variable sizes. Tune species, size ranges, rarity, spawn chances, and sale prices. Carry landed fish in the Sack with trash and sell them at the shack. Resolve competing targets through the existing cast and return lifecycle and honor available Sack space.
+
+**Verification**
+
+Use seeded trials above, near, and below the threshold and at 0% to check eligibility and increasing spawn chances. Raise pollution through the threshold again while the graphics are still easing. Check catchable fish behavior against the agreed rule and confirm ambient silhouettes cannot be hooked. Land fish and trash into the same Sack, verify a full load rejects extra catches, then sell controlled samples to check that larger fish of the same species and rarer fish of comparable size pay more.
+
+## Milestone 11 — Start menu, onboarding, and interface
+
+**Planned.** A first-time player can start from a menu, learn the cleanup and exchange loop from short prompts, and use a coherent HUD and shop at both default and reduced window sizes.
+
+- Consult the user at the start of this milestone before choosing the visual direction. The theme is open. Apply the agreed theme across the start menu, in-game HUD, and shop. Show pollution, Sack capacity, coins, current gear tiers, upgrade effects and prices, and cleanup purchase status where players need them.
+- Bring forward concise shoreline, cast, retrieve, and miss cues from the earlier onboarding plan. Add turn-in and upgrade guidance and retain access to detailed controls.
+- Provide a labeled way to start a fresh session independent of temporary pollution levels. Let the game entry point own session creation and reset. Handle menu and shop clicks before fishing input and guard against repeated start or restart activation.
+
+**Verification**
+
+Ask a first-time player to start, make a catch, exchange a load, and buy an upgrade using the on-screen cues. Resize the window and check labels, focus, and aim accuracy. Click and close shop and menu controls without casting or retrieving, then resume fishing. Start two fresh sessions and verify the spawn, gear, Sack, coins, projects, arrivals, pollution, and visuals reset each time.
+
+## Milestone 12 — Playtest and stabilize the slice
+
+**Planned.** A player can go from the starter rod to a first fish sale and lasting recovery, then start a fresh session and repeat the loop.
+
+- Play through two fresh sessions from the start menu to a fish sale, including trash-funded upgrades and cleanup, a pollution rebound, and the agreed clean-water check. Observe whether a new player can find the shack and learn what to do next. Check travel time, early affordability, Sack slowdown, full inventory, rapid inputs, range edges, and small-window legibility.
+- Run Godot editor import, main-scene startup, the updated smoke tests, the standalone water preview, and the real-render water check. Record the Godot version, renderer, skipped checks, and known limitations. Check that the README controls and architecture notes match the integrated scenes and systems. Keep generated captures and editor data out of Git.
+
+**Verification**
+
+Both sessions reach a fish sale through normal play. The replay flow resets session state, water and ambient fish respond correctly to live changes, and the independent preview still shows animated dirty, intermediate, and clean states. Check the debugger for parser, resource, and orphan-node errors.
 
 ## Scope guardrails
 
-Defer inventory, upgrades, multiple levels, dialogue, quests, save files, catchable fish, particle effects, procedural worlds, and production art/audio until the vertical slice is stable. Placeholder assets are acceptable when they make the interaction and environmental change readable.
+Keep one compact, dependency-free Godot 4 shoreline. Defer multiple levels, dialogue, quests, save files, and procedural worlds. Permanent purchases last for the playthrough. Preserve the existing water study, ambient fish, sand, footprints, and landing effects for the computer graphics class. This roadmap covers gameplay and its interface. Additional rendering, effects, and art direction will be scoped separately.
