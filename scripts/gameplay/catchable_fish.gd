@@ -60,7 +60,9 @@ func display_name() -> String:
 
 
 func sale_price() -> int:
-	return sale_value + length_cm + (species.rarity_bonus if species != null else 0)
+	if species == null:
+		return sale_value + length_cm
+	return sale_value + roundi(length_cm * species.gold_per_centimeter) + species.rarity_bonus
 
 
 func can_hook() -> bool:

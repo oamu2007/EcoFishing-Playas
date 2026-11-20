@@ -19,6 +19,12 @@ var _water: WaterVisuals
 var _return_checked: bool
 var _fish_sale_value: int
 var _intentionally_fishing: bool
+var _sale_trips: int
+var _first_threshold_time: float
+var _start_ticks: int
+var _starter_range: float
+var _seen_starter_items: Dictionary[int, bool]
+var _new_starter_times: Array[float]
 
 
 func _initialize() -> void:
@@ -33,6 +39,7 @@ func _check(condition: bool, message: String) -> bool:
 
 
 func _run() -> void:
+	physics_frame.connect(_sample_starter_supply)
 	var baseline_orphans: float = Performance.get_monitor(Performance.OBJECT_ORPHAN_NODE_COUNT)
 	_main = MainScene.instantiate()
 	root.add_child(_main)
@@ -74,11 +81,19 @@ func _start_session() -> bool:
 	_return_checked = false
 	_fish_sale_value = 0
 	_intentionally_fishing = false
+	_sale_trips = 0
+	_first_threshold_time = -1.0
+	_starter_range = _rod.maximum_cast_range
+	_seen_starter_items.clear()
+	_new_starter_times.clear()
+	for item: OceanTrash in _world.trash_manager.items:
+		_seen_starter_items[item.get_instance_id()] = true
+	_world.pollution.pollution_changed.connect(_record_threshold)
 	return _check(_world.pollution.current_pollution == 100 and _sack.item_count == 0 and _shop.coins == 0 and _shop.rod_tier == 0, "Fresh session retained progress")
 
 
 func _play_session(window: String) -> void:
-	var start_ticks: int = Engine.get_physics_frames()
+	_start_ticks = Engine.get_physics_frames()
 	print("Starting complete input playthrough at ", window)
 	await _walk_to_shore()
 	var edge: Vector2 = _rod.global_position + Vector2(_rod.maximum_cast_range, 0.0)
@@ -89,7 +104,9 @@ func _play_session(window: String) -> void:
 		return
 	if not await _buy("Gear", 0, _shop.rod_upgrades[0].cost):
 		return
-	var first_upgrade_time: float = _seconds_since(start_ticks)
+	var first_upgrade_time: float = _seconds_since(_start_ticks)
+	_check(_sale_trips >= 3, "First upgrade took fewer than three starter trips")
+	print("First gear at %.1fs after %d starter trips" % [first_upgrade_time, _sale_trips])
 	if not await _buy("Gear", _shop.rod_upgrades.size(), _shop.sack_upgrades[0].cost):
 		return
 	if not await _buy("Cleanup", 0, _shop.cleanup_projects[0].cost):
@@ -102,9 +119,10 @@ func _play_session(window: String) -> void:
 		return
 	if not await _sell():
 		return
-	var first_fish_sale_time: float = _seconds_since(start_ticks)
+	var first_fish_sale_time: float = _seconds_since(_start_ticks)
 	_check(_fish_sale_value > _world.trash_manager.trash_sale_value, "The first fish sale did not pay more than trash")
-	print("First gear %.1fs, first fish sale %.1fs (+%d gold), pollution %d%%" % [first_upgrade_time, first_fish_sale_time, _fish_sale_value, _world.pollution.current_pollution])
+	_check(_first_threshold_time >= 0.0, "The playthrough did not record a true 50% crossing")
+	print("First 50%% crossing %.1fs, first fish sale %.1fs (+%d gold), pollution %d%%" % [_first_threshold_time, first_fish_sale_time, _fish_sale_value, _world.pollution.current_pollution])
 
 	if not await _buy("Gear", 1, _shop.rod_upgrades[1].cost):
 		return
@@ -112,7 +130,7 @@ func _play_session(window: String) -> void:
 		return
 	if not await _reach_clean_water():
 		return
-	var clean_time: float = _seconds_since(start_ticks)
+	var clean_time: float = _seconds_since(_start_ticks)
 	var zero_ambient: int = _visible_ambient_count()
 	_check(zero_ambient == 6, "Ambient fish did not return at clean water")
 	var rebounds: bool = false
@@ -129,6 +147,27 @@ func _play_session(window: String) -> void:
 		await physics_frame
 	_check(is_equal_approx(_water.displayed_pollution, rebound_target) and _visible_ambient_count() == zero_ambient, "Water and ambient fish did not settle after the rebound")
 	print("Clean-water window at %.1fs, live rebound to %d%%, %d ambient fish" % [clean_time, _world.pollution.current_pollution, _visible_ambient_count()])
+	var longest_gap: float = 0.0
+	for index: int in range(1, _new_starter_times.size()):
+		longest_gap = maxf(longest_gap, _new_starter_times[index] - _new_starter_times[index - 1])
+	if _check(_new_starter_times.size() >= 2, "Recurring starter-range supply was not observed"):
+		var mean_gap: float = (_new_starter_times.back() - _new_starter_times.front()) / (_new_starter_times.size() - 1)
+		print("Ingress %.1fs, cadence %.1fs. Starter arrivals %.1fs apart on average, longest %.1fs (%d observed)." % [_world.trash_manager.arrival_travel_time, _world.trash_manager.arrival_interval, mean_gap, longest_gap, _new_starter_times.size()])
+
+
+func _sample_starter_supply() -> void:
+	if not is_instance_valid(_world):
+		return
+	for item: OceanTrash in _world.trash_manager.items:
+		var id: int = item.get_instance_id()
+		if item.can_hook() and not _seen_starter_items.has(id) and item.global_position.x - _world.shore_start.x <= _starter_range:
+			_seen_starter_items[id] = true
+			_new_starter_times.append(_seconds_since(_start_ticks))
+
+
+func _record_threshold(normalized: float) -> void:
+	if _first_threshold_time < 0.0 and normalized <= _world.catchable_fish.pollution_threshold:
+		_first_threshold_time = _seconds_since(_start_ticks)
 
 
 func _buy(catalog: String, index: int, cost: int) -> bool:
@@ -194,6 +233,8 @@ func _sell() -> bool:
 	_check(_shop.coins == before + payout and _sack.item_count == 0, "Sale failed or repeated")
 	if fish_in_load:
 		_fish_sale_value = payout
+	else:
+		_sale_trips += 1
 	_click_button(_panel.get_node("%Close"))
 	return _check(not _panel.visible and _rod.state == FishingRod.State.IDLE, "Sale or close click reached fishing")
 

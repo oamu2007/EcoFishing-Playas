@@ -79,14 +79,18 @@ func _run() -> void:
 	sell.pressed.emit()
 	_check(_shop.coins == expected and _sack.item_count == 0 and sell.disabled, "Sale paid incorrectly or paid twice")
 	_check(is_equal_approx(_sack.movement_multiplier, 1.0), "Unloading did not restore normal speed")
-	_check(_shop.buy_rod(0) and not _shop.buy_rod(0) and _shop.rod_tier == 1, "First rod upgrade failed or was duplicated")
-	_check(_shop.coins == 0 and _rod.cast_duration < starter_cast and _rod.retrieval_duration < starter_return, "Rod upgrade did not apply the advertised effects")
+	_check(not _shop.buy_rod(0), "A single starter trip funded the first rod")
 	_panel.get_node("%Close").pressed.emit()
+	_earn(_shop.rod_upgrades[0].cost)
+	var before_rod: int = _shop.coins
+	_check(_shop.buy_rod(0) and not _shop.buy_rod(0) and _shop.rod_tier == 1, "First rod upgrade failed or was duplicated")
+	_check(_shop.coins == before_rod - _shop.rod_upgrades[0].cost and _rod.cast_duration < starter_cast and _rod.retrieval_duration < starter_return, "Rod upgrade did not apply the advertised effects")
 	_check(not _panel.visible and not _rod.input_locked and not _player.input_locked, "Closing the shop did not restore controls")
 	_player.set_physics_process(false)
 	_place_on_shore(target.y)
 	_check(_rod.invalid_target_reason(target).is_empty(), "First rod upgrade failed to extend reach")
 
+	collected = _world.pollution.trash_collected
 	_align_targets(target)
 	_cast_and_retrieve(target)
 	_check(_sack.item_count == 2, "Upgraded rod failed to land two trash items")
@@ -94,6 +98,7 @@ func _run() -> void:
 	_cast_and_retrieve(target)
 	_check(_sack.item_count == 3 and _world.pollution.trash_collected == collected + 3, "Upgraded rod ignored remaining Sack space")
 	_sell_at_shack()
+	_earn(_shop.sack_upgrades[0].cost)
 	_check(_shop.buy_sack(0) and _sack.capacity > starter_capacity and not _shop.buy_sack(0), "Sack upgrade did not expand capacity exactly once")
 	_earn(_shop.rod_upgrades[1].cost)
 	var previous_range: float = _rod.maximum_cast_range

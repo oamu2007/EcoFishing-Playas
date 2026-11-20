@@ -80,14 +80,14 @@ func _verify_new_session() -> void:
 
 func _verify_cleanup_path() -> void:
 	var starter_cast: float = _rod.cast_duration
-	_earn(_shop.rod_upgrades[0].cost, 1)
+	_earn(_shop.rod_upgrades[0].cost, 3)
 	_open_shack()
-	_check(_shop.buy_rod(0) and _rod.maximum_cast_range > _starter_range and _rod.cast_duration < starter_cast, "A starter Sack did not fund the first rod upgrade")
+	_check(_shop.buy_rod(0) and _rod.maximum_cast_range > _starter_range and _rod.cast_duration < starter_cast, "Starter Sack trips did not fund the first rod upgrade")
 	_close_shack()
 
 	for index: int in range(2):
 		var project: CleanupProject = _shop.cleanup_projects[index]
-		_earn(project.cost, index + 1)
+		_earn(project.cost, 4)
 		_restore_floating_cap()
 		_purchase_project(index)
 		_check(_catch_reachable_trash(), "No reachable trash remained after the cleanup purchase")
@@ -99,7 +99,7 @@ func _verify_cleanup_path() -> void:
 	_check(_pollution.current_pollution == 50 and _meter.value == 50.0, "First rod and two projects did not reach the fish threshold after a full floating rebound")
 
 	# Starter-range income funds the final project and the gear to retrieve offshore pieces.
-	_earn(_shop.cleanup_projects[2].cost + _shop.rod_upgrades[1].cost, 5)
+	_earn(_shop.cleanup_projects[2].cost + _shop.rod_upgrades[1].cost, 9)
 	_open_shack()
 	var coins: int = _shop.coins
 	var pollution_before: int = _pollution.current_pollution

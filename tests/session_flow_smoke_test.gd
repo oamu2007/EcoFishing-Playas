@@ -85,7 +85,8 @@ func _verify_onboarding(session: Node, world: LevelScript) -> void:
 	_check(not hud.get_node("ControlsPanel").visible, "H did not close detailed controls")
 	rod.set_process(false)
 	player.set_physics_process(false)
-	world.trash_manager.arrivals_enabled = false
+	world.trash_manager.set_physics_process(false)
+	world.trash_manager.starter_slots = world.trash_manager.maximum_active_items
 	for item: OceanTrash in world.trash_manager.items:
 		item.set_physics_process(false)
 	root.size = Vector2i(800, 450)
@@ -111,9 +112,13 @@ func _verify_onboarding(session: Node, world: LevelScript) -> void:
 	_finish_cast(rod, miss)
 	_check(hud.get_node("Notification").text.begins_with("Nothing caught"), "Miss feedback did not explain the empty return")
 
-	for trip: int in 2:
+	for trip: int in 6:
 		for slot: int in sack.capacity:
+			if world.trash_manager.items.is_empty():
+				world.trash_manager._physics_process(world.trash_manager.arrival_interval)
+				world.trash_manager.items.front()._physics_process(world.trash_manager.arrival_travel_time)
 			var item: OceanTrash = world.trash_manager.items.front()
+			item.set_physics_process(false)
 			var target: Vector2 = item.global_position
 			player.global_position = Vector2(world.shore_start.x, target.y) - offset
 			camera.reset_smoothing()
@@ -138,10 +143,11 @@ func _verify_onboarding(session: Node, world: LevelScript) -> void:
 			_check(not shop_panel.visible and not _menu.visible and hint.text.contains("first upgrade"), "Shop close or first upgrade guidance failed")
 			_key(KEY_E)
 			await process_frame
+		if trip == 2:
 			var gear: Control = shop_panel.get_node("%Gear")
 			_press_button(gear.find_children("*", "Button", true, false)[0])
 			_check(world.shop.rod_tier == 1, "First upgrade did not respond to its shop control")
-		else:
+		elif trip == 5:
 			var projects: Control = shop_panel.get_node("%Cleanup")
 			_press_button(projects.find_children("*", "Button", true, false)[0])
 			_check(world.shop.is_cleanup_complete(0), "Cleanup purchase did not persist before restart")

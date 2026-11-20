@@ -13,15 +13,15 @@ const TRASH_SCENE: PackedScene = preload("res://scenes/gameplay/trash.tscn")
 @export_range(1, 10) var offshore_every: int = 3
 @export var spawn_seed: int = 2026
 @export var arrivals_enabled: bool = true
-@export_range(0.1, 60.0) var arrival_interval: float = 10.0
-@export_range(0.1, 20.0) var arrival_travel_time: float = 4.0
+@export_range(0.1, 60.0) var arrival_interval: float = 8.0
+@export_range(0.1, 20.0) var arrival_travel_time: float = 9.0
 @export var offscreen_margin: float = 100.0
 @export var starter_band: Vector2 = Vector2(110.0, 205.0)
 @export var offshore_band: Vector2 = Vector2(310.0, 545.0)
 @export var minimum_spacing: float = 72.0
 @export_range(8.0, 60.0) var item_catch_radius: float = 24.0
 @export_range(1, 30) var pollution_per_item: int = 5
-@export_range(1, 30) var trash_sale_value: int = 4
+@export_range(1, 30) var trash_sale_value: int = 3
 
 var items: Array[OceanTrash] = []
 var _rod: FishingRod

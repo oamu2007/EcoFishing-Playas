@@ -10,7 +10,7 @@ After the follow-up, trash arrives at a gentler pace, upgrades take several trip
 
 ## Next milestone
 
-Start with [Milestone 13](#milestone-13--trash-drift-and-progression-pacing). Establish the new catch supply and economy before laying out shop prices or judging how early fish should enter the loop. Use the existing roadmap workflow in [AGENTS.md](../AGENTS.md). The outstanding independent human onboarding and cross-device graphics checks carry forward to M18.
+Continue with [Milestone 14](#milestone-14--distinct-fish-visible-rod-upgrades-and-catch-timing). The M13 checkpoints are the pacing reference for later milestones. The outstanding independent human onboarding and cross-device graphics checks carry forward to M18.
 
 ## Completed baseline
 
@@ -325,7 +325,7 @@ Both sessions reach a fish sale through normal play. The replay flow resets sess
 
 ## Milestone 13 — Trash drift and progression pacing
 
-**Next.** Floating trash moves inward more gradually, and the player makes several productive starter trips before buying a first upgrade.
+**Verified November 20, 2026.** Floating trash moves inward more gradually, and three full starter Sack trips fund the first upgrade.
 
 - Increase the ingress duration and separately tune arrival cadence, starting load, and active population if needed. Compare with M7's four-second ingress and ten-second cadence. Retain randomized stopping points, the gentle settled drift, and recurring starter-range catches even at the active cap.
 - Rebalance trash payouts, fish payouts, gear prices, and cleanup prices together. The M12 scripted run bought its first upgrade at 15.7 seconds, sold its first fish at 143.3 seconds, and reached a displayed 0% at 164.6 seconds. Use those as the comparison baseline. Aim for several starter Sack trips before the first upgrade and meaningful choices between gear and cleanup. Preserve steady opportunities to fish while earning those purchases.
@@ -334,6 +334,21 @@ Both sessions reach a fish sale through normal play. The replay flow resets sess
 **Verification**
 
 Compare seeded runs on the same route and record ingress duration, time between starter-range catch opportunities, trips and time to first upgrade, time to 50%, time to first fish sale, and time to full cleanup. Verify slower ingress on screen, a viable trash-only income path, and that fish sales leave room for continued progression. Recheck the live 0% rebound and starter access at cap.
+
+**Checkpoint results**
+
+| Same seeded input route | M12 (`0ee166b`) | M13 |
+| --- | ---: | ---: |
+| Offshore ingress / arrival cadence | 4 / 10 s | 9 / 8 s |
+| New starter-range opportunities, mean / longest gap | 14.5 / 20.1 s | 10.6 / 24.8 s |
+| First upgrade | 1 trip, 15.7 s | 3 trips, 46.1 s |
+| First true 50% threshold crossing | 60.5 s | 273.5 s |
+| First fish sale | 143.3 s, 29 gold | 282.7 s, 10 gold |
+| Full permanent cleanup and displayed 0% | 164.6 s | 449.3 s |
+
+- Both window sizes reproduced the same checkpoints. The first full-load walk remained 1.65 seconds. Six initial pieces and eight reserved nearshore slots preserve both the 100% start and starter access at the 12-item cap.
+- Trash sells for 3 gold. The first rod, Sack, and cleanup choices cost 24, 21, and 24 gold. Later rods, Sacks, and projects leave room for progression after a fish sale. Fish prices add 0.75 gold per centimeter, rounded, and a species rarity bonus to the base value. The trash-only fixture funded all projects and the offshore rod. Both live runs restored all six ambient fish at 0%, then rebounded to 5%.
+- Godot 4.7.2 passed editor import, main startup, and ten smoke tests. Intel Iris Xe / OpenGL Compatibility verified seeded trash crossing into the camera while still drifting inward at 1280 × 720 and 800 × 450. Independent pacing feedback remains pending. M14 adds the distinct catch visuals and timing challenge.
 
 ## Milestone 14 — Distinct fish, visible rod upgrades, and catch timing
 
