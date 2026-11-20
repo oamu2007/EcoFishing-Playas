@@ -12,7 +12,7 @@ In the next pass, incoming trash keeps moving inward until it reaches the equipp
 
 ## Next milestone
 
-Continue with [Milestone 21](#milestone-21--more-permanent-cleanup-projects). Use the verified M18 build as the comparison baseline and follow [AGENTS.md](../AGENTS.md) for the existing roadmap execution workflow. The independent first-time-player run and graphics verification on another device carry forward to M25.
+Continue with [Milestone 22](#milestone-22--pause-controls-sell-all-and-help-visibility). Use the verified M18 build as the comparison baseline and follow [AGENTS.md](../AGENTS.md) for the existing roadmap execution workflow. The independent first-time-player run and graphics verification on another device carry forward to M25.
 
 ## Completed baseline
 
@@ -489,7 +489,7 @@ Compare the timing challenge with M18. Check success, a second-stage miss, timeo
 
 ## Milestone 21 — More permanent cleanup projects
 
-**Planned.** The player restores the coast through more purchases, each with a smaller effect and its own visible result.
+**Verified November 20, 2026.** The player restores the coast through more purchases, each with a smaller effect and its own visible result.
 
 - Add two or three additional purchasable instances of each existing project type, covering stranded debris, abandoned nets, and tide pool restoration. Give each instance a distinct site or work area, purchase state, and visible before-and-after result. Reuse the existing crew and equipment staging where it fits.
 - Add a small number of new cleanup types. Possible projects include clearing a blocked shore drain or skimming trapped surface debris. Choose projects that fit the compact shoreline and have a short, readable work sequence.
@@ -498,6 +498,10 @@ Compare the timing challenge with M18. Check success, a second-stage miss, timeo
 **Verification**
 
 Buy two instances of the same project type and confirm that they charge and complete separately and stage work at the correct sites. Fund the fish threshold using only trash sales, then buy the full catalog and verify the exact permanent total, visible completed sites, live floating-trash rebound, and reset on New Game.
+
+- The 90-gold catalog contains three debris removals, three net removals, three tide pool restorations, a blocked drain, and a surface skim. Each project has a location, a unique site ID, and separate funding and work state. The first seven cost 54 gold and bring permanent pollution down to 20 points, which keeps fish eligible at the full 30-point floating load. All eleven bring permanent pollution to zero.
+- Cleanup fixtures funded the threshold and full catalog from trash, bought two debris projects in one visit, and verified distinct crews and completions, duplicate rejection, trader suspension, exact debits and reductions, rebound, and reset. The seeded two-size route recorded a first fish sale at 252.6 seconds and displayed 0% at 449.7 seconds before the next arrival restored 5%.
+- Godot 4.7.2 imported the icons and passed cleanup, trader, session flow, and the complete seeded route. OpenGL captures at both sizes showed the drain and skimming projects before, during, and after work. The editor again reported a local settings write error. First-time discovery and cross-device review remain for M25. Next is M22 pause, Sell All, and help visibility.
 
 ## Milestone 22 — Pause controls, Sell All, and help visibility
 

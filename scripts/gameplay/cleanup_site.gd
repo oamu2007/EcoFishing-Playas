@@ -19,8 +19,20 @@ const POOL_RIM: PackedVector2Array = [
 	Vector2(-30, -3), Vector2(-21, -14), Vector2(-4, -17), Vector2(18, -14),
 	Vector2(31, -2), Vector2(27, 10), Vector2(10, 16), Vector2(-11, 14), Vector2(-27, 7),
 ]
+const DRAIN_CHANNEL: PackedVector2Array = [
+	Vector2(-9, -5), Vector2(3, -6), Vector2(16, -3), Vector2(27, -5), Vector2(39, -3),
+	Vector2(39, 6), Vector2(27, 5), Vector2(16, 8), Vector2(3, 5), Vector2(-9, 6),
+]
+const SKIM_BOOM: PackedVector2Array = [
+	Vector2(-24, -9), Vector2(-27, 0), Vector2(-21, 9), Vector2(-10, 13),
+	Vector2(6, 14), Vector2(21, 10), Vector2(28, 2), Vector2(26, -7),
+]
+const SURFACE_DEBRIS: Array[Vector2] = [
+	Vector2(-17, 0), Vector2(-9, 5), Vector2(-3, -4), Vector2(7, 4), Vector2(17, 0),
+]
 
-@export_enum("Shore debris", "Offshore net", "Tide pool") var work_kind: int = 0
+@export var site_id: StringName
+@export_enum("Shore debris", "Offshore net", "Tide pool", "Shore drain", "Surface skim") var work_kind: int = 0
 @export_range(0.5, 10.0, 0.1) var duration: float = 3.2
 @export var watch_cue: String
 
@@ -59,6 +71,10 @@ func _draw() -> void:
 			_draw_net(work)
 		2:
 			_draw_pool(work)
+		3:
+			_draw_drain(work)
+		4:
+			_draw_surface_skim(work)
 
 
 func _crew_offset() -> Vector2:
@@ -102,12 +118,7 @@ func _draw_net(work: float) -> void:
 		var approach: float = 1.0 - smoothstep(0.0, ARRIVED, progress)
 		var departure: float = smoothstep(WORK_DONE, 1.0, progress)
 		var skiff: Vector2 = Vector2(44 * (approach + departure), -28.0 + sin(progress * TAU * 3.0))
-		_ellipse(skiff + Vector2(8, 3), Vector2(27, 11), Color("#afd3c486"), false)
-		_polygon(skiff, [Vector2(-23, 0), Vector2(-12, -10), Vector2(14, -10), Vector2(23, -6),
-			Vector2(23, 6), Vector2(14, 10), Vector2(-12, 10)], SAND, INK, 2.2)
-		draw_rect(Rect2(skiff + Vector2(-10, -6), Vector2(26, 12)), DEEP)
-		_draw_worker(skiff + Vector2(1, -2), 0.0)
-		_draw_crate(skiff + Vector2(13, 0), work >= 1.0)
+		_draw_skiff(skiff, work >= 1.0)
 		if progress >= ARRIVED and progress < WORK_DONE:
 			_line(skiff + Vector2(-7, 4), Vector2(-7, -24 * work), SAND, 2.0)
 			_draw_wave(Vector2(-9, 3 + 2 * sin(progress * TAU * 6.0)))
@@ -139,6 +150,74 @@ func _draw_pool(work: float) -> void:
 		_line(worker + Vector2(4, 1), scoop, SAND, 2.4)
 		_ellipse(scoop, Vector2(4, 2), DEEP)
 		_draw_crate(Vector2(-14, 24) + offset, work > 0.5)
+
+
+func _draw_drain(work: float) -> void:
+	_ellipse(Vector2(1, 2), Vector2(36, 13), Color("#ab8c62"))
+	_polygon(Vector2.ZERO, DRAIN_CHANNEL, SILT.lerp(DEEP, work), ROCK, 2.0)
+	_polygon(Vector2.ZERO, [Vector2(-25, -13), Vector2(-11, -13), Vector2(-5, -8),
+		Vector2(-5, 8), Vector2(-11, 13), Vector2(-25, 13)], ROCK, INK, 2.0)
+	draw_rect(Rect2(-20, -8, 13, 16), INK)
+	for y: int in [-5, 0, 5]:
+		_line(Vector2(-18, y), Vector2(-8, y), ROCK, 1.6)
+	for index: int in 4:
+		var cleared: float = smoothstep(index * 0.14, 0.50 + index * 0.14, work)
+		if cleared < 0.95:
+			var clog: Vector2 = Vector2(-8 + index * 5, 3 - 6 * (index % 2))
+			_debris(clog.lerp(Vector2(-15, 24), cleared), index)
+	if work >= 1.0:
+		_line(Vector2(-5, 0), Vector2(8, 0), SEAFOAM, 1.6)
+		_line(Vector2(14, 2), Vector2(24, 1), Color("#89c5b0"), 1.5)
+		_line(Vector2(29, 0), Vector2(37, 1), SEAFOAM, 1.3)
+		_draw_grass(Vector2(17, -8))
+	if _started and not is_complete:
+		var offset: Vector2 = _crew_offset()
+		var stride: float = sin(progress * TAU * 5.0)
+		var worker: Vector2 = Vector2(-4 + 13 * work, -20) + offset
+		_draw_worker(worker, stride)
+		_draw_worker(Vector2(-25, 23) + offset, -stride)
+		var hook: Vector2 = worker + Vector2(4, 16 + 3 * stride)
+		_line(worker + Vector2(4, 1), hook, SAND, 2.4)
+		_line(hook, hook + Vector2(-4, 3), INK, 2.1)
+		_draw_crate(Vector2(-15, 24) + offset, work > 0.35)
+
+
+func _draw_surface_skim(work: float) -> void:
+	draw_polyline(SKIM_BOOM, INK, 4.5, true)
+	draw_polyline(SKIM_BOOM, ORANGE, 2.8, true)
+	for index: int in [0, 2, 4, 7]:
+		_draw_float(SKIM_BOOM[index])
+	if work < 1.0:
+		var slick: Color = Color("#68664bc9")
+		slick.a *= 1.0 - work
+		_ellipse(Vector2(0, 2), Vector2(20, 8), slick)
+		for index: int in SURFACE_DEBRIS.size():
+			var skimmed: float = smoothstep(index * 0.10, 0.53 + index * 0.10, work)
+			if skimmed < 0.95:
+				_debris(SURFACE_DEBRIS[index].lerp(Vector2(4, -12), skimmed), index)
+	else:
+		_draw_wave(Vector2(-9, 2))
+		_draw_wave(Vector2(11, 5))
+	if _started and not is_complete:
+		var approach: float = 1.0 - smoothstep(0.0, ARRIVED, progress)
+		var departure: float = smoothstep(WORK_DONE, 1.0, progress)
+		var skiff: Vector2 = Vector2(58 * (approach + departure), -25.0 + sin(progress * TAU * 3.0))
+		_draw_skiff(skiff, work > 0.55)
+		if progress >= ARRIVED and progress < WORK_DONE:
+			var basket: Vector2 = Vector2(8 - 20 * work, 4 - 7 * work)
+			_line(skiff + Vector2(0, 3), basket, SAND, 2.5)
+			_ellipse(basket, Vector2(6, 4), Color("#a6bea4"))
+			_ellipse(basket, Vector2(6, 4), INK, false)
+			_line(basket + Vector2(-4, 0), basket + Vector2(4, 0), GEAR, 1.2)
+
+
+func _draw_skiff(center: Vector2, crate_loaded: bool) -> void:
+	_ellipse(center + Vector2(8, 3), Vector2(27, 11), Color("#afd3c486"), false)
+	_polygon(center, [Vector2(-23, 0), Vector2(-12, -10), Vector2(14, -10), Vector2(23, -6),
+		Vector2(23, 6), Vector2(14, 10), Vector2(-12, 10)], SAND, INK, 2.2)
+	draw_rect(Rect2(center + Vector2(-10, -6), Vector2(26, 12)), DEEP)
+	_draw_worker(center + Vector2(1, -2), 0.0)
+	_draw_crate(center + Vector2(13, 0), crate_loaded)
 
 
 func _draw_mesh(center: Vector2, mesh_scale: Vector2) -> void:

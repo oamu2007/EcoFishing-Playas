@@ -97,7 +97,7 @@ func _start_session() -> bool:
 	_world.cleanup_work.work_started.connect(_count_cleanup_cue)
 	_check(_sack.item_count == 0 and _sack.capacity == 3 and _shop.coins == 0 and _coin_amount.text == "0 gold" and _shop.rod_tier == 0 and _shop.sack_tier == 0, "Fresh session retained Sack, gold, or gear progress")
 	for index: int in _shop.cleanup_projects.size():
-		var site: CleanupSite = _world.cleanup_work.get_child(index)
+		var site: CleanupSite = _world.cleanup_work.site_for_project(_shop.cleanup_projects[index])
 		_check(not _shop.is_cleanup_complete(index) and not site.has_started, "Fresh session retained completed cleanup or crew work")
 	return _check(_world.pollution.current_pollution == 100 and is_equal_approx(_water.displayed_pollution, 1.0), "Fresh session retained pollution or water clarity")
 
@@ -119,10 +119,12 @@ func _play_session(window: String) -> void:
 	print("First gear at %.1fs after %d starter trips" % [first_upgrade_time, _sale_trips])
 	if not await _buy("Gear", _shop.rod_upgrades.size(), _shop.sack_upgrades[0].cost):
 		return
-	if not await _buy("Cleanup", 0, _shop.cleanup_projects[0].cost):
-		return
-	if not await _buy("Cleanup", 1, _shop.cleanup_projects[1].cost):
-		return
+	var project_index: int = 0
+	var target_permanent_points: int = roundi(_world.catchable_fish.pollution_threshold * 100.0) - PollutionSystem.MAX_FLOATING_POINTS
+	while _world.pollution.permanent_points > target_permanent_points and project_index < _shop.cleanup_projects.size():
+		if not await _buy("Cleanup", project_index, _shop.cleanup_projects[project_index].cost):
+			return
+		project_index += 1
 	_check(_world.pollution.current_pollution <= 50 and _shop.rod_tier == 1 and _shop.sack_tier == 1, "Trash-funded gear and projects did not unlock fish")
 	_intentionally_fishing = true
 	if not await _catch_fish():
@@ -136,8 +138,9 @@ func _play_session(window: String) -> void:
 
 	if not await _buy("Gear", 1, _shop.rod_upgrades[1].cost):
 		return
-	if not await _buy("Cleanup", 2, _shop.cleanup_projects[2].cost):
-		return
+	for index: int in range(project_index, _shop.cleanup_projects.size()):
+		if not await _buy("Cleanup", index, _shop.cleanup_projects[index].cost):
+			return
 	if not await _reach_clean_water():
 		return
 	var clean_time: float = _seconds_since(_start_ticks)
@@ -192,7 +195,7 @@ func _check_cleanup_sites() -> void:
 		await process_frame
 	_check(_cleanup_cues == _shop.cleanup_projects.size(), "A project work cue was missing or repeated")
 	for index: int in _shop.cleanup_projects.size():
-		var site: CleanupSite = _world.cleanup_work.get_child(index)
+		var site: CleanupSite = _world.cleanup_work.site_for_project(_shop.cleanup_projects[index])
 		_check(_shop.is_cleanup_complete(index) and site.is_complete, "A project failed to leave a completed site")
 
 
@@ -203,6 +206,9 @@ func _buy(catalog: String, index: int, cost: int) -> bool:
 	await process_frame
 	var column: Control = _panel.get_node("%" + catalog)
 	var button: Button = column.find_children("*", "Button", true, false)[index]
+	var scroll: ScrollContainer = _panel.get_node("%BuyScroll")
+	scroll.ensure_control_visible(button)
+	await process_frame
 	if not _check(not button.disabled, "Funded purchase remained unavailable"):
 		return false
 	var before: int = _shop.coins

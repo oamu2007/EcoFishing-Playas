@@ -10,6 +10,7 @@ script = ExtResource("1_work")
 [node name="ShoreDebris" type="Node2D" parent="."]
 position = Vector2(765, 330)
 script = ExtResource("2_site")
+site_id = &"debris_shack"
 work_kind = 0
 duration = 3.4
 watch_cue = "Look just north of the shack for the beach crew."
@@ -17,6 +18,7 @@ watch_cue = "Look just north of the shack for the beach crew."
 [node name="OffshoreNet" type="Node2D" parent="."]
 position = Vector2(1010, 455)
 script = ExtResource("2_site")
+site_id = &"net_shack"
 work_kind = 1
 duration = 3.6
 watch_cue = "Look offshore for the skiff lifting the net."
@@ -24,6 +26,83 @@ watch_cue = "Look offshore for the skiff lifting the net."
 [node name="TidePool" type="Node2D" parent="."]
 position = Vector2(803, 610)
 script = ExtResource("2_site")
+site_id = &"pool_shack"
 work_kind = 2
 duration = 3.4
 watch_cue = "Look south of the shack for the tide pool crew."
+
+[node name="NorthShoreDebris" type="Node2D" parent="."]
+position = Vector2(707, 155)
+rotation = -0.24
+scale = Vector2(0.92, 0.92)
+script = ExtResource("2_site")
+site_id = &"debris_north"
+work_kind = 0
+duration = 3.4
+watch_cue = "Look up the north beach for the crew raking stranded debris."
+
+[node name="NorthOffshoreNet" type="Node2D" parent="."]
+position = Vector2(1025, 235)
+rotation = 0.29
+script = ExtResource("2_site")
+site_id = &"net_north"
+work_kind = 1
+duration = 3.6
+watch_cue = "Look offshore to the north for the skiff lifting the net."
+
+[node name="SouthShoreDebris" type="Node2D" parent="."]
+position = Vector2(720, 700)
+rotation = 0.32
+scale = Vector2(1.05, 1.05)
+script = ExtResource("2_site")
+site_id = &"debris_south"
+work_kind = 0
+duration = 3.4
+watch_cue = "Look down the south beach for the crew raking stranded debris."
+
+[node name="SouthOffshoreNet" type="Node2D" parent="."]
+position = Vector2(1000, 695)
+rotation = -0.22
+scale = Vector2(0.94, 0.94)
+script = ExtResource("2_site")
+site_id = &"net_south"
+work_kind = 1
+duration = 3.6
+watch_cue = "Look offshore to the south for the skiff lifting the net."
+
+[node name="NorthTidePool" type="Node2D" parent="."]
+position = Vector2(805, 245)
+rotation = 0.5
+scale = Vector2(0.88, 0.88)
+script = ExtResource("2_site")
+site_id = &"pool_north"
+work_kind = 2
+duration = 3.4
+watch_cue = "Look along the north waterline for the tide pool crew."
+
+[node name="SouthTidePool" type="Node2D" parent="."]
+position = Vector2(801, 790)
+rotation = -0.42
+scale = Vector2(0.94, 0.94)
+script = ExtResource("2_site")
+site_id = &"pool_south"
+work_kind = 2
+duration = 3.4
+watch_cue = "Look along the far south waterline for the tide pool crew."
+
+[node name="ShoreDrain" type="Node2D" parent="."]
+position = Vector2(809, 525)
+script = ExtResource("2_site")
+site_id = &"drain"
+work_kind = 3
+duration = 3.5
+watch_cue = "Look at the shore below the shack for the crew clearing the drain."
+
+[node name="SurfaceSkim" type="Node2D" parent="."]
+position = Vector2(935, 360)
+rotation = -0.12
+script = ExtResource("2_site")
+site_id = &"skim"
+work_kind = 4
+duration = 3.6
+watch_cue = "Look out from the north side of the shack for the skiff skimming the boom."

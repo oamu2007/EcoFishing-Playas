@@ -1,4 +1,4 @@
-[gd_scene load_steps=23 format=3]
+[gd_scene load_steps=33 format=3]
 
 [ext_resource type="Script" path="res://scripts/systems/shack_shop.gd" id="1_shop"]
 [ext_resource type="Script" path="res://scripts/systems/sack.gd" id="2_sack"]
@@ -14,6 +14,9 @@
 [ext_resource type="Texture2D" path="res://assets/trader/abandoned_nets.svg" id="11_nets"]
 [ext_resource type="Texture2D" path="res://assets/trader/tide_pool.svg" id="12_pool"]
 [ext_resource type="Script" path="res://scripts/systems/rod_add_on.gd" id="13_add_on"]
+
+[ext_resource type="Texture2D" path="res://assets/trader/shore_drain.svg" id="14_drain"]
+[ext_resource type="Texture2D" path="res://assets/trader/surface_skim.svg" id="15_skim"]
 
 [sub_resource type="Resource" id="Resource_shore_rod"]
 script = ExtResource("3_rod_tier")
@@ -56,35 +59,100 @@ art = ExtResource("9_cargo")
 cost = 39
 capacity = 8
 
-[sub_resource type="Resource" id="Resource_shore_cleanup"]
+[sub_resource type="Resource" id="Resource_debris_shack"]
 script = ExtResource("5_project")
-title = "Clear stranded debris"
+title = "Debris by the shack"
 art = ExtResource("10_debris")
-work_kind = 0
-cost = 24
+site_id = &"debris_shack"
+cost = 6
+pollution_reduction = 8
 
-[sub_resource type="Resource" id="Resource_net_removal"]
+[sub_resource type="Resource" id="Resource_net_shack"]
 script = ExtResource("5_project")
-title = "Remove abandoned nets"
+title = "Net off the shack"
 art = ExtResource("11_nets")
-work_kind = 1
-cost = 30
-pollution_reduction = 20
+site_id = &"net_shack"
+cost = 9
+pollution_reduction = 7
 
-[sub_resource type="Resource" id="Resource_pool_restoration"]
+[sub_resource type="Resource" id="Resource_pool_shack"]
 script = ExtResource("5_project")
-title = "Restore the tide pool"
+title = "Shack tide pool"
 art = ExtResource("12_pool")
-work_kind = 2
-cost = 36
-pollution_reduction = 20
+site_id = &"pool_shack"
+cost = 9
+pollution_reduction = 5
+
+[sub_resource type="Resource" id="Resource_debris_north"]
+script = ExtResource("5_project")
+title = "North beach debris"
+art = ExtResource("10_debris")
+site_id = &"debris_north"
+cost = 6
+pollution_reduction = 8
+
+[sub_resource type="Resource" id="Resource_net_north"]
+script = ExtResource("5_project")
+title = "North cove net"
+art = ExtResource("11_nets")
+site_id = &"net_north"
+cost = 9
+pollution_reduction = 7
+
+[sub_resource type="Resource" id="Resource_debris_south"]
+script = ExtResource("5_project")
+title = "South beach debris"
+art = ExtResource("10_debris")
+site_id = &"debris_south"
+cost = 6
+pollution_reduction = 8
+
+[sub_resource type="Resource" id="Resource_net_south"]
+script = ExtResource("5_project")
+title = "South cove net"
+art = ExtResource("11_nets")
+site_id = &"net_south"
+cost = 9
+pollution_reduction = 7
+
+[sub_resource type="Resource" id="Resource_pool_north"]
+script = ExtResource("5_project")
+title = "North tide pool"
+art = ExtResource("12_pool")
+site_id = &"pool_north"
+cost = 9
+pollution_reduction = 5
+
+[sub_resource type="Resource" id="Resource_pool_south"]
+script = ExtResource("5_project")
+title = "South tide pool"
+art = ExtResource("12_pool")
+site_id = &"pool_south"
+cost = 9
+pollution_reduction = 5
+
+[sub_resource type="Resource" id="Resource_drain"]
+script = ExtResource("5_project")
+title = "Clear the shore drain"
+art = ExtResource("14_drain")
+site_id = &"drain"
+cost = 6
+pollution_reduction = 4
+
+[sub_resource type="Resource" id="Resource_skim"]
+script = ExtResource("5_project")
+title = "Skim the inlet"
+art = ExtResource("15_skim")
+site_id = &"skim"
+cost = 12
+pollution_reduction = 6
 
 [node name="ShackShop" type="Node"]
 script = ExtResource("1_shop")
 rod_upgrades = Array[ExtResource("3_rod_tier")]([SubResource("Resource_shore_rod"), SubResource("Resource_offshore_rod")])
 rod_add_ons = Array[ExtResource("13_add_on")]([SubResource("Resource_forgiveness"), SubResource("Resource_speed")])
 sack_upgrades = Array[ExtResource("4_sack_tier")]([SubResource("Resource_canvas_sack"), SubResource("Resource_cargo_sack")])
-cleanup_projects = Array[ExtResource("5_project")]([SubResource("Resource_shore_cleanup"), SubResource("Resource_net_removal"), SubResource("Resource_pool_restoration")])
+cleanup_projects = Array[ExtResource("5_project")]([SubResource("Resource_debris_shack"), SubResource("Resource_net_shack"), SubResource("Resource_pool_shack"), SubResource("Resource_debris_north"), SubResource("Resource_net_north"), SubResource("Resource_debris_south"), SubResource("Resource_net_south"), SubResource("Resource_pool_north"), SubResource("Resource_pool_south"), SubResource("Resource_drain"), SubResource("Resource_skim")])
 
 [node name="Sack" type="Node" parent="."]
 script = ExtResource("2_sack")

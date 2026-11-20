@@ -32,7 +32,7 @@ func _check(condition: bool, message: String) -> void:
 
 func _run() -> void:
 	_start_session()
-	_check(_shop.cleanup_projects.size() == 3 and _project_buttons.size() == 3, "Expected three playable cleanup projects")
+	_check(_shop.cleanup_projects.size() == 11 and _project_buttons.size() == 11, "Expected eleven playable cleanup projects")
 	if _failures == 0:
 		_verify_new_session()
 		_verify_cleanup_path()
@@ -70,16 +70,29 @@ func _verify_new_session() -> void:
 	_open_shack()
 	_panel.get_node("%Buy").pressed.emit()
 	var catalog_points: int = 0
+	var catalog_cost: int = 0
+	var site_ids: Dictionary[StringName, bool] = {}
+	var site_positions: Dictionary[Vector2, bool] = {}
+	var kinds: Array[int] = [0, 0, 0, 0, 0]
 	for index: int in _shop.cleanup_projects.size():
 		var project: CleanupProject = _shop.cleanup_projects[index]
 		var button: Button = _project_buttons[index]
 		catalog_points += project.pollution_reduction
+		catalog_cost += project.cost
 		_check(not _shop.is_cleanup_complete(index) and button.disabled and button.text == "%d gold" % project.cost, "Session did not restore the project catalog")
-		var site: CleanupSite = _world.cleanup_work.get_child(index)
+		var site: CleanupSite = _world.cleanup_work.site_for_project(project)
+		if site == null:
+			_check(false, "Cleanup project has no site")
+			continue
+		_check(not site_ids.has(site.site_id) and not site_positions.has(site.position), "Multiple projects share a cleanup site")
+		site_ids[site.site_id] = true
+		site_positions[site.position] = true
+		kinds[site.work_kind] += 1
 		_check(not site.has_started and not site.is_complete and site.progress == 0.0, "New session retained a cleanup site")
 		button.pressed.emit()
 		_check(not _shop.buy_cleanup(index) and not _shop.is_cleanup_complete(index), "Unaffordable cleanup was purchased")
 	_check(catalog_points == PollutionSystem.MAX_PERMANENT_POINTS, "Cleanup catalog does not cover all permanent pollution")
+	_check(catalog_cost == 90 and kinds == [3, 3, 3, 1, 1], "Cleanup catalog changed its budget or site mix")
 	_check(_shop.coins == 0 and _meter.value == 100.0, "Unaffordable cleanup changed coins or pollution")
 	_close_shack()
 
@@ -91,26 +104,32 @@ func _verify_cleanup_path() -> void:
 	_check(_shop.buy_rod(0) and _rod.maximum_cast_range > _starter_range and _rod.cast_duration < starter_cast, "Starter Sack trips did not fund the first rod upgrade")
 	_close_shack()
 
-	for index: int in range(2):
-		var project: CleanupProject = _shop.cleanup_projects[index]
+	var threshold_count: int = 0
+	var threshold_cost: int = 0
+	while _pollution.permanent_points + PollutionSystem.MAX_FLOATING_POINTS > 50 and threshold_count < _shop.cleanup_projects.size():
+		var project: CleanupProject = _shop.cleanup_projects[threshold_count]
+		threshold_cost += project.cost
 		_earn(project.cost, 4)
 		_restore_floating_cap()
-		_purchase_project(index)
+		_purchase_project(threshold_count)
+		threshold_count += 1
 		_check(_catch_reachable_trash(), "No reachable trash remained after the cleanup purchase")
 		_check(_pollution.floating_points < PollutionSystem.MAX_FLOATING_POINTS, "Catch did not lower the floating load before the rebound")
 		var permanent: int = _pollution.permanent_points
 		_restore_floating_cap()
 		_check(_pollution.permanent_points == permanent, "A live arrival changed permanent pollution")
-		_check_completed_projects(index + 1)
-	_check(_pollution.current_pollution == 50 and _meter.value == 50.0, "First rod and two projects did not reach the fish threshold after a full floating rebound")
+		_check_completed_projects(threshold_count)
+	_check(_pollution.current_pollution == 50 and _meter.value == 50.0 and threshold_cost == 54, "Trash-funded projects did not reach the stable fish threshold within the budget")
 
-	# Starter-range income funds the final project and the gear to retrieve offshore pieces.
-	_earn(_shop.cleanup_projects[2].cost + _shop.rod_upgrades[1].cost, 9)
+	var remaining_cost: int = _shop.rod_upgrades[1].cost
+	for index: int in range(threshold_count, _shop.cleanup_projects.size()):
+		remaining_cost += _shop.cleanup_projects[index].cost
+	_earn(remaining_cost, 12)
 	_open_shack()
 	_panel.get_node("%Buy").pressed.emit()
 	var coins: int = _shop.coins
 	var pollution_before: int = _pollution.current_pollution
-	for index: int in range(2):
+	for index: int in threshold_count:
 		var button: Button = _project_buttons[index]
 		_check(coins >= _shop.cleanup_projects[index].cost and not _shop.buy_cleanup(index), "An affordable duplicate cleanup was accepted")
 		button.pressed.emit()
@@ -118,7 +137,8 @@ func _verify_cleanup_path() -> void:
 	_check(_shop.buy_rod(1), "Recurring trash sales did not fund the offshore rod")
 	_close_shack()
 	_restore_floating_cap()
-	_purchase_project(2)
+	for index: int in range(threshold_count, _shop.cleanup_projects.size()):
+		_purchase_project(index)
 	_check(_pollution.permanent_points == 0 and _meter.value == float(PollutionSystem.MAX_FLOATING_POINTS), "All projects should leave only the floating load")
 
 	while not _manager.items.is_empty():
@@ -144,7 +164,7 @@ func _check_completed_projects(count: int) -> void:
 	for index: int in count:
 		var button: Button = _project_buttons[index]
 		_check(_shop.is_cleanup_complete(index) and button.disabled and button.text == "Complete", "Project did not stay complete across arrivals and shop visits")
-		var site: CleanupSite = _world.cleanup_work.get_child(index)
+		var site: CleanupSite = _world.cleanup_work.site_for_project(_shop.cleanup_projects[index])
 		_check(site.is_complete and site.progress == 1.0, "Completed presentation replayed on the next visit")
 	_close_shack()
 
@@ -154,7 +174,7 @@ func _purchase_project(index: int) -> void:
 	_panel.get_node("%Buy").pressed.emit()
 	var project: CleanupProject = _shop.cleanup_projects[index]
 	var button: Button = _project_buttons[index]
-	var site: CleanupSite = _world.cleanup_work.get_child(index)
+	var site: CleanupSite = _world.cleanup_work.site_for_project(project)
 	var coins: int = _shop.coins
 	var permanent: int = _pollution.permanent_points
 	var floating: int = _pollution.floating_points
@@ -179,14 +199,18 @@ func _purchase_project(index: int) -> void:
 
 
 func _verify_queued_work() -> void:
-	_shop.coins = _shop.cleanup_projects[0].cost + _shop.cleanup_projects[1].cost
+	var first_project: CleanupProject = _shop.cleanup_projects[0]
+	var second_project: CleanupProject = _shop.cleanup_projects[3]
+	_shop.coins = first_project.cost + second_project.cost
 	_open_shack()
 	_panel.get_node("%Buy").pressed.emit()
 	_project_buttons[0].pressed.emit()
-	_project_buttons[1].pressed.emit()
-	var first: CleanupSite = _world.cleanup_work.get_child(0)
-	var second: CleanupSite = _world.cleanup_work.get_child(1)
-	_check(not first.has_started and not second.has_started and _pollution.permanent_points == 20, "Buying multiple projects did not commit and queue them")
+	_project_buttons[3].pressed.emit()
+	var first: CleanupSite = _world.cleanup_work.site_for_project(first_project)
+	var second: CleanupSite = _world.cleanup_work.site_for_project(second_project)
+	_check(first != second and first.work_kind == second.work_kind, "Repeat-project test did not use separate sites of the same kind")
+	var expected: int = PollutionSystem.MAX_PERMANENT_POINTS - first_project.pollution_reduction - second_project.pollution_reduction
+	_check(not first.has_started and not second.has_started and _pollution.permanent_points == expected, "Buying multiple projects did not commit and queue them")
 	_close_shack()
 	_check(first.has_started and not second.has_started, "Queued work started simultaneously")
 	_world.cleanup_work._process(first.duration + 0.1)
@@ -224,12 +248,12 @@ func _advance_arrival() -> void:
 			item._physics_process(60.0)
 
 
-func _catch_reachable_trash(maximum_distance: float = INF) -> bool:
+func _catch_reachable_trash() -> bool:
 	var rod_offset: Vector2 = _rod.global_position - _player.global_position
 	for item: OceanTrash in _manager.items:
 		var target: Vector2 = item.global_position
 		var origin: Vector2 = Vector2(_world.shore_start.x, target.y)
-		if not item.in_water or origin.distance_to(target) > maximum_distance:
+		if not item.in_water:
 			continue
 		if not _rod.invalid_target_reason_from(origin, target).is_empty():
 			continue
