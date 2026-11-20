@@ -16,17 +16,32 @@ const CoinBalanceScript = preload("res://scripts/ui/coin_balance.gd")
 func _ready() -> void:
 	_hud.bind_session(_world.pollution, _world.catches, _world.rod, _world.sack, _world.shop, _world.catchable_fish.pollution_threshold)
 	_hud.menu_requested.connect(menu_requested.emit)
+	_hud.help_visibility_changed.connect(_world.rod.set_help_visible)
 	_world.cleanup_work.work_started.connect(_hud.announce_cleanup)
 	_shack_panel.bind_shop(_world.shop, _world.sack, _world.rod)
 	_coin_balance.bind_shop(_world.shop)
 	_shack_panel.close_requested.connect(_close_shop)
 
 
+func _input(event: InputEvent) -> void:
+	if _shack_panel.visible and _shack_panel.handle_sell_all(event):
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_cancel"):
+		var viewport: Viewport = get_viewport()
+		viewport.set_input_as_handled()
+		if viewport.gui_is_dragging():
+			viewport.gui_cancel_drag()
+		elif _shack_panel.visible:
+			_shack_panel.cancel_page()
+		else:
+			menu_requested.emit()
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_echo():
 		return
 	if _shack_panel.visible:
-		if event.is_action_pressed("ui_cancel") or event.is_action_pressed("open_shack"):
+		if event.is_action_pressed("open_shack"):
 			get_viewport().set_input_as_handled()
 			_close_shop()
 	elif event.is_action_pressed("open_shack") and _world.can_open_shack():
@@ -34,9 +49,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		_world.set_shop_open(true)
 		set_hud_visible(false)
 		_shack_panel.open()
-	elif event.is_action_pressed("ui_cancel"):
-		get_viewport().set_input_as_handled()
-		menu_requested.emit()
 
 
 func _close_shop() -> void:
@@ -47,5 +59,4 @@ func _close_shop() -> void:
 
 func set_hud_visible(value: bool) -> void:
 	_hud.visible = value
-	if not value:
-		_hud.close_help()
+	_world.rod.set_help_visible(value and _hud.is_help_enabled())

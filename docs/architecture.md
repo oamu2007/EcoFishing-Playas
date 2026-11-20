@@ -9,6 +9,7 @@ The first vertical slice should support a compact Playas de Tijuana shoreline wh
 ```text
 Main (Node)
 ├── SessionMenu (CanvasLayer)
+├── PauseMenu (CanvasLayer)
 └── Session (Node, created when a session starts)
     ├── World (Node2D)
     │   ├── Environment (Node2D)
@@ -33,7 +34,7 @@ Main (Node)
     └── CoinBalance (CanvasLayer)
 ```
 
-The tree omits decorative nodes. The entry point owns the menu and running session. The session composes the world, HUD, trader, and coin balance. The level owns local gameplay and environmental presentation.
+The tree omits decorative nodes. The entry point owns the title, pause overlay, and running session. The session composes the world, HUD, trader, and coin balance. The level owns local gameplay and environmental presentation.
 
 The level also creates footprint and splash nodes at runtime, plus a shader-backed sand overlay and static sand-detail node under `Environment`.
 
@@ -64,7 +65,7 @@ The rod emits `state_changed`, `hook_landed`, `fish_timing_finished`, `retrieval
 
 ### Compact interface
 
-The compact HUD shows live pollution, Sack usage, and gear tiers. The coin display sits above it. Short prompts follow movement, cast state, the Sack, and affordability. Rejected casts and results appear in a separate note. H or the clickable Help control toggles detailed controls without pausing. Informational controls ignore mouse input and the Menu button consumes its own clicks.
+The compact HUD shows live pollution, Sack usage, and gear tiers. The coin display sits above it. H or the Help button toggles the control guide, situational prompts, status messages, and the rod label. The fish timing dial shows the active check and its outcome independently of Help. Informational controls ignore mouse input and the Menu button consumes its own clicks.
 
 Swept detection samples each item's current physics position rather than solving continuous relative motion for moving trash. At the configured gentle current speed this keeps the implementation small; unusually fast currents would need relative-motion sweeps. The shoreline/water validator still assumes this axis-aligned rectangular level.
 
@@ -76,7 +77,7 @@ The level injects its Sack into `Player` and `CatchResolver`. The Sack holds nam
 
 Typed `RodUpgrade` and `SackUpgrade` resources configure ordered upgrade tiers, their prices, and their effects. A purchase addresses a specific tier and debits only on success. The same shop sells configurable `CleanupProject` resources. It owns the completion flags for the session and applies each project’s stated reduction to `PollutionSystem` exactly once. Projects remove the entire 70-point permanent contribution when all are funded. Arrivals affect only floating points.
 
-The level's `CleanupWork` scene listens for successful project purchases. It maps each project's work kind to an authored site and runs one visual sequence at a time after the trader closes. Each site draws its initial, working, and completed state. The session presents the site's watch cue through the HUD. The trader and the pause menu freeze work; replacing the session resets all sites and discards queued work.
+The level's `CleanupWork` scene listens for successful project purchases. Each project references a distinct authored site by ID, even when several sites share a type of work. The scene runs one visual sequence at a time after the trader closes. Each site draws its initial, working, and completed state. The session presents the site's watch cue through Help. The trader and pause menu freeze work. Replacing the session resets all sites and discards queued work.
 
 ### Pollution-responsive water
 
@@ -117,7 +118,7 @@ The sand overlay and detail positions derive from the authored Beach polygon. Th
 
 ### Menu and replay
 
-`Main` starts at `SessionMenu` and owns a single instanced `session.tscn`. The menu activates its looping shoreline illustration while visible and owns focus and button feedback. New Game creates the first session. The HUD Menu button and Esc open the pause menu, with Esc closing an open trader first. Pause suspends the session and hides the HUD. The GPU water clock continues. Resume or Esc restores the session and HUD. Start fresh detaches and disposes of the old tree before adding a fresh instance. The entry point guards queued activation, and Save and Load are disabled buttons with no handlers. Gameplay fixtures can instantiate the session scene directly.
+`Main` starts at `SessionMenu`, which owns the title illustration and New Game. `PauseMenu` appears over the live session and owns focus and discard confirmation. Esc cancels the active drag or steps back through the trader pages before it can pause gameplay. Pause suspends the session and hides the HUD. The GPU water clock continues. Resume or Esc restores the session and HUD. After confirmation, Start fresh replaces the session and Quit to title removes it. The entry point guards queued activation, and Save and Load are disabled buttons with no handlers. Gameplay fixtures can instantiate the session scene directly.
 
 The menu, HUD, and trader share `ui/themes/coastal_field_guide.tres`. It defines sand-colored panels, brown borders and focus, ink text, and teal actions. The trader uses the menu's shoreline illustration with motion disabled. Trader and session menu controls capture pointer input before the rod's unhandled-input phase. The rod transforms mouse button event coordinates through the active viewport's canvas transform for aim accuracy after resizing.
 

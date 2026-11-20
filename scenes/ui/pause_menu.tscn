@@ -1,0 +1,106 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/pause_menu.gd" id="1_pause"]
+[ext_resource type="Theme" path="res://ui/themes/coastal_field_guide.tres" id="2_theme"]
+
+[node name="PauseMenu" type="CanvasLayer"]
+layer = 20
+visible = false
+script = ExtResource("1_pause")
+
+[node name="Shade" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.045, 0.10, 0.11, 0.63)
+
+[node name="Center" type="CenterContainer" parent="Shade"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="Panel" type="PanelContainer" parent="Shade/Center"]
+layout_mode = 2
+theme = ExtResource("2_theme")
+
+[node name="Margin" type="MarginContainer" parent="Shade/Center/Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 22
+
+[node name="Stack" type="VBoxContainer" parent="Shade/Center/Panel/Margin"]
+custom_minimum_size = Vector2(270, 0)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="PauseHeading" type="Label" parent="Shade/Center/Panel/Margin/Stack"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"FieldTitle"
+theme_override_font_sizes/font_size = 34
+text = "Paused"
+
+[node name="PauseActions" type="VBoxContainer" parent="Shade/Center/Panel/Margin/Stack"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 7
+
+[node name="Resume" type="Button" parent="Shade/Center/Panel/Margin/Stack/PauseActions"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+theme_type_variation = &"FieldPrimary"
+text = "Resume"
+
+[node name="Restart" type="Button" parent="Shade/Center/Panel/Margin/Stack/PauseActions"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 37)
+layout_mode = 2
+text = "Start fresh"
+
+[node name="Save" type="Button" parent="Shade/Center/Panel/Margin/Stack/PauseActions"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 37)
+layout_mode = 2
+focus_mode = 0
+disabled = true
+text = "Save · Coming later"
+
+[node name="QuitToTitle" type="Button" parent="Shade/Center/Panel/Margin/Stack/PauseActions"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 37)
+layout_mode = 2
+text = "Quit to title"
+
+[node name="Confirmation" type="VBoxContainer" parent="Shade/Center/Panel/Margin/Stack"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="DiscardMessage" type="Label" parent="Shade/Center/Panel/Margin/Stack/Confirmation"]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="Choice" type="HBoxContainer" parent="Shade/Center/Panel/Margin/Stack/Confirmation"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="CancelDiscard" type="Button" parent="Shade/Center/Panel/Margin/Stack/Confirmation/Choice"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"FieldPrimary"
+text = "Cancel"
+
+[node name="ConfirmDiscard" type="Button" parent="Shade/Center/Panel/Margin/Stack/Confirmation/Choice"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Start fresh"

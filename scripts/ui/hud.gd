@@ -1,6 +1,7 @@
 extends CanvasLayer
 
 signal menu_requested
+signal help_visibility_changed(enabled: bool)
 
 const CatchResolverScript = preload("res://scripts/systems/catch_resolver.gd")
 const TimingDialScript = preload("res://scripts/ui/fish_timing_dial.gd")
@@ -13,6 +14,7 @@ var _pollution: PollutionSystem
 var _rod: FishingRod
 var _fish_threshold: float
 var _guard_used: bool = false
+var _fish_result_remaining: float = 0.0
 
 @onready var _progress: Label = $ProgressPanel/Margin/Readouts/Progress
 @onready var _notification: Label = $Notification
@@ -53,14 +55,17 @@ func bind_session(pollution: PollutionSystem, catches: CatchResolverScript, rod:
 
 func _process(delta: float) -> void:
 	_notification_remaining = maxf(0.0, _notification_remaining - delta)
-	_notification.visible = _notification_remaining > 0.0
 	if _rod != null:
-		if _timing_dial.visible:
-			_timing_dial.update_dial(_rod, _guard_used)
+		if _rod.state == FishingRod.State.TIMING:
+			_timing_dial.update_timing(_rod, _guard_used)
+		if _fish_result_remaining > 0.0:
+			_fish_result_remaining = maxf(0.0, _fish_result_remaining - delta)
+			if _fish_result_remaining == 0.0:
+				_timing_dial.hide()
 		var message: String = _guidance()
-		_hint.visible = not message.is_empty()
 		if _hint.text != message:
 			_hint.text = message
+	_update_help_layers()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -71,10 +76,18 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _toggle_help() -> void:
 	_help.visible = not _help.visible
+	_help_button.button_pressed = _help.visible
+	_update_help_layers()
+	help_visibility_changed.emit(_help.visible)
 
 
-func close_help() -> void:
-	_help.hide()
+func is_help_enabled() -> bool:
+	return _help.visible
+
+
+func _update_help_layers() -> void:
+	_hint.visible = _help.visible and not _hint.text.is_empty()
+	_notification.visible = _help.visible and _notification_remaining > 0.0
 
 
 func announce_cleanup(message: String) -> void:
@@ -131,11 +144,14 @@ func _on_pollution_changed(normalized: float) -> void:
 
 
 func _on_rod_state_changed(state: FishingRod.State) -> void:
-	_timing_dial.visible = state == FishingRod.State.TIMING or (state == FishingRod.State.WAITING and _rod.fish_secured)
+	_fish_result_remaining = 0.0
+	_timing_dial.hide()
 	if state == FishingRod.State.TIMING:
 		_guard_used = false
-	if _timing_dial.visible:
-		_timing_dial.update_dial(_rod, _guard_used)
+		_timing_dial.update_timing(_rod, false)
+		_timing_dial.show()
+	elif state == FishingRod.State.WAITING and _rod.fish_secured:
+		_timing_dial.show_result("Fish secured", "Click to reel in")
 	if state == FishingRod.State.CASTING:
 		_hooked_count = 0
 		_notification_remaining = 0.0
@@ -146,7 +162,8 @@ func _on_rod_state_changed(state: FishingRod.State) -> void:
 
 func _on_fish_timing_finished(succeeded: bool) -> void:
 	if not succeeded:
-		_notify("The fish slipped away. Cast again.")
+		_timing_dial.show_result("Fish slipped away", "Cast again")
+		_fish_result_remaining = 1.2
 
 
 func _on_fish_timing_saved() -> void:
@@ -176,4 +193,4 @@ func _on_catches_returned(count: int, type_name: String) -> void:
 func _notify(message: String) -> void:
 	_notification.text = message
 	_notification_remaining = 3.0
-	_notification.show()
+	_update_help_layers()

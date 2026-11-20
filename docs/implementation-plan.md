@@ -12,7 +12,7 @@ In the next pass, incoming trash keeps moving inward until it reaches the equipp
 
 ## Next milestone
 
-Continue with [Milestone 22](#milestone-22--pause-controls-sell-all-and-help-visibility). Use the verified M18 build as the comparison baseline and follow [AGENTS.md](../AGENTS.md) for the existing roadmap execution workflow. The independent first-time-player run and graphics verification on another device carry forward to M25.
+Continue with [Milestone 23](#milestone-23--title-screen-and-ui-typography). Use the verified M18 build as the comparison baseline and follow [AGENTS.md](../AGENTS.md) for the existing roadmap execution workflow. The independent first-time-player run and graphics verification on another device carry forward to M25.
 
 ## Completed baseline
 
@@ -505,7 +505,7 @@ Buy two instances of the same project type and confirm that they charge and comp
 
 ## Milestone 22 — Pause controls, Sell All, and help visibility
 
-**Planned.** Esc opens a compact in-game pause menu, selling a full Sack takes one action, and contextual hint text appears when Help is active.
+**Verified November 20, 2026.** Esc opens a compact in-game pause menu, selling a full Sack takes one action, and contextual hint text appears when Help is active.
 
 - Bind Esc to pause and resume during play. Route Esc to the active trader page or overlay first so one keypress performs one action. Retain the on-screen Menu button. Use a compact pause layout over the current session with Resume, the existing restart option, an inactive Save entry, and a clearly labeled way to quit to title. Confirm actions that discard the current session. Keep the pause screen visually distinct from the title screen.
 - Add a clearly labeled **Sell All (F)** control on the Sell screen. The button and a single fresh F press sell the full Sack in one transaction, including any staged items. Keep partial drag-and-drop sales available. Disable the action for an empty Sack and ignore key repeat and F outside the Sell screen.
@@ -514,6 +514,10 @@ Buy two instances of the same project type and confirm that they charge and comp
 **Verification**
 
 Check Esc from shore, an active fishing challenge, and each trader page. Verify pause freezes play and resumes the same state. Test Sell All by button and F with staged, unstaged, and identical items. Confirm the correct credit once and no sale outside the Sell page. Toggle H on and off and verify both text layers follow it while the permanent HUD remains legible.
+
+- Esc cancels an active drag first, backs out of Sell or Buy, closes the trader home, and opens pause from play. Pause has Resume, Start fresh, inactive Save, and Quit to title. Restart and quit require confirmation, and Esc dismisses confirmation without closing pause. Both Help text layers default to hidden. The fish dial retains timing and outcome cues with Help off.
+- Godot 4.7.2 passed the OpenGL trader and session flow checks, focused shop and fish regression checks, and the two-size headless playthrough. Checks covered staged and unstaged duplicates in one sale, button and F charges, empty sales, repeat and out-of-page input, keyboard focus, pause during fishing and cleanup, confirmation, and clean New Game after quitting. The editor import reported only the local settings write error.
+- Human onboarding and typography review carry forward. Next is M23 title art and type.
 
 ## Milestone 23 — Title screen and UI typography
 

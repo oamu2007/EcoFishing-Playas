@@ -41,6 +41,7 @@ var _elapsed: float = 0.0
 var _start: Vector2 = Vector2.ZERO
 var _target: Vector2 = Vector2.ZERO
 var _invalid_feedback: float = 0.0
+var _help_visible: bool = false
 
 @onready var _pivot: Node2D = $Pivot
 @onready var _rod_art: Sprite2D = $Pivot/Rod
@@ -58,6 +59,11 @@ func _ready() -> void:
 
 func is_active() -> bool:
 	return state != State.IDLE
+
+
+func set_help_visible(value: bool) -> void:
+	_help_visible = value
+	_refresh_status_visibility()
 
 
 func set_rod_art(art: Texture2D) -> void:
@@ -192,9 +198,13 @@ func _process(delta: float) -> void:
 				_finish_fish_timing(false)
 	if is_active():
 		_line.connect_endpoints(_tip.global_position, _hook.get_line_endpoint())
-	_status.visible = not input_locked and state != State.TIMING and (is_active() or (show_idle_status and is_near_shore(global_position)))
+	_refresh_status_visibility()
 	_status.modulate = Color(1.0, 0.4, 0.3) if _invalid_feedback > 0.0 else Color.WHITE
 	queue_redraw()
+
+
+func _refresh_status_visibility() -> void:
+	_status.visible = _help_visible and not input_locked and state != State.TIMING and (is_active() or (show_idle_status and is_near_shore(global_position)))
 
 
 func _draw() -> void:

@@ -8,6 +8,7 @@ const CleanupSite = preload("res://scripts/gameplay/cleanup_site.gd")
 var _failures: int = 0
 var _main: Node
 var _menu: CanvasLayer
+var _pause: CanvasLayer
 var _session: Node
 var _panel: CanvasLayer
 var _world: LevelScript
@@ -47,6 +48,7 @@ func _run() -> void:
 	_main = MainScene.instantiate()
 	root.add_child(_main)
 	_menu = _main.get_node("SessionMenu")
+	_pause = _main.get_node("PauseMenu")
 	root.size = Vector2i(1280, 720)
 	await process_frame
 	if await _start_session():
@@ -55,7 +57,7 @@ func _run() -> void:
 		await process_frame
 		root.size = Vector2i(800, 450)
 		await process_frame
-		if _check(_menu.visible, "Replay menu did not open after the first session") and await _start_session():
+		if _check(_pause.visible, "Pause menu did not open after the first session") and await _start_session(true):
 			await _play_session("800 x 450")
 	_main.free()
 	for frame: int in 4:
@@ -65,13 +67,17 @@ func _run() -> void:
 	quit(0 if _failures == 0 else 1)
 
 
-func _start_session() -> bool:
-	var start: Button = _menu.get_node("%StartSession")
-	_click_button(start)
+func _start_session(restarting: bool = false) -> bool:
+	if restarting:
+		_click_button(_pause.get_node("%Restart"))
+		await process_frame
+		_click_button(_pause.get_node("%ConfirmDiscard"))
+	else:
+		_click_button(_menu.get_node("%StartSession"))
 	await process_frame
 	await process_frame
 	_session = _main.get_node_or_null("Session")
-	if not _check(_session != null and not _menu.visible, "Start did not enter the playable session"):
+	if not _check(_session != null and not _menu.visible and not _pause.visible, "Start did not enter the playable session"):
 		return false
 	_world = _session.get_node("World")
 	_player = _world.get_node("Player")
@@ -394,10 +400,10 @@ func _cast_and_return(target: Vector2, rapid: bool = false) -> bool:
 		var progress: float = _rod.fish_timing_progress()
 		_key(KEY_ESCAPE)
 		await _wait_ticks(8)
-		_check(_menu.visible and is_equal_approx(progress, _rod.fish_timing_progress()), "Pause did not freeze the timing challenge")
+		_check(_pause.visible and is_equal_approx(progress, _rod.fish_timing_progress()), "Pause did not freeze the timing challenge")
 		_key(KEY_ESCAPE)
 		await process_frame
-		if not _check(not _menu.visible and _rod.state == FishingRod.State.TIMING, "Pause did not resume the visible timing challenge"):
+		if not _check(not _pause.visible and _rod.state == FishingRod.State.TIMING, "Pause did not resume the visible timing challenge"):
 			return false
 		for stage: int in _rod.fish_timing_checks:
 			while _rod.state == FishingRod.State.TIMING and _rod.fish_timing_progress() < _rod.fish_timing_zone().x + 0.04:

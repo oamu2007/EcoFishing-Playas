@@ -1,52 +1,34 @@
 extends CanvasLayer
 
 signal start_requested
-signal resume_requested
 
 const ShorelineIllustration = preload("res://scripts/ui/shoreline_illustration.gd")
 
 var _feedback_tweens: Dictionary[Button, Tween] = {}
 
-@onready var _backdrop: ColorRect = $Backdrop
-@onready var _title: Label = %Title
-@onready var _intro: Label = %Introduction
 @onready var _start: Button = %StartSession
-@onready var _resume: Button = %Resume
 @onready var _shoreline: ShorelineIllustration = %Shoreline
 
 
 func _ready() -> void:
 	_start.pressed.connect(start_requested.emit)
-	_resume.pressed.connect(resume_requested.emit)
-	for button: Button in [_start, _resume]:
-		button.mouse_entered.connect(_animate_button.bind(button, 1.014))
-		button.mouse_exited.connect(_animate_button.bind(button, 1.0))
-		button.button_down.connect(_animate_button.bind(button, 0.98))
-		button.button_up.connect(_animate_button.bind(button, 1.0))
-
-
-func open(has_session: bool) -> void:
-	_backdrop.color.a = 0.79 if has_session else 1.0
-	_title.text = "Session\npaused" if has_session else "EcoFishing\nPlayas"
-	_intro.text = "Start fresh to reset your gear, Sack, gold, and cleanup projects." if has_session else "Fish for trash and fund cleanup.\nBring fish back to Playas."
-	_start.text = "Start fresh" if has_session else "New Game"
-	_start.theme_type_variation = &"Button" if has_session else &"FieldPrimary"
-	_resume.visible = has_session
-	_resume.disabled = false
-	_start.disabled = false
+	_start.mouse_entered.connect(_animate_button.bind(_start, 1.014))
+	_start.mouse_exited.connect(_animate_button.bind(_start, 1.0))
+	_start.button_down.connect(_animate_button.bind(_start, 0.98))
+	_start.button_up.connect(_animate_button.bind(_start, 1.0))
 	_apply_pressed_style(_start)
-	_apply_pressed_style(_resume)
+
+
+func open() -> void:
+	_start.text = "New Game"
+	_start.disabled = false
 	show()
 	_shoreline.set_motion_active(true)
-	if has_session:
-		_resume.grab_focus()
-	else:
-		_start.grab_focus()
+	_start.grab_focus()
 
 
 func set_transition_pending() -> void:
 	_start.disabled = true
-	_resume.disabled = true
 	_start.text = "Opening shoreline…"
 
 

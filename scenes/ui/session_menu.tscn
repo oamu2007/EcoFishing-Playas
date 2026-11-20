@@ -46,22 +46,17 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"FieldTitle"
 theme_override_constants/line_spacing = -2
+text = "EcoFishing\nPlayas"
 
 [node name="Introduction" type="Label" parent="Backdrop/Center/Panel/Margin/Layout/Body"]
 unique_name_in_owner = true
 layout_mode = 2
 autowrap_mode = 2
+text = "Fish for trash and fund cleanup.\nBring fish back to Playas."
 
 [node name="Actions" type="VBoxContainer" parent="Backdrop/Center/Panel/Margin/Layout/Body"]
 layout_mode = 2
 theme_override_constants/separation = 8
-
-[node name="Resume" type="Button" parent="Backdrop/Center/Panel/Margin/Layout/Body/Actions"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 45)
-layout_mode = 2
-theme_type_variation = &"FieldPrimary"
-text = "Resume session"
 
 [node name="StartSession" type="Button" parent="Backdrop/Center/Panel/Margin/Layout/Body/Actions"]
 unique_name_in_owner = true

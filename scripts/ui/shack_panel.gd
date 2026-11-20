@@ -22,6 +22,7 @@ var _rod_add_on_buttons: Array[Button] = []
 @onready var _sack_heading: Label = %SackHeading
 @onready var _feedback: Label = %Feedback
 @onready var _confirm: Button = %ConfirmSale
+@onready var _sell_all: Button = %SellAll
 @onready var _sell: Button = %Sell
 @onready var _buy: Button = %Buy
 @onready var _back: Button = %Back
@@ -42,6 +43,7 @@ func _ready() -> void:
 	_buy.pressed.connect(_show_page.bind(Page.BUY))
 	_back.pressed.connect(_show_page.bind(Page.HOME))
 	_confirm.pressed.connect(_sell_selected)
+	_sell_all.pressed.connect(_sell_entire_sack)
 	_close.pressed.connect(close_requested.emit)
 	for zone: Control in [%SackScroll, %SackZone]:
 		_set_drop_destination(zone, false)
@@ -91,6 +93,20 @@ func close() -> void:
 	_selection.clear()
 
 
+func cancel_page() -> void:
+	if _page == Page.HOME:
+		close_requested.emit()
+	else:
+		_show_page(Page.HOME)
+
+
+func handle_sell_all(event: InputEvent) -> bool:
+	if not visible or _page != Page.SELL or not event.is_action_pressed(&"sell_all"):
+		return false
+	_sell_entire_sack()
+	return true
+
+
 func _show_page(page: Page) -> void:
 	_page = page
 	_title.text = ["Fishing shack", "Sell your catch", "Buy gear and cleanup"][page]
@@ -138,6 +154,8 @@ func _render_sale_items() -> void:
 		_add_empty_note(_tray_items, "No items selected for sale.")
 	_confirm.disabled = _selection.is_empty()
 	_confirm.text = "Sell selected  ·  %d gold" % maxi(0, _sack.sale_quote(_selection))
+	_sell_all.disabled = _sack.item_count == 0
+	_sell_all.text = "Sell All (F)  ·  %d gold" % _sack.sale_total()
 
 
 func _sale_card(entry: Sack.Entry) -> Button:
@@ -215,7 +233,21 @@ func _sell_selected() -> void:
 		_focus_sale_item(false)
 		return
 	var earned: int = _shop.sell_selected(selected)
-	_feedback.text = "Sold %d items for %d gold." % [selected.size(), earned] if selected.size() != 1 else "Sold 1 item for %d gold." % earned
+	_report_sale(selected.size(), earned)
+
+
+func _sell_entire_sack() -> void:
+	if not visible or _page != Page.SELL or _sack.item_count == 0:
+		return
+	if get_viewport().gui_is_dragging():
+		get_viewport().gui_cancel_drag()
+	var count: int = _sack.item_count
+	var earned: int = _shop.sell_all()
+	_report_sale(count, earned)
+
+
+func _report_sale(count: int, earned: int) -> void:
+	_feedback.text = "Sold %d items for %d gold." % [count, earned] if count != 1 else "Sold 1 item for %d gold." % earned
 	_focus_sale_item(false)
 
 

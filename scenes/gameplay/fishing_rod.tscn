@@ -24,6 +24,7 @@ position = Vector2(48, 0)
 [node name="FishingHook" parent="." instance=ExtResource("2")]
 
 [node name="Status" type="Label" parent="."]
+visible = false
 offset_left = -100.0
 offset_top = -76.0
 mouse_filter = 2

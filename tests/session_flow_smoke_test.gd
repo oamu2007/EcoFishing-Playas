@@ -9,6 +9,7 @@ const CleanupSite = preload("res://scripts/gameplay/cleanup_site.gd")
 var _failures: int = 0
 var _main: Node
 var _menu: CanvasLayer
+var _pause: CanvasLayer
 var _start: Button
 var _resume: Button
 
@@ -27,11 +28,13 @@ func _run() -> void:
 	_main = MainScene.instantiate()
 	root.add_child(_main)
 	_menu = _main.get_node("SessionMenu")
+	_pause = _main.get_node("PauseMenu")
 	_start = _menu.get_node("%StartSession")
-	_resume = _menu.get_node("%Resume")
+	_resume = _pause.get_node("%Resume")
 	await process_frame
 	_check(_menu.visible and _start.has_focus() and _start.text == "New Game" and not _main.has_node("Session"), "Launch did not focus New Game before creating gameplay")
-	_check_placeholders()
+	_check_placeholder(_menu.get_node("%Save"))
+	_check_placeholder(_menu.get_node("%Load"))
 	_check(not _main.has_node("Session"), "A startup placeholder created a session")
 	_press_button(_start)
 	_start.pressed.emit()
@@ -51,18 +54,23 @@ func _run() -> void:
 		var previous_world_id: int = world.get_instance_id()
 		_key(KEY_ESCAPE)
 		await process_frame
-		_check(_menu.visible and _resume.has_focus() and _start.text == "Start fresh", "Pause menu did not show labeled resume and reset actions")
-		_check_placeholders()
-		_check(_menu.visible and _main.get_node("Session") == session and _resume.has_focus(), "A pause placeholder changed the session or keyboard focus")
-		_press_button(_start)
-		_start.pressed.emit()
+		var restart: Button = _pause.get_node("%Restart")
+		_check(_pause.visible and _resume.has_focus() and restart.text == "Start fresh", "Pause menu did not show labeled resume and reset actions")
+		_check_placeholder(_pause.get_node("%Save"))
+		_check(_pause.visible and _main.get_node("Session") == session and _resume.has_focus(), "A pause placeholder changed the session or keyboard focus")
+		_press_button(restart)
+		await process_frame
+		_check(_pause.get_node("%CancelDiscard").has_focus() and _main.get_node("Session") == session, "Restart discarded a session before confirmation")
+		var confirm: Button = _pause.get_node("%ConfirmDiscard")
+		_press_button(confirm)
+		confirm.pressed.emit()
 		await process_frame
 		session = _main.get_node_or_null("Session")
 		if session == null:
 			_check(false, "Start fresh did not create a replacement session")
 			break
 		world = session.get_node("World")
-		_check(not _menu.visible and world.get_instance_id() != previous_world_id and _main.get_child_count() == 2, "Repeated activation replaced the session twice or retained the old tree")
+		_check(not _pause.visible and world.get_instance_id() != previous_world_id and _main.find_children("Session", "", false, false).size() == 1, "Repeated activation replaced the session twice or retained the old tree")
 		_check_fresh(world)
 		for index: int in world.trash_manager.items.size():
 			_check(world.trash_manager.items[index].global_position.distance_to(opening_positions[index]) < 3.0, "Seeded starting position did not reset")
@@ -72,14 +80,36 @@ func _run() -> void:
 			world.shop.sell_all()
 			world.pollution.remove_permanent(55)
 			world.trash_manager._physics_process(world.trash_manager.arrival_interval)
+	await _verify_quit_to_title()
 	_finish()
 
 
-func _check_placeholders() -> void:
-	for action: String in ["Save", "Load"]:
-		var button: Button = _menu.get_node("%" + action)
-		_check(button.disabled and button.focus_mode == Control.FOCUS_NONE and button.text.contains("Coming later"), "Save or Load was not clearly inactive")
-		_press_button(button)
+func _check_placeholder(button: Button) -> void:
+	_check(button.disabled and button.focus_mode == Control.FOCUS_NONE and button.text.contains("Coming later"), "Save or Load was not clearly inactive")
+	_press_button(button)
+
+
+func _verify_quit_to_title() -> void:
+	_key(KEY_ESCAPE)
+	await process_frame
+	var quit_to_title: Button = _pause.get_node("%QuitToTitle")
+	_press_button(quit_to_title)
+	await process_frame
+	_key(KEY_ESCAPE)
+	await process_frame
+	_check(_pause.visible and quit_to_title.has_focus() and _main.has_node("Session"), "Esc did not dismiss confirmation alone")
+	_press_button(quit_to_title)
+	await process_frame
+	_press_button(_pause.get_node("%ConfirmDiscard"))
+	await process_frame
+	_check(_menu.visible and _start.has_focus() and not _pause.visible and not _main.has_node("Session"), "Confirmed quit did not restore the title")
+	_press_button(_start)
+	await process_frame
+	var session: Node = _main.get_node_or_null("Session")
+	if session != null:
+		_check_fresh(session.get_node("World"))
+	else:
+		_check(false, "New Game after quitting did not open a fresh session")
 
 
 func _verify_onboarding(session: Node, world: LevelScript) -> void:
@@ -91,7 +121,10 @@ func _verify_onboarding(session: Node, world: LevelScript) -> void:
 	var shop_panel: CanvasLayer = session.get_node("ShackPanel")
 	var shack: FishingShack = world.get_node("FishingShack")
 	var sack: Sack = world.sack
-	_check(hint.text.begins_with("Move right"), "Opening guidance did not point to the shoreline")
+	var rod_status: Label = rod.get_node("Status")
+	var notices: Label = hud.get_node("Notification")
+	var permanent_hud: Control = hud.get_node("ProgressPanel")
+	_check(hint.text.begins_with("Move right") and not hint.visible and not notices.visible and not rod_status.visible and permanent_hud.is_visible_in_tree(), "Opening guidance was visible by default or hid the permanent HUD")
 	_press_button(hud.get_node("HelpKey"))
 	_check(hud.get_node("ControlsPanel").visible, "Help button did not open detailed controls")
 	_key(KEY_H)
@@ -109,20 +142,26 @@ func _verify_onboarding(session: Node, world: LevelScript) -> void:
 	camera.reset_smoothing()
 	camera.force_update_scroll()
 	await process_frame
-	_check(hint.text.begins_with("Aim at floating trash"), "Shoreline prompt did not advance to casting")
+	rod._process(0.0)
+	_check(hint.text.begins_with("Aim at floating trash") and not hint.visible and not rod_status.visible, "Shoreline guidance was visible with Help off")
+	_key(KEY_H)
+	_check(hint.visible and rod_status.visible, "H did not show shore and rod guidance")
 	if not _begin_cast(rod, miss):
 		return
 	await process_frame
 	_check(hint.text.contains("reel in"), "Onboarding omitted retrieval cue")
 	_press_button(hud.get_node("MenuButton"))
-	_check(_menu.visible and rod.state == FishingRod.State.WAITING, "Menu click reeled in the waiting hook")
+	_check(_pause.visible and rod.state == FishingRod.State.WAITING, "Menu click reeled in the waiting hook")
 	await process_frame
 	_mouse_click(Vector2(928, 520))
 	_check(rod.state == FishingRod.State.WAITING, "Click on the pause backdrop reached fishing")
 	_press_button(_resume)
-	_check(not _menu.visible and rod.state == FishingRod.State.WAITING, "Resume click reeled in the waiting hook")
+	_check(not _pause.visible and rod.state == FishingRod.State.WAITING, "Resume click reeled in the waiting hook")
 	_finish_cast(rod, miss)
-	_check(hud.get_node("Notification").text.begins_with("Nothing caught"), "Miss feedback did not explain the empty return")
+	_check(notices.visible and notices.text.begins_with("Nothing caught"), "Enabled Help omitted the empty return")
+	_key(KEY_H)
+	_check(not hint.visible and not notices.visible and not rod_status.visible and permanent_hud.is_visible_in_tree(), "H did not hide both help layers while keeping progress visible")
+	_press_button(hud.get_node("HelpKey"))
 
 	for trip: int in 6:
 		for slot: int in sack.capacity:
@@ -154,7 +193,9 @@ func _verify_onboarding(session: Node, world: LevelScript) -> void:
 		if trip == 0:
 			_key(KEY_ESCAPE)
 			await process_frame
-			_check(not shop_panel.visible and not _menu.visible and hint.text.contains("first upgrade"), "Shop close or first upgrade guidance failed")
+			_key(KEY_ESCAPE)
+			await process_frame
+			_check(not shop_panel.visible and not _pause.visible and hint.visible and hint.text.contains("first upgrade"), "Shop close or first upgrade guidance failed")
 			_key(KEY_E)
 			await process_frame
 		if trip == 2:
@@ -182,7 +223,7 @@ func _verify_onboarding(session: Node, world: LevelScript) -> void:
 	var progress: float = site.progress
 	for frame: int in 3:
 		await process_frame
-	_check(_menu.visible and is_equal_approx(progress, site.progress), "The pause menu did not freeze active cleanup work")
+	_check(_pause.visible and is_equal_approx(progress, site.progress), "The pause menu did not freeze active cleanup work")
 	_key(KEY_ESCAPE)
 	await process_frame
 
