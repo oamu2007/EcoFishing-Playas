@@ -1,5 +1,7 @@
 # Vertical slice implementation plan
 
+The GitHub `main` gameplay baseline includes the beach, fishing, trash collection, pollution tracking, and HUD refinements through M4.5. M5 and M6 are implemented on `feature/dynamic-water`. Run their acceptance steps and test commands from a checkout that includes those features. M7 and M8 are planned.
+
 ## Definition of done
 
 A first-time player can start a session from the menu, learn to collect recurring floating trash with a starter rod, and take it to a nearby fishing shack in a shared Sack. Trash sales fund rod and Sack upgrades and permanent cleanup. Cleaner water brings back catchable fish that the player can carry and sell for more gold coins. The map supports short trips between the shoreline and shack, and the menu, HUD, and shop use a consistent visual theme. The player can start a fresh session in-game. The main scene and standalone graphics preview run without parser or resource errors.
