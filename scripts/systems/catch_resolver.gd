@@ -20,6 +20,7 @@ func initialize(rod: FishingRod, sack: Sack) -> void:
 	rod.target_detected.connect(_on_target_detected)
 	rod.retrieval_advanced.connect(_on_retrieval_advanced)
 	rod.retrieval_completed.connect(_on_retrieval_completed)
+	rod.fish_timing_finished.connect(_on_fish_timing_finished)
 
 
 func register_target(target: FishingTarget) -> void:
@@ -92,7 +93,18 @@ func _attach(target: FishingTarget) -> void:
 		_caught.append(target)
 		if target is OceanTrash:
 			_trash_held += 1
+		elif target is CatchableFish:
+			_rod.start_fish_timing()
 		catch_hooked.emit(target.display_name())
+
+
+func _on_fish_timing_finished(succeeded: bool) -> void:
+	if succeeded:
+		return
+	# Only the first attachment can start the challenge, before any retrieval sweep.
+	var fish: CatchableFish = _caught.pop_back() as CatchableFish
+	if is_instance_valid(fish):
+		fish.escape()
 
 
 func _on_retrieval_completed(_point: Vector2) -> void:
@@ -108,7 +120,7 @@ func _on_retrieval_completed(_point: Vector2) -> void:
 		if not is_instance_valid(target) or not target.hooked or target.collected:
 			continue
 		var label: String = target.display_name()
-		if not _sack.store(label, target.sale_price(), target is CatchableFish):
+		if not _sack.store(label, target.sale_price(), target is CatchableFish, target.inventory_art()):
 			push_error("A reserved catch could not fit in the Sack")
 			continue
 		target.finish_collection()

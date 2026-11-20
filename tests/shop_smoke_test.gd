@@ -40,6 +40,9 @@ func _run() -> void:
 	var starter_cast: float = _rod.cast_duration
 	var starter_return: float = _rod.retrieval_duration
 	var starter_capacity: int = _sack.capacity
+	var equipped_art: Sprite2D = _rod.get_node("Pivot/Rod")
+	var tip: Marker2D = _rod.get_node("Pivot/Tip")
+	var starter_art: Texture2D = equipped_art.texture
 	var target: Vector2 = Vector2(_world.shore_start.x + 325.0, 450.0)
 	var shack: FishingShack = _world.get_node("FishingShack")
 	_check(_sack.capacity == 3 and _shop.coins == 0 and _sack.item_count == 0, "Session did not start with base equipment")
@@ -84,6 +87,7 @@ func _run() -> void:
 	_earn(_shop.rod_upgrades[0].cost)
 	var before_rod: int = _shop.coins
 	_check(_shop.buy_rod(0) and not _shop.buy_rod(0) and _shop.rod_tier == 1, "First rod upgrade failed or was duplicated")
+	_check(equipped_art.texture == _shop.rod_upgrades[0].art and equipped_art.texture != starter_art, "Shore rod did not switch the equipped art")
 	_check(_shop.coins == before_rod - _shop.rod_upgrades[0].cost and _rod.cast_duration < starter_cast and _rod.retrieval_duration < starter_return, "Rod upgrade did not apply the advertised effects")
 	_check(not _panel.visible and not _rod.input_locked and not _player.input_locked, "Closing the shop did not restore controls")
 	_player.set_physics_process(false)
@@ -105,6 +109,7 @@ func _run() -> void:
 	var previous_cast: float = _rod.cast_duration
 	var previous_retrieval: float = _rod.retrieval_duration
 	_check(_shop.buy_rod(1) and not _shop.buy_rod(1), "Second rod upgrade failed")
+	_check(equipped_art.texture == _shop.rod_upgrades[1].art and equipped_art.position + Vector2(52, 12) == tip.position, "Offshore rod art or line attachment is misaligned")
 	_check(_rod.maximum_cast_range > previous_range and _rod.cast_duration < previous_cast and _rod.retrieval_duration < previous_retrieval and _rod.trash_per_cast == 3, "Offshore rod tuning failed")
 	_earn(_shop.sack_upgrades[1].cost)
 	_check(_shop.buy_sack(1) and _sack.capacity == 8 and not _shop.buy_sack(1), "Second Sack upgrade failed")

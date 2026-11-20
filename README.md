@@ -34,7 +34,7 @@ Aim at or near a trash item's center to hook one item on landing. During retriev
 
 The session starts with six reachable pieces. New trash drifts in from offshore, and the starter rod returns one piece per cast. Each piece contributes five floating points while in the water. Floating pollution caps at 30 points and the session starts with 70 permanent points.
 
-With the rod idle, press **E** near the fishing shack to sell any load, buy gear, or fund permanent cleanup. Close the shop with **E**, **Esc**, or **Close**. New catchable fish visit at 50% pollution or below. Aim at their white split rings and retrieve them into the same Sack. A fish already in the water can finish its visit after a rebound. Larger and rarer fish sell for more gold. After funding every project, clearing the floating trash can bring the water to 0% between arrivals.
+With the rod idle, press **E** near the fishing shack to sell any load, buy gear, or fund permanent cleanup. Close the shop with **E**, **Esc**, or **Close**. New catchable fish visit at 50% pollution or below. Aim at their white split rings. When a fish latches, click or press **Space** as the marker crosses the green arc, then click to reel it into the Sack. A fish already in the water can finish its visit after a rebound. Larger and rarer fish sell for more gold. After funding every project, clearing the floating trash can bring the water to 0% between arrivals.
 
 Press **H** or click **Help** for controls. Open **Menu** or press **Esc** when the shop is closed. Use **Resume session** or **Esc** to continue, or **Start fresh** to reset the session.
 

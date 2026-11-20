@@ -44,6 +44,7 @@ func buy_rod(index: int) -> bool:
 	_rod.cast_duration = upgrade.cast_time
 	_rod.retrieval_duration = upgrade.retrieval_time
 	_rod.trash_per_cast = upgrade.trash_limit
+	_rod.set_rod_art(upgrade.art)
 	purchases_changed.emit()
 	return true
 

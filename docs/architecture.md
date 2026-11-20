@@ -94,7 +94,9 @@ Tune `early_reveal_pollution`, `late_reveal_pollution`, and `fade_width` on the 
 
 `CatchableFishManager` reads true normalized pollution on each seeded spawn trial. The interval is four seconds, and the chance rises from 24% at 50% pollution to 85% at 0%. Above 50%, the manager skips arrivals and existing fish remain until their visit ends. There are at most three active visitors by default. The nearshore bounds fit each swim route within the starter rod's reach. The level connects the manager's spawn and departure signals to the catch resolver. Species, length ranges, rarity weights, sale bonuses, and colors are authored `FishSpecies` resources.
 
-A catchable fish is a bright `FishingTarget` with a split-ring cue and collision on layer 3. A cast can attach one fish by landing or waiting and can collect trash on the return path. The Sack's space is shared by all pending catches. Fish have a timed visit that pauses when hooked. On a successful return to the fisherman they leave the fish manager and enter the Sack with their species, size, and sale price. Their sales use the same wallet transaction as trash.
+A catchable fish is a bright `FishingTarget` with a species sprite, split-ring cue, and collision on layer 3. A cast can attach one fish by landing or waiting and can collect trash on the return path. The Sack's space is shared by all pending catches. Fish have a timed visit that pauses when hooked. A hooked fish starts the rod's configurable timing state, which the HUD presents as a dial. A successful press allows retrieval and a miss or timeout makes the resolver release the fish. The session pause freezes the timer. Fish leave the manager when they escape or land, and the Sack keeps each landed fish's species, size, art, and sale price.
+
+Starter, Shore and Offshore rod art shares a grip and tip coordinate. The shop applies the texture from each `RodUpgrade` alongside its cast settings.
 
 ### Beach detail and landing effects
 

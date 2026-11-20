@@ -3,6 +3,7 @@ extends CanvasLayer
 signal menu_requested
 
 const CatchResolverScript = preload("res://scripts/systems/catch_resolver.gd")
+const TimingDialScript = preload("res://scripts/ui/fish_timing_dial.gd")
 
 var _notification_remaining: float = 0.0
 var _hooked_count: int = 0
@@ -21,6 +22,7 @@ var _fish_threshold: float
 @onready var _gear: Label = $ProgressPanel/Margin/Readouts/Gear
 @onready var _menu_button: Button = $MenuButton
 @onready var _help_button: Button = $HelpKey
+@onready var _timing_dial: TimingDialScript = $FishTiming
 
 
 func _ready() -> void:
@@ -42,6 +44,7 @@ func bind_session(pollution: PollutionSystem, catches: CatchResolverScript, rod:
 	catches.catches_returned.connect(_on_catches_returned)
 	rod.state_changed.connect(_on_rod_state_changed)
 	rod.cast_rejected.connect(_notify)
+	rod.fish_timing_finished.connect(_on_fish_timing_finished)
 	_on_pollution_changed(pollution.normalized_pollution)
 	_hint.text = _guidance()
 
@@ -50,7 +53,10 @@ func _process(delta: float) -> void:
 	_notification_remaining = maxf(0.0, _notification_remaining - delta)
 	_notification.visible = _notification_remaining > 0.0
 	if _rod != null:
+		if _timing_dial.visible:
+			_timing_dial.update_dial(_rod.fish_timing_progress(), _rod.fish_timing_zone())
 		var message: String = _guidance()
+		_hint.visible = not message.is_empty()
 		if _hint.text != message:
 			_hint.text = message
 
@@ -77,6 +83,8 @@ func _guidance() -> String:
 			return "Left click again to reel in."
 		FishingRod.State.RETRIEVING:
 			return "Reeling in your line…"
+		FishingRod.State.TIMING:
+			return ""
 	if _sack.free_slots == 0:
 		return "Head inland to the fishing shack and press E."
 	if _sack.fish_count > 0:
@@ -94,7 +102,7 @@ func _guidance() -> String:
 	if _pollution.permanent_points == 0 and _pollution.current_pollution > 0:
 		return "Clear floating trash between arrivals to reach 0%."
 	if _pollution.normalized_pollution <= _fish_threshold:
-		return "Watch for white-ringed fish. Click to cast and reel them in."
+		return "Cast at white-ringed fish and time the catch."
 	if _pollution.trash_collected == 0:
 		return "Aim at floating trash. Left click when the marker is green."
 	return "Sell trash at the shack to fund cleanup. Fish return at %d%%." % roundi(_fish_threshold * 100.0)
@@ -117,12 +125,19 @@ func _on_pollution_changed(normalized: float) -> void:
 
 
 func _on_rod_state_changed(state: FishingRod.State) -> void:
+	_timing_dial.visible = state == FishingRod.State.TIMING
+	if _timing_dial.visible:
+		_timing_dial.update_dial(0.0, _rod.fish_timing_zone())
 	if state == FishingRod.State.CASTING:
 		_hooked_count = 0
 		_notification_remaining = 0.0
 		_notification.hide()
 		if _sack.free_slots == 0:
 			_notify("Sack full. Sell your catch at the shack.")
+
+
+func _on_fish_timing_finished(succeeded: bool) -> void:
+	_notify("Fish secured. Click to reel in." if succeeded else "The fish slipped away. Cast again.")
 
 
 func _on_catch_hooked(type_name: String) -> void:

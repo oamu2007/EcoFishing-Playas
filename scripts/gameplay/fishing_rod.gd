@@ -7,10 +7,12 @@ signal hook_landed(water_position: Vector2)
 signal retrieval_completed(water_position: Vector2)
 signal retrieval_advanced(previous_position: Vector2, current_position: Vector2, hook_radius: float)
 signal target_detected(target: Area2D)
+signal fish_timing_finished(succeeded: bool)
 
-enum State { IDLE, CASTING, WAITING, RETRIEVING }
+enum State { IDLE, CASTING, WAITING, RETRIEVING, TIMING }
 
 const FishingLineScript = preload("res://scripts/gameplay/fishing_line.gd")
+const TIMING_CENTER: float = 0.64
 
 @export var shoreline_distance: float = 140.0
 @export var minimum_cast_range: float = 60.0
@@ -19,6 +21,8 @@ const FishingLineScript = preload("res://scripts/gameplay/fishing_line.gd")
 @export_range(0.1, 3.0) var retrieval_duration: float = 0.85
 @export_range(1, 10) var trash_per_cast: int = 1
 @export var cast_height: float = 100.0
+@export_range(0.5, 5.0, 0.05) var fish_timing_duration: float = 1.8
+@export_range(0.05, 0.6, 0.01) var fish_timing_window: float = 0.22
 
 var state: State = State.IDLE
 var cast_number: int = 0
@@ -31,6 +35,7 @@ var _target: Vector2 = Vector2.ZERO
 var _invalid_feedback: float = 0.0
 
 @onready var _pivot: Node2D = $Pivot
+@onready var _rod_art: Sprite2D = $Pivot/Rod
 @onready var _tip: Marker2D = $Pivot/Tip
 @onready var _hook: FishingHook = $FishingHook
 @onready var _line: FishingLineScript = $FishingLine
@@ -45,6 +50,24 @@ func _ready() -> void:
 
 func is_active() -> bool:
 	return state != State.IDLE
+
+
+func set_rod_art(art: Texture2D) -> void:
+	if art != null:
+		_rod_art.texture = art
+
+
+func start_fish_timing() -> void:
+	if state == State.WAITING:
+		_set_state(State.TIMING)
+
+
+func fish_timing_progress() -> float:
+	return clampf(_elapsed / fish_timing_duration, 0.0, 1.0) if state == State.TIMING else 0.0
+
+
+func fish_timing_zone() -> Vector2:
+	return Vector2(TIMING_CENTER - fish_timing_window * 0.5, TIMING_CENTER + fish_timing_window * 0.5)
 
 
 func invalid_target_reason(target: Vector2) -> String:
@@ -77,6 +100,13 @@ func invalid_target_reason_from(origin: Vector2, target: Vector2) -> String:
 	return ""
 
 
+func _input(event: InputEvent) -> void:
+	if not input_locked and state == State.TIMING and event is InputEventKey and event.physical_keycode == KEY_SPACE:
+		get_viewport().set_input_as_handled()
+		if event.pressed and not event.echo:
+			_press_fish_timing()
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if input_locked or not event.is_action_pressed("fishing_action"):
 		return
@@ -95,6 +125,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		State.WAITING:
 			_start = _hook.global_position
 			_set_state(State.RETRIEVING)
+		State.TIMING:
+			_press_fish_timing()
 
 
 func _process(delta: float) -> void:
@@ -129,9 +161,13 @@ func _process(delta: float) -> void:
 				_line.hide()
 				_set_state(State.IDLE)
 				retrieval_completed.emit(_target)
+		State.TIMING:
+			_elapsed += delta
+			if _elapsed >= fish_timing_duration:
+				_finish_fish_timing(false)
 	if is_active():
 		_line.connect_endpoints(_tip.global_position, _hook.get_line_endpoint())
-	_status.visible = not input_locked and (state != State.IDLE or (show_idle_status and is_near_shore(global_position)))
+	_status.visible = not input_locked and state != State.TIMING and (is_active() or (show_idle_status and is_near_shore(global_position)))
 	_status.modulate = Color(1.0, 0.4, 0.3) if _invalid_feedback > 0.0 else Color.WHITE
 	queue_redraw()
 
@@ -160,6 +196,22 @@ func _start_cast(target: Vector2) -> void:
 	_line.show()
 	_line.connect_endpoints(_start, _start)
 	_set_state(State.CASTING)
+
+
+func _press_fish_timing() -> void:
+	var zone: Vector2 = fish_timing_zone()
+	var progress: float = fish_timing_progress()
+	_finish_fish_timing(progress >= zone.x and progress <= zone.y)
+
+
+func _finish_fish_timing(succeeded: bool) -> void:
+	if succeeded:
+		_set_state(State.WAITING)
+	else:
+		_hook.hide()
+		_line.hide()
+		_set_state(State.IDLE)
+	fish_timing_finished.emit(succeeded)
 
 
 func _set_state(new_state: State) -> void:

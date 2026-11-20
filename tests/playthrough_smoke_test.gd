@@ -341,9 +341,21 @@ func _cast_and_return(target: Vector2, rapid: bool = false) -> bool:
 		_cast_click(target)
 		_cast_click(target)
 		_check(_rod.state == FishingRod.State.CASTING, "Repeated clicks interrupted casting")
-	if not await _wait_for_rod(FishingRod.State.WAITING):
+	if not await _wait_for_rod(FishingRod.State.WAITING, true):
 		return false
 	_check(_rod.get_hook_water_position().distance_to(target) < 2.0, "Hook landed away from the selected point")
+	if _rod.state == FishingRod.State.TIMING:
+		var progress: float = _rod.fish_timing_progress()
+		_key(KEY_ESCAPE)
+		await _wait_ticks(8)
+		_check(_menu.visible and is_equal_approx(progress, _rod.fish_timing_progress()), "Pause did not freeze the timing challenge")
+		_key(KEY_ESCAPE)
+		await process_frame
+		while _rod.state == FishingRod.State.TIMING and _rod.fish_timing_progress() < _rod.fish_timing_zone().x + 0.04:
+			await process_frame
+		_key(KEY_SPACE)
+		if not _check(_rod.state == FishingRod.State.WAITING, "Timed input did not secure a fish"):
+			return false
 	_cast_click(target)
 	if rapid:
 		_cast_click(target)
@@ -351,9 +363,9 @@ func _cast_and_return(target: Vector2, rapid: bool = false) -> bool:
 	return await _wait_for_rod(FishingRod.State.IDLE)
 
 
-func _wait_for_rod(state: FishingRod.State) -> bool:
+func _wait_for_rod(state: FishingRod.State, allow_timing: bool = false) -> bool:
 	for frame: int in 230:
-		if _rod.state == state:
+		if _rod.state == state or (allow_timing and _rod.state == FishingRod.State.TIMING):
 			return true
 		await process_frame
 	return _check(false, "Fishing loop did not reach state %s" % FishingRod.State.keys()[state])

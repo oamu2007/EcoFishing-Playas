@@ -7,11 +7,13 @@ class Entry extends RefCounted:
 	var label: String
 	var value: int
 	var is_fish: bool
+	var art: Texture2D
 
-	func _init(catch_label: String, sale_value: int, caught_fish: bool) -> void:
+	func _init(catch_label: String, sale_value: int, caught_fish: bool, catch_art: Texture2D) -> void:
 		label = catch_label
 		value = sale_value
 		is_fish = caught_fish
+		art = catch_art
 
 @export_range(1, 20) var capacity: int = 3
 @export_range(0.0, 0.5) var full_slowdown: float = 0.12
@@ -36,10 +38,10 @@ var movement_multiplier: float:
 		return 1.0 - full_slowdown * float(item_count) / capacity
 
 
-func store(label: String, sale_value: int, is_fish: bool) -> bool:
+func store(label: String, sale_value: int, is_fish: bool, art: Texture2D = null) -> bool:
 	if free_slots <= 0:
 		return false
-	_items.append(Entry.new(label, maxi(sale_value, 0), is_fish))
+	_items.append(Entry.new(label, maxi(sale_value, 0), is_fish, art))
 	contents_changed.emit()
 	return true
 

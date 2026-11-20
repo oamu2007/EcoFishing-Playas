@@ -27,6 +27,10 @@ func sale_price() -> int:
 	return sale_value
 
 
+func inventory_art() -> Texture2D:
+	return null
+
+
 func can_hook() -> bool:
 	return not hooked and not collected and not is_queued_for_deletion()
 

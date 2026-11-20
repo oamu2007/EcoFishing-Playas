@@ -10,7 +10,7 @@ After the follow-up, trash arrives at a gentler pace, upgrades take several trip
 
 ## Next milestone
 
-Continue with [Milestone 14](#milestone-14--distinct-fish-visible-rod-upgrades-and-catch-timing). The M13 checkpoints are the pacing reference for later milestones. The outstanding independent human onboarding and cross-device graphics checks carry forward to M18.
+Continue with [Milestone 15](#milestone-15--screen-based-shack-trader-and-coin-display) using the M13 catalog prices and M14 item artwork. The outstanding independent human onboarding and cross-device graphics checks carry forward to M18.
 
 ## Completed baseline
 
@@ -352,7 +352,7 @@ Compare seeded runs on the same route and record ingress duration, time between 
 
 ## Milestone 14 — Distinct fish, visible rod upgrades, and catch timing
 
-**Planned.** Players can identify a fish by its silhouette, see their rod improve after a purchase, and earn a fish catch by timing an input after it latches.
+**Verified November 20, 2026.** Four original fish sprites, three equipped rod designs, and a circular timing challenge are in the game.
 
 - Give the existing four catchable species distinctive body shapes, fins, or markings. Make them readable at gameplay scale and reuse the same visuals for inventory cards. Use original, generated, or freely licensed assets with any required attribution. Keep size variation, rarity, and catch-target cues.
 - Give every rod tier a recognizable in-hand appearance. Start with a visibly basic rod and progressively improve its build and finish. Switch the artwork when the upgrade is applied and preserve alignment of the grip, rod tip, line, and cast origin.
@@ -361,6 +361,13 @@ Compare seeded runs on the same route and record ingress duration, time between 
 **Verification**
 
 Identify the four fish in motion at gameplay scale and compare every rod tier equipped and casting. Exercise early, successful, late, repeated, and absent timing input. A successful catch lands once if there is Sack space. A miss or timeout adds no item or coins and leaves the next cast usable. Check trash-only casts, mixed targets, a full Sack, and opening or closing the pause menu during the challenge.
+
+**Checkpoint results**
+
+- The topsmelt is slim and striped, the sardine is silver-blue with a forked tail, the surfperch is deep-bodied and barred, and the bass is spiny and mottled. The Sack retains each fish's sprite for the M15 trader. The cane, reinforced shore, and offshore rod textures share the same grip and tip alignment. Upgrades switch the art as the new cast settings apply.
+- A latched fish starts a 1.8-second dial with a configurable 22% success arc. Click or press Space in the marked arc, then click to reel in. Early, late, or absent input releases the fish and clears the line. Pausing freezes the dial and resuming restores it. Trash and full-Sack casts retain their prior input flow.
+- Godot 4.7.2 passed editor import, focused catch, fishing, refinement, shop, and session tests, and two full input playthroughs. The timing-aware route sold its first fish at 283.9 seconds and reached displayed 0% at 449.5 seconds at both sizes, with a live rebound to 5%. Intel Iris Xe / OpenGL rendered all four fish in motion and the three rod tiers, and captures at 1280 × 720 and 800 × 450 showed the white catch rings and the dial's marked success boundaries.
+- Next action is the dedicated trader and persistent in-session coin display.
 
 ## Milestone 15 — Screen-based shack trader and coin display
 

@@ -114,9 +114,21 @@ func _test_recovery_and_sales() -> void:
 	fish.global_position = spot
 	var expected: int = fish.sale_price() + trash.trash_sale_value
 	_cast(rod, spot)
-	_check(fish.hooked and not competitor.hooked and sack.item_count == 0, "Nearest cross-type landing did not prefer the fish")
+	_check(fish.hooked and rod.state == FishingRod.State.TIMING and not competitor.hooked and sack.item_count == 0, "Nearest cross-type landing did not start fish timing")
 	fish._physics_process(fish.lifetime + 1.0)
 	_check(fish.hooked and not fish.is_queued_for_deletion(), "Hooked fish expired during retrieval")
+	var zone: Vector2 = rod.fish_timing_zone()
+	rod._process(rod.fish_timing_duration * lerpf(zone.x, zone.y, 0.5))
+	var timing_key: InputEventKey = InputEventKey.new()
+	timing_key.physical_keycode = KEY_SPACE
+	timing_key.pressed = true
+	timing_key.echo = true
+	rod._input(timing_key)
+	_check(rod.state == FishingRod.State.TIMING, "Key repeat resolved the timing challenge")
+	timing_key.echo = false
+	rod._input(timing_key)
+	rod._input(timing_key)
+	_check(rod.state == FishingRod.State.WAITING and sack.item_count == 0, "Timed input failed to secure a fish before retrieval")
 	_retrieve(rod)
 	_check(fish.collected and competitor.collected and not downstream.collected, "Mixed return failed to land fish plus the swept trash")
 	_check(model.trash_collected == 1 and model.current_pollution == 25, "Fish changed floating pollution or trash did not score")
@@ -155,9 +167,30 @@ func _test_recovery_and_sales() -> void:
 		_cast(rod, spot + Vector2(48, 0))
 		_retrieve(rod)
 		_check(not excess.hooked and sack.item_count == 0, "Retrieval sweep hooked a fish without a landing")
+		_test_misses(manager, rod, sack, spot)
 	await process_frame
 	_check(not is_instance_valid(fish), "Landed fish did not leave the water")
 	session.free()
+
+
+func _test_misses(manager: CatchableFishManager, rod: FishingRod, sack: Sack, spot: Vector2) -> void:
+	for progress: float in [0.05, 0.95, 1.05]:
+		var fish: CatchableFish = _next_fish(manager)
+		if fish == null:
+			_check(false, "No fish for a timing-miss fixture")
+			return
+		fish.set_physics_process(false)
+		fish.global_position = spot
+		_cast(rod, spot)
+		_check(rod.state == FishingRod.State.TIMING, "Timing-miss fixture did not hook a fish")
+		rod._process(rod.fish_timing_duration * progress)
+		if progress < 1.0:
+			_retrieve(rod)
+		_check(rod.state == FishingRod.State.IDLE and fish.is_queued_for_deletion(), "Early, late, or absent input did not release the fish")
+		_check(not manager.fish.has(fish) and sack.item_count == 0, "Escaped fish blocked another visit or entered the Sack")
+	_cast(rod, spot + Vector2(48, 0))
+	_retrieve(rod)
+	_check(rod.state == FishingRod.State.IDLE, "A new cast did not recover after timing failures")
 
 
 func _next_fish(manager: CatchableFishManager) -> CatchableFish:

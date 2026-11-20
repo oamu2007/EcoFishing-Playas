@@ -13,15 +13,14 @@ var _swim_speed: float
 var _elapsed: float = 0.0
 
 @onready var _silhouette: Node2D = $Visual/Silhouette
-@onready var _body: Polygon2D = $Visual/Silhouette/Body
+@onready var _sprite: Sprite2D = $Visual/Silhouette/Sprite
 @onready var _ripple: Node2D = $Visual/Ripple
 
 
 func _ready() -> void:
 	super._ready()
 	swim_center = global_position
-	if species != null:
-		_body.color = species.color
+	_sprite.texture = inventory_art()
 	_silhouette.scale = Vector2.ONE * remap(clampf(length_cm, 10.0, 38.0), 10.0, 38.0, 0.85, 1.14)
 
 
@@ -39,10 +38,7 @@ func _physics_process(delta: float) -> void:
 		return
 	_elapsed += delta
 	if _elapsed >= lifetime:
-		hide()
-		visit_ended.emit(self)
-		queue_free()
-		set_physics_process(false)
+		escape()
 		return
 	_swim_phase = fposmod(_swim_phase + delta * _swim_speed, TAU)
 	_update_swim()
@@ -63,6 +59,17 @@ func sale_price() -> int:
 	if species == null:
 		return sale_value + length_cm
 	return sale_value + roundi(length_cm * species.gold_per_centimeter) + species.rarity_bonus
+
+
+func inventory_art() -> Texture2D:
+	return species.art if species != null and species.art != null else preload("res://assets/fish/topsmelt.svg")
+
+
+func escape() -> void:
+	hide()
+	set_physics_process(false)
+	queue_free()
+	visit_ended.emit(self)
 
 
 func can_hook() -> bool:
