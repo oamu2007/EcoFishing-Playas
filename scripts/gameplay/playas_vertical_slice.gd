@@ -44,7 +44,7 @@ func _ready() -> void:
 	trash_manager.trash_collected.connect(_on_trash_collected)
 	trash_manager.trash_arrived.connect(pollution.register_trash)
 	_player.sack = sack
-	shop.initialize(sack, rod)
+	shop.initialize(sack, rod, pollution)
 	trash_manager.initialize(rod, shore_start, shore_end, sack)
 	_water.global_position = bounds.position
 	_water.configure_size(bounds.size)

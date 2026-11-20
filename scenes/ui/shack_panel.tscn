@@ -1,6 +1,17 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/shack_panel.gd" id="1"]
+
+[sub_resource type="StyleBoxFlat" id="PanelStyle"]
+bg_color = Color(0.075, 0.104, 0.13, 1)
+corner_radius_top_left = 7
+corner_radius_top_right = 7
+corner_radius_bottom_left = 7
+corner_radius_bottom_right = 7
+
+[sub_resource type="Theme" id="TemporaryShopTheme"]
+Button/colors/font_disabled_color = Color(0.69, 0.74, 0.77, 1)
+PanelContainer/styles/panel = SubResource("PanelStyle")
 
 [node name="ShackPanel" type="CanvasLayer"]
 layer = 10
@@ -21,6 +32,7 @@ mouse_filter = 1
 
 [node name="Panel" type="PanelContainer" parent="Backdrop/Center"]
 layout_mode = 2
+theme = SubResource("TemporaryShopTheme")
 
 [node name="Margin" type="MarginContainer" parent="Backdrop/Center/Panel"]
 layout_mode = 2
@@ -30,7 +42,7 @@ theme_override_constants/margin_right = 22
 theme_override_constants/margin_bottom = 16
 
 [node name="Body" type="VBoxContainer" parent="Backdrop/Center/Panel/Margin"]
-custom_minimum_size = Vector2(495, 0)
+custom_minimum_size = Vector2(752, 0)
 layout_mode = 2
 theme_override_constants/separation = 9
 
@@ -63,10 +75,31 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 
-[node name="Gear" type="VBoxContainer" parent="Backdrop/Center/Panel/Margin/Body"]
+[node name="Catalog" type="HBoxContainer" parent="Backdrop/Center/Panel/Margin/Body"]
+layout_mode = 2
+theme_override_constants/separation = 22
+
+[node name="Gear" type="VBoxContainer" parent="Backdrop/Center/Panel/Margin/Body/Catalog"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 6
+
+[node name="GearHeading" type="Label" parent="Backdrop/Center/Panel/Margin/Body/Catalog/Gear"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Gear upgrades"
+
+[node name="Cleanup" type="VBoxContainer" parent="Backdrop/Center/Panel/Margin/Body/Catalog"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="CleanupHeading" type="Label" parent="Backdrop/Center/Panel/Margin/Body/Catalog/Cleanup"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Cleanup projects"
 
 [node name="Feedback" type="Label" parent="Backdrop/Center/Panel/Margin/Body"]
 unique_name_in_owner = true

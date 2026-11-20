@@ -8,7 +8,7 @@ A first-time player can start a session from the menu, learn to collect recurrin
 
 ## Next milestone
 
-Continue with [Milestone 9](#milestone-9--permanent-cleanup-purchases). Add cleanup projects and verify that trash income can unlock fish habitat.
+Continue with [Milestone 10](#milestone-10--catchable-fish-and-fish-sales). Connect catchable fish to true pollution and let fish share the Sack and sales flow.
 
 ## Completed baseline
 
@@ -246,7 +246,7 @@ Test with base gear and zero coins. Fill the Sack, observe the slowdown and full
 
 ## Milestone 9 — Permanent cleanup purchases
 
-**Planned.** The player can fund permanent beach and ocean improvements with trash income and see those purchases hold as more trash drifts in.
+**Verified November 19, 2026.** Trash income funds the cleanup catalog, and permanent reductions hold through further arrivals.
 
 - Choose a small catalog of projects, their costs, point reductions, and any map space they require. Possible projects include clearing stranded debris, removing submerged debris or abandoned nets, and restoring a tide pool. The catalog should let the player remove all 70 permanent points within the playthrough. Use simple visible state changes or completed-project feedback.
 - Set prices and reductions so reasonable starter-gear trips and early upgrade choices can bring total pollution to around 50% with trash income alone. Tune for a realistic floating load, including rebounds. Check that purchases are affordable in a practical order and that recurring starter income remains available.
@@ -254,6 +254,13 @@ Test with base gear and zero coins. Fill the Sack, observe the slowdown and full
 **Verification**
 
 Use only trash sales to buy the first meaningful upgrades and cleanup and reach the fish threshold. Confirm each project charges coins once, removes its stated permanent points, and stays complete across further arrivals and shop visits. Exercise all projects, verify only the floating component rebounds, and test the agreed 0% behavior in a running session. Confirm a new session restores the permanent contribution and the catalog.
+
+**Checkpoint results**
+
+- Clearing stranded debris costs 12 gold and removes 30 permanent points. Net removal costs 20 gold and removes 20 points. Tide pool restoration costs 24 gold and removes the final 20. Each purchase displays confirmation and remains marked Complete at the shack. This version uses shop feedback for project results.
+- A starter-size trip funded the Shore rod, and two affordable cleanup purchases reached 50% even after returning to the full 30-point floating load. The full catalog reduces the permanent contribution to zero. After the last contributing trash is landed, the meter reaches 0%, then rebounds to 5% when the next piece enters the water. This was verified with the live arrival path and actual casts at seeded trash positions.
+- Godot 4.7.2 editor import, main startup and seven smoke tests passed. The cleanup projects test covers trash-funded gear and projects, price and point accounting, duplicate and unaffordable purchases, catalog persistence through shop visits and arrivals, zero and rebound, and new-session reset. Rendered shop layout and E/Esc input passed at 1280 × 720 and 800 × 450.
+- Next action is to add catchable fish at 50% and below. M11 will apply the chosen visual theme to the shop.
 
 ## Milestone 10 — Catchable fish and fish sales
 

@@ -6,12 +6,14 @@ var _shop: ShackShop
 var _sack: Sack
 var _rod_buttons: Array[Button] = []
 var _sack_buttons: Array[Button] = []
+var _cleanup_buttons: Array[Button] = []
 
 @onready var _summary: Label = %Summary
 @onready var _feedback: Label = %Feedback
 @onready var _sell: Button = %Sell
 @onready var _close: Button = %Close
 @onready var _gear: VBoxContainer = %Gear
+@onready var _cleanup: VBoxContainer = %Cleanup
 
 
 func _ready() -> void:
@@ -25,14 +27,19 @@ func bind_shop(shop: ShackShop, sack: Sack, rod: FishingRod) -> void:
 	for index: int in shop.rod_upgrades.size():
 		var upgrade: RodUpgrade = shop.rod_upgrades[index]
 		var effect: String = "%d px, %.2fs cast / %.2fs return, %d trash" % [upgrade.cast_range, upgrade.cast_time, upgrade.retrieval_time, upgrade.trash_limit]
-		var button: Button = _add_gear_button(upgrade.title, effect)
+		var button: Button = _add_catalog_button(_gear, upgrade.title, effect)
 		button.pressed.connect(_buy_rod.bind(index))
 		_rod_buttons.append(button)
 	for index: int in shop.sack_upgrades.size():
 		var upgrade: SackUpgrade = shop.sack_upgrades[index]
-		var button: Button = _add_gear_button(upgrade.title, "%d slots" % upgrade.capacity)
+		var button: Button = _add_catalog_button(_gear, upgrade.title, "%d slots" % upgrade.capacity)
 		button.pressed.connect(_buy_sack.bind(index))
 		_sack_buttons.append(button)
+	for index: int in shop.cleanup_projects.size():
+		var project: CleanupProject = shop.cleanup_projects[index]
+		var button: Button = _add_catalog_button(_cleanup, project.title, "Removes %d permanent points" % project.pollution_reduction)
+		button.pressed.connect(_buy_cleanup.bind(index))
+		_cleanup_buttons.append(button)
 	%StarterGear.text = "Starter rod  •  %d px, %d trash    |    Starter Sack  •  %d slots" % [rod.maximum_cast_range, rod.trash_per_cast, sack.capacity]
 	shop.purchases_changed.connect(_refresh)
 	sack.contents_changed.connect(_refresh)
@@ -49,7 +56,7 @@ func open() -> void:
 		_sell.grab_focus()
 
 
-func _add_gear_button(title: String, effect: String) -> Button:
+func _add_catalog_button(catalog: VBoxContainer, title: String, effect: String) -> Button:
 	var row: HBoxContainer = HBoxContainer.new()
 	var details: Label = Label.new()
 	details.text = "%s\n%s" % [title, effect]
@@ -58,7 +65,7 @@ func _add_gear_button(title: String, effect: String) -> Button:
 	button.custom_minimum_size = Vector2(116.0, 34.0)
 	row.add_child(details)
 	row.add_child(button)
-	_gear.add_child(row)
+	catalog.add_child(row)
 	return button
 
 
@@ -70,6 +77,10 @@ func _refresh() -> void:
 		_set_price(_rod_buttons[index], index, _shop.rod_tier, _shop.rod_upgrades[index].cost)
 	for index: int in _sack_buttons.size():
 		_set_price(_sack_buttons[index], index, _shop.sack_tier, _shop.sack_upgrades[index].cost)
+	for index: int in _cleanup_buttons.size():
+		var button: Button = _cleanup_buttons[index]
+		button.disabled = not _shop.can_buy_cleanup(index)
+		button.text = "Complete" if _shop.is_cleanup_complete(index) else "%d gold" % _shop.cleanup_projects[index].cost
 
 
 func _set_price(button: Button, index: int, current_tier: int, cost: int) -> void:
@@ -96,3 +107,8 @@ func _buy_rod(index: int) -> void:
 func _buy_sack(index: int) -> void:
 	if _shop.buy_sack(index):
 		_feedback.text = "Equipped the %s." % _shop.sack_upgrades[index].title
+
+
+func _buy_cleanup(index: int) -> void:
+	if _shop.buy_cleanup(index):
+		_feedback.text = "Project funded. Permanent pollution fell by %d points." % _shop.cleanup_projects[index].pollution_reduction

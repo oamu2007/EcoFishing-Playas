@@ -5,17 +5,21 @@ signal purchases_changed
 
 @export var rod_upgrades: Array[RodUpgrade] = []
 @export var sack_upgrades: Array[SackUpgrade] = []
+@export var cleanup_projects: Array[CleanupProject] = []
 
 var coins: int = 0
 var rod_tier: int = 0
 var sack_tier: int = 0
 var _sack: Sack
 var _rod: FishingRod
+var _pollution: PollutionSystem
+var _completed_projects: Dictionary[int, bool] = {}
 
 
-func initialize(sack: Sack, rod: FishingRod) -> void:
+func initialize(sack: Sack, rod: FishingRod, pollution: PollutionSystem) -> void:
 	_sack = sack
 	_rod = rod
+	_pollution = pollution
 
 
 func sell_all() -> int:
@@ -53,5 +57,27 @@ func buy_sack(index: int) -> bool:
 	coins -= upgrade.cost
 	sack_tier += 1
 	_sack.expand(upgrade.capacity)
+	purchases_changed.emit()
+	return true
+
+
+func is_cleanup_complete(index: int) -> bool:
+	return _completed_projects.has(index)
+
+
+func can_buy_cleanup(index: int) -> bool:
+	if index < 0 or index >= cleanup_projects.size() or is_cleanup_complete(index):
+		return false
+	var project: CleanupProject = cleanup_projects[index]
+	return coins >= project.cost and _pollution.permanent_points >= project.pollution_reduction
+
+
+func buy_cleanup(index: int) -> bool:
+	if not can_buy_cleanup(index):
+		return false
+	var project: CleanupProject = cleanup_projects[index]
+	coins -= project.cost
+	_completed_projects[index] = true
+	_pollution.remove_permanent(project.pollution_reduction)
 	purchases_changed.emit()
 	return true

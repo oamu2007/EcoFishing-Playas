@@ -32,7 +32,7 @@ Press **F5** to run. Move with **WASD or arrow keys**. Approach the shoreline, a
 
 Aim at or near a trash item's center to hook one item on landing. During retrieval, the hook also collects trash crossed along its return path, with small offsets for held items. Upgraded rods can collect several aligned objects in one return, subject to the space in the Sack. All held items count only after returning to the fisherman. A completely empty cast/return does not change pollution. Walk along the shoreline to find more targets.
 
-The session starts with six reachable pieces of trash. New trash drifts in from offshore, including pieces within starter-rod range. The starter rod returns one piece per cast. Each piece in the water contributes five floating pollution points, capped at 30, on top of the 70 permanent pollution points. The HUD shows the live percentage and catch feedback. Fill the Sack and press **E** at the fishing shack to sell the load or buy rod and Sack upgrades. Press **H** for detailed controls. In the editor, **F8** followed by **F5** resets the session.
+The session starts with six reachable pieces of trash. New trash drifts in from offshore, including pieces within starter-rod range. The starter rod returns one piece per cast. Each piece in the water contributes five floating pollution points, capped at 30, on top of the 70 permanent pollution points. The HUD shows the live percentage and catch feedback. Fill the Sack and press **E** at the fishing shack to sell the load, buy rod and Sack upgrades, or fund cleanup projects. Cleanup projects lower permanent pollution for the rest of the session. Once all projects are funded, the water can reach 0% between arrivals by clearing the floating trash. Press **H** for detailed controls. In the editor, **F8** followed by **F5** resets the session.
 
 The level's `TrashManager` exposes starter and offshore stop bands, arrival cadence, population limits, seed, spacing, and catch radius in the Inspector. The HUD updates immediately while water clarity and ambient fish visibility ease toward the new state over 1.6 seconds. The `AmbientFish` node exposes reveal thresholds, fade width, tint, and nearshore route width. [Architecture notes](docs/architecture.md) describe the bindings and tuning.
 
@@ -54,6 +54,7 @@ godot --headless --path . --script res://tests/refinement_smoke_test.gd
 godot --headless --path . --script res://tests/water_smoke_test.gd
 godot --headless --path . --script res://tests/fish_smoke_test.gd
 godot --headless --path . --script res://tests/shop_smoke_test.gd
+godot --headless --path . --script res://tests/cleanup_projects_smoke_test.gd
 godot --headless --path . --quit-after 120
 ```
 
