@@ -128,6 +128,8 @@ func _test_recovery_and_sales() -> void:
 	_check(rod.state == FishingRod.State.TIMING, "Key repeat resolved the timing challenge")
 	timing_key.echo = false
 	rod._input(timing_key)
+	while rod.state == FishingRod.State.TIMING:
+		_press_in_zone(rod, timing_key)
 	rod._input(timing_key)
 	_check(rod.state == FishingRod.State.WAITING and sack.item_count == 0, "Timed input failed to secure a fish before retrieval")
 	_retrieve(rod)
@@ -172,6 +174,7 @@ func _test_recovery_and_sales() -> void:
 		_retrieve(rod)
 		_check(not excess.hooked and sack.item_count == 0, "Retrieval sweep hooked a fish without a landing")
 		_test_misses(manager, rod, sack, spot)
+		_test_rare_timing_and_add_ons(world, spot)
 	await process_frame
 	_check(not is_instance_valid(fish), "Landed fish did not leave the water")
 	session.free()
@@ -195,6 +198,74 @@ func _test_misses(manager: CatchableFishManager, rod: FishingRod, sack: Sack, sp
 	_cast(rod, spot + Vector2(48, 0))
 	_retrieve(rod)
 	_check(rod.state == FishingRod.State.IDLE, "A new cast did not recover after timing failures")
+
+
+func _test_rare_timing_and_add_ons(world: LevelScript, spot: Vector2) -> void:
+	var rod: FishingRod = world.rod
+	var shop: ShackShop = world.shop
+	var manager: CatchableFishManager = world.catchable_fish
+	var timing_key: InputEventKey = InputEventKey.new()
+	timing_key.physical_keycode = KEY_SPACE
+	timing_key.pressed = true
+	var rare: CatchableFish = _hook_rare(manager, rod, spot)
+	if rare == null:
+		return
+	_press_in_zone(rod, timing_key)
+	_check(rod.state == FishingRod.State.TIMING and rod.fish_timing_stage == 2, "Rare fish became secured before the second check")
+	_retrieve(rod)
+	_check(rod.state == FishingRod.State.IDLE and rare.is_queued_for_deletion(), "Missing the second check did not release the fish")
+	rare = _hook_rare(manager, rod, spot)
+	if rare == null:
+		return
+	_press_in_zone(rod, timing_key)
+	_press_in_zone(rod, timing_key)
+	_check(rod.fish_secured, "Two stock timing checks did not secure a rare fish")
+	_retrieve(rod)
+	_check(rare.collected and world.sack.fish_count == 1, "Stock rod could not land the rare fish")
+
+	shop.coins = 250
+	for tier: int in 2:
+		_check(not shop.owns_rod_add_on(tier, 0) and is_equal_approx(rod.cast_duration, rod.equipped_cast_duration()), "A new rod inherited add-ons")
+		for index: int in shop.rod_add_ons.size():
+			var before: int = shop.coins
+			_check(shop.buy_rod_add_on(index) and shop.owns_rod_add_on(tier, index), "The equipped rod could not buy its add-on")
+			_check(not shop.buy_rod_add_on(index) and shop.coins == before - shop.rod_add_ons[index].cost, "A duplicate add-on charged the player")
+		var discount: float = shop.rod_add_ons[1].duration_discount
+		_check(is_equal_approx(rod.equipped_cast_duration(), rod.cast_duration * (1.0 - discount)) and is_equal_approx(rod.equipped_retrieval_duration(), rod.retrieval_duration * (1.0 - discount)), "Quick spool did not shorten both phases")
+		rare = _hook_rare(manager, rod, spot)
+		if rare == null:
+			return
+		_retrieve(rod)
+		_check(rod.state == FishingRod.State.TIMING and not rare.is_queued_for_deletion() and rod.fish_timing_saves_left == 0, "Slip guard did not allow one retry")
+		_press_in_zone(rod, timing_key)
+		_retrieve(rod)
+		_check(rod.state == FishingRod.State.IDLE and rare.is_queued_for_deletion(), "Slip guard retried another missed input")
+		rare = _hook_rare(manager, rod, spot)
+		if rare == null:
+			return
+		_check(rod.fish_timing_saves_left == 1, "Slip guard did not reset for the next fish")
+		rod._process(rod.fish_timing_duration)
+		_check(rod.state == FishingRod.State.IDLE and rare.is_queued_for_deletion(), "A timeout was forgiven without an input")
+		_check(shop.buy_rod(tier), "Add-on fixture could not upgrade to the next rod")
+	_check(shop.owns_rod_add_on(0, 0) and shop.owns_rod_add_on(1, 0) and not shop.owns_rod_add_on(2, 0), "Slip guard ownership did not stay with each rod")
+
+
+func _hook_rare(manager: CatchableFishManager, rod: FishingRod, spot: Vector2) -> CatchableFish:
+	var rare: CatchableFish = _next_fish(manager)
+	_check(rare != null, "No fish for a two-check fixture")
+	if rare != null:
+		rare.species = manager.species_catalog.back()
+		rare.set_physics_process(false)
+		rare.global_position = spot
+		_cast(rod, spot)
+		_check(rod.state == FishingRod.State.TIMING and rod.fish_timing_checks == 2, "Rare species did not use the two-check challenge")
+	return rare
+
+
+func _press_in_zone(rod: FishingRod, event: InputEventKey) -> void:
+	var zone: Vector2 = rod.fish_timing_zone()
+	rod._process(rod.fish_timing_duration * (zone.x + zone.y) * 0.5)
+	rod._input(event)
 
 
 func _next_fish(manager: CatchableFishManager) -> CatchableFish:

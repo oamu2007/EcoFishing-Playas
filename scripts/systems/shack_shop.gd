@@ -5,6 +5,7 @@ signal purchases_changed
 signal cleanup_funded(project: CleanupProject)
 
 @export var rod_upgrades: Array[RodUpgrade] = []
+@export var rod_add_ons: Array[RodAddOn] = []
 @export var sack_upgrades: Array[SackUpgrade] = []
 @export var cleanup_projects: Array[CleanupProject] = []
 
@@ -15,6 +16,7 @@ var _sack: Sack
 var _rod: FishingRod
 var _pollution: PollutionSystem
 var _completed_projects: Dictionary[int, bool] = {}
+var _owned_rod_add_ons: Dictionary[Vector2i, bool] = {}
 
 
 func initialize(sack: Sack, rod: FishingRod, pollution: PollutionSystem) -> void:
@@ -52,8 +54,41 @@ func buy_rod(index: int) -> bool:
 	_rod.retrieval_duration = upgrade.retrieval_time
 	_rod.trash_per_cast = upgrade.trash_limit
 	_rod.set_rod_art(upgrade.art)
+	_apply_rod_add_ons()
 	purchases_changed.emit()
 	return true
+
+
+func rod_title(tier: int) -> String:
+	return "Starter rod" if tier == 0 else rod_upgrades[tier - 1].title
+
+
+func owns_rod_add_on(tier: int, index: int) -> bool:
+	return _owned_rod_add_ons.has(Vector2i(tier, index))
+
+
+func can_buy_rod_add_on(index: int) -> bool:
+	return index >= 0 and index < rod_add_ons.size() and not _rod.is_active() and not owns_rod_add_on(rod_tier, index) and coins >= rod_add_ons[index].cost
+
+
+func buy_rod_add_on(index: int) -> bool:
+	if not can_buy_rod_add_on(index):
+		return false
+	coins -= rod_add_ons[index].cost
+	_owned_rod_add_ons[Vector2i(rod_tier, index)] = true
+	_apply_rod_add_ons()
+	purchases_changed.emit()
+	return true
+
+
+func _apply_rod_add_ons() -> void:
+	var forgiveness: int = 0
+	var discount: float = 0.0
+	for index: int in rod_add_ons.size():
+		if owns_rod_add_on(rod_tier, index):
+			forgiveness = maxi(forgiveness, rod_add_ons[index].forgiven_misses)
+			discount = maxf(discount, rod_add_ons[index].duration_discount)
+	_rod.configure_add_ons(forgiveness, discount)
 
 
 func buy_sack(index: int) -> bool:

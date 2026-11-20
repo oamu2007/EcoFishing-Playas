@@ -109,10 +109,21 @@ func _play(main: Node) -> void:
 	await process_frame
 	_check(shore_rod.disabled and shore_rod.text == "Owned" and balance.text == "5 gold", "Purchase did not update the visible balance and ownership")
 	_click(shore_rod)
+	var add_ons: Control = trader.get_node("%RodAddOns")
+	var guard: Button = add_ons.find_children("*", "Button", true, false)[0]
+	var catalog: ScrollContainer = trader.get_node("%BuyScroll")
+	_check(guard.disabled and guard.text == "12 gold", "The equipped rod add-on did not show its price and affordability")
+	world.shop.coins += 15
+	world.shop.purchases_changed.emit()
+	catalog.ensure_control_visible(guard)
+	await process_frame
+	_click(guard)
+	await process_frame
+	_check(guard.disabled and guard.text == "Owned · 12 gold" and world.shop.owns_rod_add_on(1, 0) and balance.text == "8 gold", "Trader input did not equip and charge for the add-on once")
 	_click(trader.get_node("%Close"))
 	_key(KEY_ESCAPE)
 	await process_frame
-	_check(menu.visible and balance.is_visible_in_tree() and balance.text == "5 gold" and world.rod.cast_number == 0, "The balance or input state did not survive return to shore and pause")
+	_check(menu.visible and balance.is_visible_in_tree() and balance.text == "8 gold" and world.rod.cast_number == 0, "The balance or input state did not survive return to shore and pause")
 
 
 func _drag(item: Control, destination: Control) -> void:

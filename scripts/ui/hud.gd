@@ -12,6 +12,7 @@ var _shop: ShackShop
 var _pollution: PollutionSystem
 var _rod: FishingRod
 var _fish_threshold: float
+var _guard_used: bool = false
 
 @onready var _progress: Label = $ProgressPanel/Margin/Readouts/Progress
 @onready var _notification: Label = $Notification
@@ -45,6 +46,7 @@ func bind_session(pollution: PollutionSystem, catches: CatchResolverScript, rod:
 	rod.state_changed.connect(_on_rod_state_changed)
 	rod.cast_rejected.connect(_notify)
 	rod.fish_timing_finished.connect(_on_fish_timing_finished)
+	rod.fish_timing_saved.connect(_on_fish_timing_saved)
 	_on_pollution_changed(pollution.normalized_pollution)
 	_hint.text = _guidance()
 
@@ -54,7 +56,7 @@ func _process(delta: float) -> void:
 	_notification.visible = _notification_remaining > 0.0
 	if _rod != null:
 		if _timing_dial.visible:
-			_timing_dial.update_dial(_rod.fish_timing_progress(), _rod.fish_timing_zone())
+			_timing_dial.update_dial(_rod, _guard_used)
 		var message: String = _guidance()
 		_hint.visible = not message.is_empty()
 		if _hint.text != message:
@@ -129,9 +131,11 @@ func _on_pollution_changed(normalized: float) -> void:
 
 
 func _on_rod_state_changed(state: FishingRod.State) -> void:
-	_timing_dial.visible = state == FishingRod.State.TIMING
+	_timing_dial.visible = state == FishingRod.State.TIMING or (state == FishingRod.State.WAITING and _rod.fish_secured)
+	if state == FishingRod.State.TIMING:
+		_guard_used = false
 	if _timing_dial.visible:
-		_timing_dial.update_dial(0.0, _rod.fish_timing_zone())
+		_timing_dial.update_dial(_rod, _guard_used)
 	if state == FishingRod.State.CASTING:
 		_hooked_count = 0
 		_notification_remaining = 0.0
@@ -141,7 +145,12 @@ func _on_rod_state_changed(state: FishingRod.State) -> void:
 
 
 func _on_fish_timing_finished(succeeded: bool) -> void:
-	_notify("Fish secured. Click to reel in." if succeeded else "The fish slipped away. Cast again.")
+	if not succeeded:
+		_notify("The fish slipped away. Cast again.")
+
+
+func _on_fish_timing_saved() -> void:
+	_guard_used = true
 
 
 func _on_catch_hooked(type_name: String) -> void:

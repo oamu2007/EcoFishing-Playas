@@ -12,6 +12,7 @@ var _selection: Array[Sack.Entry] = []
 var _rod_buttons: Array[Button] = []
 var _sack_buttons: Array[Button] = []
 var _cleanup_buttons: Array[Button] = []
+var _rod_add_on_buttons: Array[Button] = []
 
 @onready var _home: Control = %Home
 @onready var _sell_screen: Control = %SellScreen
@@ -29,6 +30,11 @@ var _cleanup_buttons: Array[Button] = []
 @onready var _tray_items: VBoxContainer = %TrayItems
 @onready var _gear: VBoxContainer = %Gear
 @onready var _cleanup: VBoxContainer = %Cleanup
+@onready var _current_gear: Label = %CurrentGear
+@onready var _rod_add_ons_section: VBoxContainer = %RodAddOnsSection
+@onready var _rod_add_ons: VBoxContainer = %RodAddOns
+@onready var _rod_add_ons_heading: Label = %RodAddOnsHeading
+@onready var _rod_add_on_ownership: Label = %RodAddOnOwnership
 
 
 func _ready() -> void:
@@ -63,6 +69,12 @@ func bind_shop(shop: ShackShop, sack: Sack, rod: FishingRod) -> void:
 		var button: Button = _add_catalog_card(_cleanup, project.title, "Removes %d permanent points" % project.pollution_reduction, project.art)
 		button.pressed.connect(_buy_cleanup.bind(index))
 		_cleanup_buttons.append(button)
+	_rod_add_ons_section.visible = not shop.rod_add_ons.is_empty()
+	for index: int in shop.rod_add_ons.size():
+		var add_on: RodAddOn = shop.rod_add_ons[index]
+		var button: Button = _add_catalog_card(_rod_add_ons, add_on.title, add_on.effect_text())
+		button.pressed.connect(_buy_rod_add_on.bind(index))
+		_rod_add_on_buttons.append(button)
 	shop.purchases_changed.connect(_refresh_catalog)
 	sack.contents_changed.connect(_on_contents_changed)
 	_refresh_catalog()
@@ -207,15 +219,17 @@ func _sell_selected() -> void:
 	_focus_sale_item(false)
 
 
-func _add_catalog_card(catalog: VBoxContainer, title: String, effect: String, art: Texture2D) -> Button:
+func _add_catalog_card(catalog: VBoxContainer, title: String, effect: String, art: Texture2D = null) -> Button:
 	var card: PanelContainer = PanelContainer.new()
 	var row: HBoxContainer = HBoxContainer.new()
-	var picture: TextureRect = TextureRect.new()
-	picture.texture = art
-	picture.custom_minimum_size = Vector2(62, 49)
-	picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	picture.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if art != null:
+		var picture: TextureRect = TextureRect.new()
+		picture.texture = art
+		picture.custom_minimum_size = Vector2(62, 49)
+		picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		picture.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(picture)
 	var details: Label = Label.new()
 	details.add_theme_font_size_override("font_size", 14)
 	details.text = "%s\n%s" % [title, effect]
@@ -226,7 +240,6 @@ func _add_catalog_card(catalog: VBoxContainer, title: String, effect: String, ar
 	button.custom_minimum_size.x = 110.0
 	button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	button.add_theme_font_size_override("font_size", 14)
-	row.add_child(picture)
 	row.add_child(details)
 	row.add_child(button)
 	card.add_child(row)
@@ -235,7 +248,9 @@ func _add_catalog_card(catalog: VBoxContainer, title: String, effect: String, ar
 
 
 func _refresh_catalog() -> void:
-	%CurrentGear.text = "Equipped   ·   Rod %d   ·   %d px reach   ·   %d Sack slots" % [_shop.rod_tier + 1, _rod.maximum_cast_range, _sack.capacity]
+	var rod_title: String = _shop.rod_title(_shop.rod_tier)
+	_current_gear.text = "Equipped   ·   %s   ·   %d px reach   ·   %d Sack slots" % [rod_title, _rod.maximum_cast_range, _sack.capacity]
+	_rod_add_ons_heading.text = "Rod add-ons · %s" % rod_title
 	for index: int in _rod_buttons.size():
 		_set_price(_rod_buttons[index], index, _shop.rod_tier, _shop.rod_upgrades[index].cost)
 	for index: int in _sack_buttons.size():
@@ -245,6 +260,30 @@ func _refresh_catalog() -> void:
 		var complete: bool = _shop.is_cleanup_complete(index)
 		var project: CleanupProject = _shop.cleanup_projects[index]
 		_set_availability(button, not _shop.can_buy_cleanup(index), "Complete" if complete else "%d gold" % project.cost, project.cost)
+	for index: int in _rod_add_on_buttons.size():
+		var add_on: RodAddOn = _shop.rod_add_ons[index]
+		var status: String = "%d gold" % add_on.cost
+		if _shop.owns_rod_add_on(_shop.rod_tier, index):
+			status = "Owned · %s" % status
+		_set_availability(_rod_add_on_buttons[index], not _shop.can_buy_rod_add_on(index), status, add_on.cost)
+	_refresh_rod_add_on_ownership()
+
+
+func _refresh_rod_add_on_ownership() -> void:
+	var rod_statuses: PackedStringArray = []
+	for tier: int in range(_shop.rod_upgrades.size() + 1):
+		if tier == _shop.rod_tier:
+			continue
+		var status: String = "Rod locked"
+		if tier < _shop.rod_tier:
+			var owned_titles: PackedStringArray = []
+			for index: int in _shop.rod_add_ons.size():
+				if _shop.owns_rod_add_on(tier, index):
+					owned_titles.append(_shop.rod_add_ons[index].title)
+			status = "No add-ons owned" if owned_titles.is_empty() else "%s owned" % ", ".join(owned_titles)
+		rod_statuses.append("%s · %s" % [_shop.rod_title(tier), status])
+	_rod_add_on_ownership.text = "\n".join(rod_statuses)
+	_rod_add_on_ownership.visible = not rod_statuses.is_empty()
 
 
 func _set_price(button: Button, index: int, current_tier: int, cost: int) -> void:
@@ -278,3 +317,8 @@ func _buy_sack(index: int) -> void:
 func _buy_cleanup(index: int) -> void:
 	if visible and _page == Page.BUY and _shop.buy_cleanup(index):
 		_feedback.text = "Permanent pollution fell by %d points. Return to shore to see the work." % _shop.cleanup_projects[index].pollution_reduction
+
+
+func _buy_rod_add_on(index: int) -> void:
+	if visible and _page == Page.BUY and _shop.buy_rod_add_on(index):
+		_feedback.text = "Fitted %s to the %s." % [_shop.rod_add_ons[index].title, _shop.rod_title(_shop.rod_tier)]

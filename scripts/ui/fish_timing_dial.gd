@@ -9,16 +9,30 @@ const SUCCESS: Color = Color("#3f9462")
 
 var _progress: float
 var _zone: Vector2
+var _secured: bool
 
 
-func update_dial(progress: float, zone: Vector2) -> void:
-	_progress = progress
-	_zone = zone
+func update_dial(rod: FishingRod, guard_used: bool) -> void:
+	_secured = rod.fish_secured
+	_progress = rod.fish_timing_progress()
+	_zone = rod.fish_timing_zone()
+	if _secured:
+		$Title.text = "Fish secured"
+		$Cue.text = "Click to reel in"
+		$Guard.hide()
+	else:
+		$Title.text = "Fish on!" if rod.fish_timing_checks == 1 else "Check %d of %d" % [rod.fish_timing_stage, rod.fish_timing_checks]
+		$Cue.text = "Click or press Space in the green arc"
+		$Guard.visible = guard_used or rod.fish_timing_saves_left > 0
+		$Guard.text = "Slip guard used · try again" if guard_used else "Slip guard ready"
 	queue_redraw()
 
 
 func _draw() -> void:
 	var center: Vector2 = Vector2(size.x * 0.5, 57.0)
+	if _secured:
+		draw_rect(Rect2(center - Vector2(75.0, 16.0), Vector2(150.0, 32.0)), INK)
+		return
 	draw_circle(center, 57.0, INK, true, -1.0, true)
 	draw_arc(center, RADIUS, 0.0, TAU, 80, MISS, 9.0, true)
 	var from: float = START_ANGLE + _zone.x * TAU

@@ -12,7 +12,7 @@ In the next pass, incoming trash keeps moving inward until it reaches the equipp
 
 ## Next milestone
 
-Continue with [Milestone 20](#milestone-20--harder-fish-timing-and-optional-rod-add-ons). Use the verified M18 build as the comparison baseline and follow [AGENTS.md](../AGENTS.md) for the existing roadmap execution workflow. The independent first-time-player run and graphics verification on another device carry forward to M25.
+Continue with [Milestone 21](#milestone-21--more-permanent-cleanup-projects). Use the verified M18 build as the comparison baseline and follow [AGENTS.md](../AGENTS.md) for the existing roadmap execution workflow. The independent first-time-player run and graphics verification on another device carry forward to M25.
 
 ## Completed baseline
 
@@ -472,7 +472,7 @@ Compare seeded captures with M18 at default and reduced window sizes. Check offs
 
 ## Milestone 20 — Harder fish timing and optional rod add-ons
 
-**Planned.** Landing fish takes more precise timing, and players can buy optional upgrades for the rod they use.
+**Verified November 20, 2026.** Landing fish takes more precise timing, and players can buy optional upgrades for the rod they use.
 
 - Tighten the existing 1.8-second dial with a faster sweep and a smaller readable success window. Start with one faster success check for common fish and two successive checks for rarer fish. Tune the difficulty against normal mouse and Space input. Keep pause and retry behavior clear.
 - Add a small add-on selection to the trader with purchases scoped to a specific rod. Start with a safeguard that forgives one missed timing input per hooked fish and a modest cast or retrieval speed boost. Display each effect, price, and ownership by rod. Buying a new rod leaves its add-on slots empty so the player can purchase the add-ons separately for that rod.
@@ -481,6 +481,11 @@ Compare seeded captures with M18 at default and reduced window sizes. Check offs
 **Verification**
 
 Compare the timing challenge with M18. Check success, a second-stage miss, timeout, pause and resume, and recovery on the next cast. Buy the same add-on for two rods independently and check its effect only when the purchased rod is equipped. Verify duplicate purchases are rejected and complete the fish catch path with no add-ons.
+
+- The sweep takes 1.30 seconds with a 221 ms success window. M18 allowed a 1.80-second sweep and a 396 ms window. Topsmelt and sardines use one check. Surfperch and kelp bass use two. The dial identifies the current check and cues retrieval after success.
+- Slip guard costs 12 gold and retries one missed input per fish. A timeout still releases the catch. Quick spool costs 15 gold and shortens cast and reel durations by 15%. Both effects and prices are configurable. Ownership is per rod, and the next rod starts with empty slots.
+- The fish smoke test passed stock two-stage success, a second-stage mouse miss, early and late misses, timeout, recovery, keyboard repeat rejection, duplicate purchase rejection, and both effects on two rods. The headless stock route passed pause/resume, fish sale at 253.4 seconds, cleanup, and reset at 1280 × 720 and 800 × 450. The rendered trader smoke test passed actual purchase input, pricing, and ownership at both sizes on Intel Iris Xe / OpenGL Compatibility. Editor import registered the new resource and reported a local settings safe-save error.
+- Human timing feel and discovery carry forward to M25. Next is the expanded cleanup catalog in M21.
 
 ## Milestone 21 — More permanent cleanup projects
 

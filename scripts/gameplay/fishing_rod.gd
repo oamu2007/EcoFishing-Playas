@@ -8,11 +8,12 @@ signal retrieval_completed(water_position: Vector2)
 signal retrieval_advanced(previous_position: Vector2, current_position: Vector2, hook_radius: float)
 signal target_detected(target: Area2D)
 signal fish_timing_finished(succeeded: bool)
+signal fish_timing_advanced
+signal fish_timing_saved
 
 enum State { IDLE, CASTING, WAITING, RETRIEVING, TIMING }
 
 const FishingLineScript = preload("res://scripts/gameplay/fishing_line.gd")
-const TIMING_CENTER: float = 0.64
 
 @export var shoreline_distance: float = 140.0
 @export var minimum_cast_range: float = 60.0
@@ -21,14 +22,21 @@ const TIMING_CENTER: float = 0.64
 @export_range(0.1, 3.0) var retrieval_duration: float = 0.85
 @export_range(1, 10) var trash_per_cast: int = 1
 @export var cast_height: float = 100.0
-@export_range(0.5, 5.0, 0.05) var fish_timing_duration: float = 1.8
-@export_range(0.05, 0.6, 0.01) var fish_timing_window: float = 0.22
+@export_range(0.5, 5.0, 0.05) var fish_timing_duration: float = 1.30
+@export_range(0.05, 0.6, 0.01) var fish_timing_window: float = 0.17
+@export var fish_timing_centers: Vector2 = Vector2(0.64, 0.70)
 
 var state: State = State.IDLE
 var cast_number: int = 0
 var input_locked: bool = false
 var show_idle_status: bool = true
 var water_bounds: Rect2 = Rect2()
+var fish_timing_stage: int = 1
+var fish_timing_checks: int = 1
+var fish_timing_saves_left: int = 0
+var fish_secured: bool = false
+var _forgiven_misses: int = 0
+var _duration_discount: float = 0.0
 var _elapsed: float = 0.0
 var _start: Vector2 = Vector2.ZERO
 var _target: Vector2 = Vector2.ZERO
@@ -57,8 +65,24 @@ func set_rod_art(art: Texture2D) -> void:
 		_rod_art.texture = art
 
 
-func start_fish_timing() -> void:
+func configure_add_ons(forgiven_misses: int, duration_discount: float) -> void:
+	_forgiven_misses = forgiven_misses
+	_duration_discount = duration_discount
+
+
+func equipped_cast_duration() -> float:
+	return cast_duration * (1.0 - _duration_discount)
+
+
+func equipped_retrieval_duration() -> float:
+	return retrieval_duration * (1.0 - _duration_discount)
+
+
+func start_fish_timing(checks: int) -> void:
 	if state == State.WAITING:
+		fish_timing_stage = 1
+		fish_timing_checks = checks
+		fish_timing_saves_left = _forgiven_misses
 		_set_state(State.TIMING)
 
 
@@ -67,7 +91,8 @@ func fish_timing_progress() -> float:
 
 
 func fish_timing_zone() -> Vector2:
-	return Vector2(TIMING_CENTER - fish_timing_window * 0.5, TIMING_CENTER + fish_timing_window * 0.5)
+	var center: float = fish_timing_centers.x if fish_timing_stage == 1 else fish_timing_centers.y
+	return Vector2(center - fish_timing_window * 0.5, center + fish_timing_window * 0.5)
 
 
 func invalid_target_reason(target: Vector2) -> String:
@@ -139,7 +164,7 @@ func _process(delta: float) -> void:
 			_status.text = "Ready - click to cast" if reason.is_empty() else reason
 		State.CASTING:
 			_elapsed += delta
-			var progress: float = clampf(_elapsed / cast_duration, 0.0, 1.0)
+			var progress: float = clampf(_elapsed / equipped_cast_duration(), 0.0, 1.0)
 			_hook.global_position = _start.lerp(_target, progress)
 			# Height is presentation only: the Area2D follows the water-plane path.
 			_hook.set_height(4.0 * cast_height * progress * (1.0 - progress))
@@ -150,7 +175,7 @@ func _process(delta: float) -> void:
 					target_detected.emit(area)
 		State.RETRIEVING:
 			_elapsed += delta
-			var progress: float = clampf(_elapsed / retrieval_duration, 0.0, 1.0)
+			var progress: float = clampf(_elapsed / equipped_retrieval_duration(), 0.0, 1.0)
 			var previous_position: Vector2 = _hook.global_position
 			_hook.global_position = _start.lerp(_tip.global_position, progress)
 			_hook.set_height(0.0)
@@ -201,11 +226,24 @@ func _start_cast(target: Vector2) -> void:
 func _press_fish_timing() -> void:
 	var zone: Vector2 = fish_timing_zone()
 	var progress: float = fish_timing_progress()
-	_finish_fish_timing(progress >= zone.x and progress <= zone.y)
+	if progress >= zone.x and progress <= zone.y:
+		if fish_timing_stage == fish_timing_checks:
+			_finish_fish_timing(true)
+		else:
+			fish_timing_stage += 1
+			_elapsed = 0.0
+			fish_timing_advanced.emit()
+	elif fish_timing_saves_left > 0:
+		fish_timing_saves_left -= 1
+		_elapsed = 0.0
+		fish_timing_saved.emit()
+	else:
+		_finish_fish_timing(false)
 
 
 func _finish_fish_timing(succeeded: bool) -> void:
 	if succeeded:
+		fish_secured = true
 		_set_state(State.WAITING)
 	else:
 		_hook.hide()
@@ -217,6 +255,8 @@ func _finish_fish_timing(succeeded: bool) -> void:
 func _set_state(new_state: State) -> void:
 	state = new_state
 	_elapsed = 0.0
+	if state == State.IDLE and fish_secured:
+		fish_secured = false
 	match state:
 		State.CASTING:
 			_status.text = "Casting..."

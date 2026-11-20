@@ -29,6 +29,7 @@ minimum_length_cm = 17
 maximum_length_cm = 30
 spawn_weight = 15.0
 rarity_bonus = 4
+timing_checks = 2
 art = ExtResource("5_surfperch")
 
 [sub_resource type="Resource" id="Resource_bass"]
@@ -38,6 +39,7 @@ minimum_length_cm = 21
 maximum_length_cm = 38
 spawn_weight = 5.0
 rarity_bonus = 7
+timing_checks = 2
 art = ExtResource("6_bass")
 
 [node name="CatchableFishManager" type="Node2D"]

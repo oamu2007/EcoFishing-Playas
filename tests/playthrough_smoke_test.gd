@@ -393,9 +393,10 @@ func _cast_and_return(target: Vector2, rapid: bool = false) -> bool:
 		await process_frame
 		if not _check(not _menu.visible and _rod.state == FishingRod.State.TIMING, "Pause did not resume the visible timing challenge"):
 			return false
-		while _rod.state == FishingRod.State.TIMING and _rod.fish_timing_progress() < _rod.fish_timing_zone().x + 0.04:
-			await process_frame
-		_key(KEY_SPACE)
+		for stage: int in _rod.fish_timing_checks:
+			while _rod.state == FishingRod.State.TIMING and _rod.fish_timing_progress() < _rod.fish_timing_zone().x + 0.04:
+				await process_frame
+			_key(KEY_SPACE)
 		if not _check(_rod.state == FishingRod.State.WAITING, "Timed input did not secure a fish"):
 			return false
 	_cast_click(target)
