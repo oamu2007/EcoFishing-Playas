@@ -1,0 +1,29 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/gameplay/cleanup_work.gd" id="1_work"]
+[ext_resource type="Script" path="res://scripts/gameplay/cleanup_site.gd" id="2_site"]
+
+[node name="CleanupWork" type="Node2D"]
+z_index = 0
+script = ExtResource("1_work")
+
+[node name="ShoreDebris" type="Node2D" parent="."]
+position = Vector2(765, 330)
+script = ExtResource("2_site")
+work_kind = 0
+duration = 3.4
+watch_cue = "Look just north of the shack for the beach crew."
+
+[node name="OffshoreNet" type="Node2D" parent="."]
+position = Vector2(1010, 455)
+script = ExtResource("2_site")
+work_kind = 1
+duration = 3.6
+watch_cue = "Look offshore for the skiff lifting the net."
+
+[node name="TidePool" type="Node2D" parent="."]
+position = Vector2(803, 610)
+script = ExtResource("2_site")
+work_kind = 2
+duration = 3.4
+watch_cue = "Look south of the shack for the tide pool crew."

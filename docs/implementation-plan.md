@@ -10,7 +10,7 @@ After the follow-up, trash arrives at a gentler pace, upgrades take several trip
 
 ## Next milestone
 
-Continue with [Milestone 16](#milestone-16--visible-permanent-cleanup-work). Build the work sequences around successful purchases from the dedicated trader. The outstanding independent human onboarding and cross-device graphics checks carry forward to M18.
+Continue with [Milestone 17](#milestone-17--animated-start-menu). Preserve the session reset and add inactive Save and Load controls. The outstanding independent human onboarding and cross-device graphics checks carry forward to M18.
 
 ## Completed baseline
 
@@ -391,7 +391,7 @@ Enter the trader from shore, switch screens, and leave without triggering a cast
 
 ## Milestone 16 — Visible permanent cleanup work
 
-**Planned.** Buying a project triggers a short visible work sequence that shows what changed on the beach or in the water.
+**Verified November 20, 2026.** All three cleanup purchases stage visible work and leave lasting changes to their sites.
 
 - Give each permanent project a simple staged action suited to its site. For example, a shore crew can gather debris, a skiff and crew can lift a net, or workers can clear a tide pool and leave a visible improvement. Keep staging brief and show the player where to look when returning from the trader.
 - Keep the project transaction and its 70-point contribution in the existing cleanup model. Stage the presentation from a successful purchase, then show a completed state that lasts for the session. Keep the sequence safe across menu transitions, repeated input, and a new session.
@@ -399,6 +399,13 @@ Enter the trader from shore, switch screens, and leave without triggering a cast
 **Verification**
 
 Buy each project through the trader, observe the crew or equipment arrive and do the work, and confirm the visible result and pollution reduction. Reopen the trader, check that the project is complete, and verify that revisiting the site or reopening the menu does not replay the work or charge again. Confirm replay restores the initial sites, project states, and pollution.
+
+**Checkpoint results**
+
+- A beach crew gathers stranded debris north of the shack, an offshore skiff lifts the abandoned net and leaves a small buoy, and the south crew clears silt and litter from the tide pool. Each work sequence lasts 3.4–3.6 seconds by default, with a shoreline cue telling the player where to look.
+- A successful purchase immediately reduces permanent pollution and queues its presentation. The crew starts when the player returns to shore. Multiple projects play in purchase order. Reopening the trader or pausing freezes an active crew, and starting fresh restores all sites. The 70-point contribution and completed flags stay in the existing models.
+- Godot 4.7.2 passed editor import, main startup, cleanup, session, trader, and water tests. The tests checked every purchase, queue ordering, one-time charges, pause and trader transitions, persistence within the session, and replay. The full route passed at both window sizes. Intel Iris Xe / OpenGL captures from the shack showed each crew in action and the before and after sites at 1280 × 720 and 800 × 450.
+- Next action is M17's animated menu and inactive Save and Load buttons.
 
 ## Milestone 17 — Animated start menu
 

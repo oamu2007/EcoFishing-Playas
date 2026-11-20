@@ -47,12 +47,14 @@ capacity = 8
 script = ExtResource("5_project")
 title = "Clear stranded debris"
 art = ExtResource("10_debris")
+work_kind = 0
 cost = 24
 
 [sub_resource type="Resource" id="Resource_net_removal"]
 script = ExtResource("5_project")
 title = "Remove abandoned nets"
 art = ExtResource("11_nets")
+work_kind = 1
 cost = 30
 pollution_reduction = 20
 
@@ -60,6 +62,7 @@ pollution_reduction = 20
 script = ExtResource("5_project")
 title = "Restore the tide pool"
 art = ExtResource("12_pool")
+work_kind = 2
 cost = 36
 pollution_reduction = 20
 

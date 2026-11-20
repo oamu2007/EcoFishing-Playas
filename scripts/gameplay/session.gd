@@ -16,6 +16,7 @@ const CoinBalanceScript = preload("res://scripts/ui/coin_balance.gd")
 func _ready() -> void:
 	_hud.bind_session(_world.pollution, _world.catches, _world.rod, _world.sack, _world.shop, _world.catchable_fish.pollution_threshold)
 	_hud.menu_requested.connect(menu_requested.emit)
+	_world.cleanup_work.work_started.connect(_hud.announce_cleanup)
 	_shack_panel.bind_shop(_world.shop, _world.sack, _world.rod)
 	_coin_balance.bind_shop(_world.shop)
 	_shack_panel.close_requested.connect(_close_shop)

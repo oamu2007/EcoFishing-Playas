@@ -2,6 +2,7 @@ class_name ShackShop
 extends Node
 
 signal purchases_changed
+signal cleanup_funded(project: CleanupProject)
 
 @export var rod_upgrades: Array[RodUpgrade] = []
 @export var sack_upgrades: Array[SackUpgrade] = []
@@ -87,4 +88,5 @@ func buy_cleanup(index: int) -> bool:
 	_completed_projects[index] = true
 	_pollution.remove_permanent(project.pollution_reduction)
 	purchases_changed.emit()
+	cleanup_funded.emit(project)
 	return true

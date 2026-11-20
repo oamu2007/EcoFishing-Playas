@@ -8,6 +8,7 @@ var _footprints: Node2D
 const SandDetailsScript = preload("res://scripts/gameplay/sand_details.gd")
 const PlayerScript = preload("res://scripts/gameplay/player.gd")
 const CatchResolverScript = preload("res://scripts/systems/catch_resolver.gd")
+const CleanupWorkScript = preload("res://scripts/gameplay/cleanup_work.gd")
 const SandShader: Shader = preload("res://shaders/sand.gdshader")
 
 var shore_start: Vector2
@@ -20,6 +21,7 @@ var shore_end: Vector2
 @onready var shop: ShackShop = $ShackShop
 @onready var sack: Sack = $ShackShop/Sack
 @onready var catches: CatchResolverScript = $CatchResolver
+@onready var cleanup_work: CleanupWorkScript = $CleanupWork
 @onready var catchable_fish: CatchableFishManager = $CatchableFishManager
 @onready var _shack: FishingShack = $FishingShack
 @onready var _beach: Polygon2D = $Environment/Beach
@@ -48,6 +50,7 @@ func _ready() -> void:
 	trash_manager.trash_arrived.connect(pollution.register_trash)
 	_player.sack = sack
 	shop.initialize(sack, rod, pollution)
+	cleanup_work.bind_shop(shop)
 	catches.initialize(rod, sack)
 	trash_manager.trash_spawned.connect(catches.register_target)
 	trash_manager.initialize(rod, shore_start, shore_end)
@@ -82,6 +85,7 @@ func can_open_shack() -> bool:
 func set_shop_open(value: bool) -> void:
 	_player.input_locked = value
 	rod.input_locked = value
+	cleanup_work.set_trader_open(value)
 
 
 func _shape_bounds(collider: CollisionShape2D) -> Rect2:

@@ -277,4 +277,4 @@ func _buy_sack(index: int) -> void:
 
 func _buy_cleanup(index: int) -> void:
 	if visible and _page == Page.BUY and _shop.buy_cleanup(index):
-		_feedback.text = "Project funded. Permanent pollution fell by %d points." % _shop.cleanup_projects[index].pollution_reduction
+		_feedback.text = "Permanent pollution fell by %d points. Return to shore to see the work." % _shop.cleanup_projects[index].pollution_reduction

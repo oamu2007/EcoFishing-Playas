@@ -75,6 +75,10 @@ func close_help() -> void:
 	_help.hide()
 
 
+func announce_cleanup(message: String) -> void:
+	_notify(message)
+
+
 func _guidance() -> String:
 	match _rod.state:
 		FishingRod.State.CASTING:

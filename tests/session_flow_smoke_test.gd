@@ -4,6 +4,7 @@ const MainScene: PackedScene = preload("res://scenes/gameplay/main.tscn")
 const LevelScript = preload("res://scripts/gameplay/playas_vertical_slice.gd")
 const PlayerScript = preload("res://scripts/gameplay/player.gd")
 const TraderFixture = preload("res://tests/trader_fixture.gd")
+const CleanupSite = preload("res://scripts/gameplay/cleanup_site.gd")
 
 var _failures: int = 0
 var _main: Node
@@ -164,6 +165,16 @@ func _verify_onboarding(session: Node, world: LevelScript) -> void:
 			_check(world.shop.is_cleanup_complete(0), "Cleanup purchase did not persist before restart")
 		_press_button(shop_panel.get_node("%Close"))
 		_check(not shop_panel.visible and rod.state == FishingRod.State.IDLE, "Shop close button triggered fishing")
+	var site: CleanupSite = world.cleanup_work.get_child(0)
+	_check(site.has_started and not site.is_complete and hud.get_node("Notification").text.contains("beach crew"), "Closing the trader did not start or announce cleanup work")
+	await process_frame
+	_key(KEY_ESCAPE)
+	var progress: float = site.progress
+	for frame: int in 3:
+		await process_frame
+	_check(_menu.visible and is_equal_approx(progress, site.progress), "The pause menu did not freeze active cleanup work")
+	_key(KEY_ESCAPE)
+	await process_frame
 
 
 func _check_fresh(world: LevelScript) -> void:

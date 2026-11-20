@@ -3,6 +3,7 @@ extends SceneTree
 const SESSION_SCENE: PackedScene = preload("res://scenes/gameplay/session.tscn")
 const LevelScript = preload("res://scripts/gameplay/playas_vertical_slice.gd")
 const TraderFixture = preload("res://tests/trader_fixture.gd")
+const CleanupSite = preload("res://scripts/gameplay/cleanup_site.gd")
 
 var _failures: int = 0
 var _session: Node
@@ -38,6 +39,7 @@ func _run() -> void:
 		_session.free()
 		_start_session()
 		_verify_new_session()
+		_verify_queued_work()
 	_session.free()
 	print("Cleanup projects smoke test: %d failures" % _failures)
 	quit(0 if _failures == 0 else 1)
@@ -73,6 +75,8 @@ func _verify_new_session() -> void:
 		var button: Button = _project_buttons[index]
 		catalog_points += project.pollution_reduction
 		_check(not _shop.is_cleanup_complete(index) and button.disabled and button.text == "%d gold" % project.cost, "Session did not restore the project catalog")
+		var site: CleanupSite = _world.cleanup_work.get_child(index)
+		_check(not site.has_started and not site.is_complete and site.progress == 0.0, "New session retained a cleanup site")
 		button.pressed.emit()
 		_check(not _shop.buy_cleanup(index) and not _shop.is_cleanup_complete(index), "Unaffordable cleanup was purchased")
 	_check(catalog_points == PollutionSystem.MAX_PERMANENT_POINTS, "Cleanup catalog does not cover all permanent pollution")
@@ -140,6 +144,8 @@ func _check_completed_projects(count: int) -> void:
 	for index: int in count:
 		var button: Button = _project_buttons[index]
 		_check(_shop.is_cleanup_complete(index) and button.disabled and button.text == "Complete", "Project did not stay complete across arrivals and shop visits")
+		var site: CleanupSite = _world.cleanup_work.get_child(index)
+		_check(site.is_complete and site.progress == 1.0, "Completed presentation replayed on the next visit")
 	_close_shack()
 
 
@@ -148,6 +154,7 @@ func _purchase_project(index: int) -> void:
 	_panel.get_node("%Buy").pressed.emit()
 	var project: CleanupProject = _shop.cleanup_projects[index]
 	var button: Button = _project_buttons[index]
+	var site: CleanupSite = _world.cleanup_work.get_child(index)
 	var coins: int = _shop.coins
 	var permanent: int = _pollution.permanent_points
 	var floating: int = _pollution.floating_points
@@ -158,7 +165,34 @@ func _purchase_project(index: int) -> void:
 	_check(_pollution.floating_points == floating and _manager.items.size() == trash_count, "Project changed the floating load")
 	_check(_meter.value == float(permanent - project.pollution_reduction + floating), "Project did not update the HUD immediately")
 	_check(_shop.is_cleanup_complete(index) and button.disabled and button.text == "Complete", "Purchased project did not display completion")
+	_check(not site.has_started and not _world.cleanup_work.is_processing(), "A crew started work while the trader hid the shore")
 	_close_shack()
+	_check(site.has_started and not site.is_complete, "Returning to shore did not start the purchased work")
+	_world.cleanup_work._process(site.duration * 0.5)
+	var halfway: float = site.progress
+	_check(is_equal_approx(halfway, 0.5), "Work did not advance through the middle stage")
+	_open_shack()
+	_check(not _world.cleanup_work.is_processing() and is_equal_approx(halfway, site.progress), "Reopening the trader advanced or reset the crew")
+	_close_shack()
+	_world.cleanup_work._process(site.duration * 0.6)
+	_check(site.is_complete and not _world.cleanup_work.is_processing(), "Work did not leave a persistent completed state")
+
+
+func _verify_queued_work() -> void:
+	_shop.coins = _shop.cleanup_projects[0].cost + _shop.cleanup_projects[1].cost
+	_open_shack()
+	_panel.get_node("%Buy").pressed.emit()
+	_project_buttons[0].pressed.emit()
+	_project_buttons[1].pressed.emit()
+	var first: CleanupSite = _world.cleanup_work.get_child(0)
+	var second: CleanupSite = _world.cleanup_work.get_child(1)
+	_check(not first.has_started and not second.has_started and _pollution.permanent_points == 20, "Buying multiple projects did not commit and queue them")
+	_close_shack()
+	_check(first.has_started and not second.has_started, "Queued work started simultaneously")
+	_world.cleanup_work._process(first.duration + 0.1)
+	_check(first.is_complete and second.has_started and not second.is_complete, "Second crew did not follow the first")
+	_world.cleanup_work._process(second.duration + 0.1)
+	_check(second.is_complete and _shop.coins == 0, "Queued work remained unfinished or charged twice")
 
 
 func _earn(amount: int, max_trips: int) -> void:

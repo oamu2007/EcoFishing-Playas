@@ -74,6 +74,8 @@ The level injects its Sack into `Player` and `CatchResolver`. The Sack holds nam
 
 Typed `RodUpgrade` and `SackUpgrade` resources configure ordered upgrade tiers, their prices, and their effects. A purchase addresses a specific tier and debits only on success. The same shop sells configurable `CleanupProject` resources. It owns the completion flags for the session and applies each project’s stated reduction to `PollutionSystem` exactly once. Projects remove the entire 70-point permanent contribution when all are funded. Arrivals affect only floating points.
 
+The level's `CleanupWork` scene listens for successful project purchases. It maps each project's work kind to an authored site and runs one visual sequence at a time after the trader closes. Each site draws its initial, working, and completed state. The session presents the site's watch cue through the HUD. The trader and the pause menu freeze work; replacing the session resets all sites and discards queued work.
+
 ### Pollution-responsive water
 
 The level injects `PollutionSystem` into `Environment/Water` (`WaterVisuals`). It reads `normalized_pollution` immediately, then subscribes to `pollution_changed(normalized_pollution: float)`. Values range from 0 (clean) to 1 (initial pollution). The controller smoothly displays changes over 1.6 seconds using a finite Hermite interpolation; the HUD independently receives the true model value immediately. A private material is created once per water instance and only its `pollution_level` uniform changes during transitions.
