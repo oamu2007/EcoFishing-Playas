@@ -37,9 +37,9 @@ func _run() -> void:
 	model.remove_permanent(50)
 	_check(model.current_pollution == 50 and water.target_pollution == 0.5, "Half-pollution fixture did not update visual target")
 	_check(_uniform(water) == 1.0, "Visual jumped instead of transitioning")
-	var bar: ProgressBar = main.get_node("HUD/PollutionBar")
+	var bar: ProgressBar = main.get_node("HUD/ProgressPanel/Margin/Readouts/PollutionBar")
 	_check(absf(bar.value - model.normalized_pollution * 100.0) <= maxf(bar.step, 0.0001), "HUD waited for water smoothing")
-	var hud_text: String = main.get_node("HUD/ProgressPanel/Margin/Progress").text
+	var hud_text: String = main.get_node("HUD/ProgressPanel/Margin/Readouts/Progress").text
 	_check(hud_text.ends_with("%d%%" % roundi(model.normalized_pollution * 100.0)), "Numerical HUD pollution did not update immediately")
 	water._process(water.transition_duration * 0.5)
 	_check(_uniform(water) < 1.0 and _uniform(water) > water.target_pollution, "Intermediate interpolation outside boundaries")

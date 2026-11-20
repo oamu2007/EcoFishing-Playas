@@ -1,0 +1,139 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/gameplay/fishing_shack.gd" id="1_shack"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_shack"]
+size = Vector2(132, 64)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_prompt"]
+bg_color = Color(0.09, 0.18, 0.21, 0.96)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.99, 0.88, 0.63, 0.8)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_left = 5
+corner_radius_bottom_right = 5
+
+[node name="FishingShack" type="Node2D"]
+script = ExtResource("1_shack")
+
+[node name="Shadow" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-65, -89, 68, -89, 92, -59, 90, 7, 71, 18, -62, 18, -82, 5, -84, -63)
+color = Color(0.33, 0.24, 0.14, 0.22)
+
+[node name="Deck" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-73, -33, 73, -33, 73, 4, 66, 10, -66, 10, -73, 4)
+color = Color(0.61, 0.4, 0.23, 1)
+
+[node name="DeckSurface" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-70, -35, 70, -35, 70, 1, 65, 6, -65, 6, -70, 1)
+color = Color(0.81, 0.59, 0.36, 1)
+
+[node name="DeckPlanks" type="Line2D" parent="."]
+points = PackedVector2Array(-70, -16, 70, -16, 70, -6, -70, -6)
+width = 1.5
+default_color = Color(0.59, 0.39, 0.25, 1)
+
+[node name="Facade" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-66, -83, 66, -83, 66, -26, 60, -22, -66, -22)
+color = Color(0.17, 0.4, 0.43, 1)
+
+[node name="SideWall" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(55, -66, 66, -73, 66, -26, 55, -22)
+color = Color(0.12, 0.3, 0.32, 1)
+
+[node name="Sill" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-64, -25, 55, -25, 55, -22, -64, -22)
+color = Color(0.11, 0.28, 0.29, 1)
+
+[node name="WindowFrame" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-53, -56, 4, -56, 4, -31, -53, -31)
+color = Color(0.99, 0.85, 0.59, 1)
+
+[node name="Window" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-49, -53, 0, -53, 0, -35, -49, -35)
+color = Color(0.12, 0.26, 0.29, 1)
+
+[node name="WindowReflection" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-44, -50, -32, -50, -42, -38, -47, -38)
+color = Color(0.44, 0.66, 0.63, 1)
+
+[node name="WindowDivider" type="Line2D" parent="."]
+points = PackedVector2Array(-21, -53, -21, -34)
+width = 2.0
+default_color = Color(0.99, 0.85, 0.59, 1)
+
+[node name="DoorFrame" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(18, -55, 46, -55, 46, -22, 18, -22)
+color = Color(0.9, 0.72, 0.47, 1)
+
+[node name="Door" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(21, -52, 43, -52, 43, -22, 21, -22)
+color = Color(0.4, 0.27, 0.18, 1)
+
+[node name="DoorHandle" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(35, -36, 40, -36, 40, -33, 35, -33)
+color = Color(0.99, 0.85, 0.59, 1)
+
+[node name="Crate" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-71, -28, -57, -28, -51, -23, -51, -11, -71, -11)
+color = Color(0.53, 0.34, 0.2, 1)
+
+[node name="CrateLid" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-71, -28, -57, -28, -51, -23, -66, -23)
+color = Color(0.87, 0.66, 0.39, 1)
+
+[node name="RoofTrim" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-66, -94, 60, -94, 77, -63, 73, -56, -79, -56, -79, -62)
+color = Color(0.45, 0.23, 0.19, 1)
+
+[node name="Roof" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-66, -94, 60, -94, 77, -63, -79, -63)
+color = Color(0.73, 0.38, 0.29, 1)
+
+[node name="RoofRidge" type="Line2D" parent="."]
+points = PackedVector2Array(-66, -92, 59, -92)
+width = 3.0
+default_color = Color(0.94, 0.57, 0.4, 1)
+
+[node name="Signboard" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-63, -88, 62, -88, 62, -65, -63, -65)
+color = Color(0.25, 0.19, 0.14, 1)
+
+[node name="Sign" type="Label" parent="."]
+offset_left = -62.0
+offset_top = -88.0
+offset_right = 61.0
+offset_bottom = -65.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.68, 1)
+theme_override_font_sizes/font_size = 14
+text = "FISHING SHACK"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Building" type="StaticBody2D" parent="."]
+collision_layer = 1
+collision_mask = 2
+
+[node name="Footprint" type="CollisionShape2D" parent="Building"]
+position = Vector2(0, -55)
+shape = SubResource("RectangleShape2D_shack")
+
+[node name="InteractionPrompt" type="Label" parent="."]
+visible = false
+z_index = 6
+offset_left = -68.0
+offset_top = 20.0
+offset_right = 68.0
+offset_bottom = 50.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.96, 0.86, 1)
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBoxFlat_prompt")
+text = "E  Fishing shack"
+horizontal_alignment = 1
+vertical_alignment = 1

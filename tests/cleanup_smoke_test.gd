@@ -25,8 +25,9 @@ func _run() -> void:
 	var manager: TrashManager = world.trash_manager
 	var pollution: PollutionSystem = world.pollution
 	var notification: Label = main.get_node("HUD/Notification")
-	var meter: ProgressBar = main.get_node("HUD/PollutionBar")
+	var meter: ProgressBar = main.get_node("HUD/ProgressPanel/Margin/Readouts/PollutionBar")
 	manager.arrivals_enabled = false
+	world.sack.expand(manager.maximum_active_items)
 	rod.set_process(false)
 	player.set_physics_process(false)
 	_check(manager.items.size() == 6 and pollution.current_pollution == 100, "Unexpected starting load")

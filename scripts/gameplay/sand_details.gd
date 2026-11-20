@@ -4,12 +4,13 @@ extends Node2D
 # Usa una semilla fija para que la playa siempre se vea igual.
 
 const SEED: int = 2026
-const AREA: Rect2 = Rect2(20, 20, 740, 860)
 const PEBBLE_CLUSTERS: int = 10
 const SHELL_COUNT: int = 12
 const RIPPLE_COUNT: int = 18
 const MIN_SPACING: float = 40.0
 const MAX_TRIES: int = 30
+
+@export var area: Rect2 = Rect2(20, 20, 740, 860)
 
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var _used_points: Array[Vector2] = []
@@ -34,8 +35,8 @@ func _free_point() -> Vector2:
 	var point: Vector2 = Vector2.ZERO
 	for _try: int in range(MAX_TRIES):
 		point = Vector2(
-			_rng.randf_range(AREA.position.x, AREA.end.x),
-			_rng.randf_range(AREA.position.y, AREA.end.y)
+			_rng.randf_range(area.position.x, area.end.x),
+			_rng.randf_range(area.position.y, area.end.y)
 		)
 		var is_free: bool = true
 		for other: Vector2 in _used_points:
@@ -90,8 +91,8 @@ func _make_shell(center: Vector2) -> Dictionary:
 func _make_ripple() -> Dictionary:
 	return {
 		"position": Vector2(
-			_rng.randf_range(AREA.position.x, AREA.end.x),
-			_rng.randf_range(AREA.position.y, AREA.end.y)
+			_rng.randf_range(area.position.x, area.end.x),
+			_rng.randf_range(area.position.y, area.end.y)
 		),
 		"radius": _rng.randf_range(18.0, 46.0),
 		"start": _rng.randf_range(0.0, TAU),

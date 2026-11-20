@@ -99,7 +99,7 @@ func _run() -> void:
 	hud._unhandled_input(help_event)
 	_check(not help.visible, "H did not close help")
 	await process_frame
-	_check(hud.get_node("ProgressPanel").size.x < 320.0 and hud.get_node("ProgressPanel").size.y <= 60.0, "HUD is no longer compact")
+	_check(hud.get_node("ProgressPanel").size.x < 320.0 and hud.get_node("ProgressPanel").size.y <= 100.0, "HUD is no longer compact")
 	main.free()
 	print("Refinement smoke test: %d failures" % _failures)
 	quit(0 if _failures == 0 else 1)

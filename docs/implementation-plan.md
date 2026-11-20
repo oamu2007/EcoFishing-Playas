@@ -8,7 +8,7 @@ A first-time player can start a session from the menu, learn to collect recurrin
 
 ## Next milestone
 
-Continue with [Milestone 8](#milestone-8--sack-shack-and-gear-upgrades). Use the recurring starter catches to tune Sack trips and trash-funded gear.
+Continue with [Milestone 9](#milestone-9--permanent-cleanup-purchases). Add cleanup projects and verify that trash income can unlock fish habitat.
 
 ## Completed baseline
 
@@ -226,7 +226,7 @@ Adapt the cleanup, refinement, water, and ambient-fish smoke tests that assume a
 
 ## Milestone 8 — Sack, shack, and gear upgrades
 
-**Planned.** The player can fill a small Sack, walk it to a nearby fishing shack, trade trash for gold coins, and use those coins to improve the next trip.
+**Verified November 19, 2026.** A full starter Sack finances a first rod or Sack upgrade at the fishing shack.
 
 - Add the shared Sack with a low starting capacity and a slight, tunable movement slowdown as it fills. Landed trash uses Sack space. Leave excess items in the water when the Sack or per-cast limit is reached. Give clear feedback on a full Sack, and restore normal speed after unloading. Use the same inventory for fish in Milestone 10.
 - Expand the [shoreline map](../scenes/levels/playas_vertical_slice.tscn) slightly for the shack and any cleanup sites that need room. Keep the shack close to starter-range fishing spots. Recheck camera limits, collision shapes, casting and drift bounds, and beach-detail coverage after map edits.
@@ -235,6 +235,14 @@ Adapt the cleanup, refinement, water, and ambient-fish smoke tests that assume a
 **Verification**
 
 Test with base gear and zero coins. Fill the Sack, observe the slowdown and full feedback, and confirm another cast cannot overflow inventory or remove excess trash. Walk to the shack and exchange the load once for the displayed amount. Earn and buy each upgrade using trash, then verify a previously unreachable target becomes valid, cast and retrieval get faster, a return can carry multiple pieces within free Sack space, and the Sack can hold more. Try unaffordable purchases and repeated shop clicks and check for duplicate credits, duplicate upgrades, or stray casts.
+
+**Checkpoint results**
+
+- The beach extends 100 world pixels west. The shack is on the route from spawn to the shoreline, with a 64 px approach radius. E opens the shop with the rod idle and movement and casting are gated until close. The blocking shack wall leaves the direct beach route open. The sand overlay and detail placement fit the expanded beach.
+- The starter Sack holds three items and slows movement by up to 12%. Trash pays four gold each. The first rod and Sack upgrades cost 12 gold each, and the final tiers cost 28 and 24. Rod tiers reach 390 and 600 px, speed up cast and return, and hold two and three trash respectively. Sack tiers hold five and eight items. These values are configurable.
+- Followed the architecture review recommendation to inject the Sack into the existing trash manager while there is one catch producer. M10 will centralize selection and the temporary held list so both fish and trash share the same Sack limit and landing priority.
+- Godot 4.7.2 editor import, main startup, six smoke tests, and the OpenGL water render check passed. The shop test funds all four gear upgrades through trash, exercises a physical walk to the shack, checks the full-load multiplier, and checks empty sales, unaffordable and repeated purchases, suppressed gameplay input, multiple trash returns, and limited free space. The map harness checked the collider boundaries, camera limits, frontage, prompt, sand coverage, and unchanged water and casting geometry. A rendered frontage check identified prompt overlap from the idle rod text, which is now hidden near the shack.
+- Final theme and a first-time player check remain in M11. Next action is to add the permanent cleanup catalog and verify 0% followed by a live rebound.
 
 ## Milestone 9 — Permanent cleanup purchases
 

@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/gameplay/player.tscn" id="1_player"]
 [ext_resource type="Script" path="res://scripts/gameplay/playas_vertical_slice.gd" id="2_level"]
@@ -6,12 +6,15 @@
 [ext_resource type="Script" path="res://scripts/systems/pollution_system.gd" id="4_pollution"]
 [ext_resource type="PackedScene" path="res://scenes/gameplay/water.tscn" id="5_water"]
 [ext_resource type="PackedScene" path="res://scenes/gameplay/ambient_fish.tscn" id="6_fish"]
+[ext_resource type="PackedScene" path="res://scenes/gameplay/fishing_shack.tscn" id="7_shack"]
+
+[ext_resource type="PackedScene" path="res://scenes/gameplay/shack_shop.tscn" id="8_shop"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_vertical"]
 size = Vector2(32, 900)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_horizontal"]
-size = Vector2(840, 32)
+size = Vector2(940, 32)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ocean"]
 size = Vector2(24, 900)
@@ -37,7 +40,7 @@ polygon = PackedVector2Array(840, 0, 920, 0, 940, 120, 913, 240, 938, 360, 910, 
 color = Color(0.22, 0.67, 0.72, 1)
 
 [node name="Beach" type="Polygon2D" parent="Environment"]
-polygon = PackedVector2Array(0, 0, 840, 0, 840, 900, 0, 900)
+polygon = PackedVector2Array(-100, 0, 840, 0, 840, 900, -100, 900)
 color = Color(0.87, 0.74, 0.48, 1)
 
 [node name="WetSand" type="Polygon2D" parent="Environment"]
@@ -45,11 +48,11 @@ polygon = PackedVector2Array(780, 0, 840, 0, 840, 900, 790, 900, 798, 780, 781, 
 color = Color(0.72, 0.62, 0.43, 1)
 
 [node name="DunePatch" type="Polygon2D" parent="Environment"]
-polygon = PackedVector2Array(0, 0, 245, 0, 220, 85, 130, 110, 0, 90)
+polygon = PackedVector2Array(-100, 0, 245, 0, 220, 85, 130, 110, -24, 92, -100, 107)
 color = Color(0.78, 0.69, 0.4, 1)
 
 [node name="DunePatch2" type="Polygon2D" parent="Environment"]
-polygon = PackedVector2Array(0, 710, 120, 690, 250, 740, 300, 900, 0, 900)
+polygon = PackedVector2Array(-100, 735, 0, 710, 120, 690, 250, 740, 300, 900, -100, 900)
 color = Color(0.79, 0.69, 0.4, 1)
 
 [node name="FoamLine1" type="Line2D" parent="Environment"]
@@ -74,23 +77,28 @@ collision_layer = 1
 collision_mask = 2
 
 [node name="Left" type="CollisionShape2D" parent="WorldBounds"]
-position = Vector2(-16, 450)
+position = Vector2(-116, 450)
 shape = SubResource("RectangleShape2D_vertical")
 
 [node name="Top" type="CollisionShape2D" parent="WorldBounds"]
-position = Vector2(420, -16)
+position = Vector2(370, -16)
 shape = SubResource("RectangleShape2D_horizontal")
 
 [node name="Bottom" type="CollisionShape2D" parent="WorldBounds"]
-position = Vector2(420, 916)
+position = Vector2(370, 916)
 shape = SubResource("RectangleShape2D_horizontal")
 
 [node name="OceanBarrier" type="CollisionShape2D" parent="WorldBounds"]
 position = Vector2(828, 450)
 shape = SubResource("RectangleShape2D_ocean")
 
+[node name="FishingShack" parent="." instance=ExtResource("7_shack")]
+position = Vector2(660, 450)
+
 [node name="Player" parent="." instance=ExtResource("1_player")]
 position = Vector2(520, 450)
+
+[node name="ShackShop" parent="." instance=ExtResource("8_shop")]
 
 [node name="TrashManager" type="Node2D" parent="."]
 script = ExtResource("3_trash")

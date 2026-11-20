@@ -21,6 +21,8 @@ const FishingLineScript = preload("res://scripts/gameplay/fishing_line.gd")
 
 var state: State = State.IDLE
 var cast_number: int = 0
+var input_locked: bool = false
+var show_idle_status: bool = true
 var water_bounds: Rect2 = Rect2()
 var _elapsed: float = 0.0
 var _start: Vector2 = Vector2.ZERO
@@ -71,7 +73,7 @@ func invalid_target_reason_from(origin: Vector2, target: Vector2) -> String:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not event.is_action_pressed("fishing_action"):
+	if input_locked or not event.is_action_pressed("fishing_action"):
 		return
 	get_viewport().set_input_as_handled()
 	match state:
@@ -120,12 +122,13 @@ func _process(delta: float) -> void:
 				retrieval_completed.emit(_target)
 	if is_active():
 		_line.connect_endpoints(_tip.global_position, _hook.get_line_endpoint())
+	_status.visible = not input_locked and (state != State.IDLE or show_idle_status)
 	_status.modulate = Color(1.0, 0.4, 0.3) if _invalid_feedback > 0.0 else Color.WHITE
 	queue_redraw()
 
 
 func _draw() -> void:
-	if state != State.IDLE:
+	if input_locked or state != State.IDLE:
 		return
 	var aim: Vector2 = get_global_mouse_position()
 	var valid: bool = invalid_target_reason(aim).is_empty()

@@ -22,9 +22,11 @@ const TRASH_SCENE: PackedScene = preload("res://scenes/gameplay/trash.tscn")
 @export var minimum_spacing: float = 72.0
 @export_range(8.0, 60.0) var item_catch_radius: float = 24.0
 @export_range(1, 30) var pollution_per_item: int = 5
+@export_range(1, 30) var trash_sale_value: int = 4
 
 var items: Array[OceanTrash] = []
 var _rod: FishingRod
+var _sack: Sack
 var _shore_x: float
 var _drift_limits: Vector2
 var _near_stops: Vector2
@@ -38,10 +40,11 @@ var _spawned_count: int = 0
 var _last_returned_cast: int = 0
 
 
-func initialize(rod: FishingRod, shore_start: Vector2, shore_end: Vector2) -> void:
+func initialize(rod: FishingRod, shore_start: Vector2, shore_end: Vector2, sack: Sack) -> void:
 	if _rod != null:
 		return
 	_rod = rod
+	_sack = sack
 	_rod.hook_landed.connect(_on_hook_landed)
 	_rod.target_detected.connect(_on_target_detected)
 	_rod.retrieval_completed.connect(_on_retrieval_completed)
@@ -148,8 +151,12 @@ func _on_hook_landed(point: Vector2) -> void:
 		_attach_item(nearest)
 
 
+func _has_catch_space() -> bool:
+	return _caught.size() < mini(_rod.trash_per_cast, _sack.free_slots)
+
+
 func _attach_item(item: OceanTrash) -> void:
-	if _caught.size() >= _rod.trash_per_cast:
+	if not _has_catch_space():
 		return
 	var index: int = _caught.size()
 	var columns: Array[float] = [0.0, -22.0, 22.0, -44.0, 44.0]
@@ -163,7 +170,7 @@ func _on_retrieval_advanced(from: Vector2, to: Vector2, hook_radius: float) -> v
 	if _rod.state != FishingRod.State.RETRIEVING:
 		return
 	for item: OceanTrash in items:
-		if _caught.size() >= _rod.trash_per_cast:
+		if not _has_catch_space():
 			break
 		if item.hooked or item.collected or not item.in_water:
 			continue
@@ -193,8 +200,12 @@ func _on_retrieval_completed(_water_position: Vector2) -> void:
 	var type_name: String
 	var count: int = 0
 	for item: OceanTrash in returned:
-		if not is_instance_valid(item) or not item.finish_collection():
+		if not is_instance_valid(item) or not item.hooked or item.collected:
 			continue
+		if not _sack.store(trash_sale_value):
+			push_error("A reserved trash catch could not fit in the Sack")
+			continue
+		item.finish_collection()
 		items.erase(item)
 		_starter_items.erase(item)
 		type_name = item.display_name()

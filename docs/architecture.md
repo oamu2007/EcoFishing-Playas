@@ -18,9 +18,13 @@ Main (Node)
 │   ├── WorldBounds (StaticBody2D)
 │   ├── Player (CharacterBody2D)
 │   │   └── FishingRod (Node2D)
+│   ├── FishingShack (Node2D)
+│   ├── ShackShop (Node)
+│   │   └── Sack (Node)
 │   ├── TrashManager (Node2D)
 │   └── PollutionSystem (Node)
-└── HUD (CanvasLayer)
+├── HUD (CanvasLayer)
+└── ShackPanel (CanvasLayer)
 ```
 
 The tree omits decorative nodes. `Main` instantiates the level and HUD, and the level owns local gameplay and environmental presentation.
@@ -54,9 +58,15 @@ Typed rod signals: `state_changed`, `hook_landed`, `retrieval_advanced(previous_
 
 ### Compact interface
 
-The normal HUD is a 264 × 48 px translucent corner card with the live pollution percentage and a slim pollution bar. Catch notifications use small unboxed text and aggregate successful returns. Detailed instructions are hidden until the `toggle_help` action (H); key repeat does not toggle repeatedly. A six-second startup hint reduces to “H Help”. All HUD controls ignore mouse input, preserving cast clicks. The help panel is explicitly toggled and does not pause gameplay.
+The normal HUD is a 264 × 85 px translucent corner card with live pollution, Sack usage, gold, and gear tiers. Catch notifications use small unboxed text and aggregate successful returns. Detailed instructions are hidden until the `toggle_help` action (H); key repeat does not toggle repeatedly. A six-second startup hint reduces to “H Help”. All HUD controls ignore mouse input, preserving cast clicks. The help panel is explicitly toggled and does not pause gameplay.
 
 Swept detection samples each item's current physics position rather than solving continuous relative motion for moving trash. At the configured gentle current speed this keeps the implementation small; unusually fast currents would need relative-motion sweeps. The shoreline/water validator still assumes this axis-aligned rectangular level.
+
+### Sack and fishing shack
+
+The level injects its Sack into `Player` and `TrashManager`. The Sack holds sale values across casts, applies a linear movement multiplier as it fills, and has three slots and a 12% full-load slowdown by default. The trash manager checks Sack space and the rod's trash limit before attachment. It stores a successful return before registering pollution removal. Full Sack casts leave excess trash in the water.
+
+`FishingShack` marks a short route inland from starter-range water. The player presses E in range with the rod idle. `Main` opens the modal `ShackPanel` and gates both movement and rod input until the panel closes. `ShackShop` owns the session wallet and purchase state. It credits the sum of the Sack's sale values once, then empties it. Typed `RodUpgrade` and `SackUpgrade` resources configure ordered upgrade tiers, their prices, and their effects. A purchase addresses a specific tier and debits only on success. The trash manager retains cast ownership until fish need the same geometry arbitration in M10. This keeps M8's change limited to one catch producer and avoids global session state.
 
 ### Pollution-responsive water
 
@@ -82,10 +92,10 @@ Commit `2589291` adds three local presentation scripts and `shaders/sand.gdshade
 
 - `footprints.gd` receives the player reference and measures actual movement in `_process()`. Every 26 pixels it places an alternating footprint with a six-pixel lateral offset. Prints fade over eight seconds and are capped at 80. The node draws after Environment and before Player at Z 0.
 - `water_splash.gd` receives `hook_landed` through the level, with the landing position and true normalized pollution. It creates one 18-droplet `CPUParticles2D` burst with a 0.6-second lifetime and two expanding rings with a 0.18-second stagger and 0.9-second lifetime. Droplet nodes free themselves on `finished`. Rings are removed when their lifetime ends. The effect draws at Z 3 below the rod and hook at player-relative +5.
-- The sand overlay is a mouse-ignoring 840 × 900 ColorRect under Environment. Its private material combines smooth value-noise dunes, sine wind marks, and two-pixel grain with 0.32 alpha. Shader uniforms control colors, dune/grain strength, opacity, and area size.
+- The sand overlay is a mouse-ignoring ColorRect under Environment fitted to the Beach polygon's rectangle. Its private material combines smooth value-noise dunes, sine wind marks, and two-pixel grain with 0.32 alpha. Shader uniforms control colors, dune/grain strength, opacity, and area size.
 - `sand_details.gd` generates ten pebble clusters, twelve shells, and eighteen wind arcs once with seed 2026, then uses cached draw commands. It uses bounded placement attempts and spacing for pebble-cluster and shell centers.
 
-The sand overlay size and detail rectangle are currently fixed to this map. Future geometry changes must update them or derive them from Beach. Footprint and splash nodes continue processing/redrawing while empty. Most effect settings are script constants rather than exported Inspector controls. Extracting a reusable presentation scene and exposing tuning are follow-up maintenance work.
+The sand overlay and detail positions derive from the authored Beach polygon. The detail inset keeps pebbles and shells away from wet sand. Footprint and splash nodes continue processing/redrawing while empty. Most effect settings are script constants rather than exported Inspector controls. Extracting a reusable presentation scene and exposing tuning are follow-up maintenance work.
 
 ### Planned replay
 
@@ -111,7 +121,7 @@ The rod reports lifecycle and hook positions. The trash manager identifies and f
 
 - Session pollution belongs to `PollutionSystem`, with a clear initial and minimum value.
 - Fishing state belongs to `FishingRod` (IDLE, CASTING, WAITING, RETRIEVING).
-- Movement state belongs to `Player`.
+- Movement state belongs to `Player`. `Sack` provides the load multiplier and owns carried items. `ShackShop` owns coins and purchased tiers.
 - Water clarity follows normalized pollution, and fish visibility follows the displayed water value.
 - Collectible configuration should move into typed custom `Resource` data only when multiple variants make that worthwhile.
 
