@@ -60,3 +60,11 @@ EcoFishing Playas is a 2D top-down environmental fishing game built with Godot 4
 - Run available checks before marking a task complete.
 - Do not commit generated Godot cache files.
 - Keep main stable and playable.
+
+## Codex roadmap execution
+
+- Use `docs/implementation-plan.md` as the gameplay roadmap. When the user authorizes a roadmap run, proceed through all authorized milestones in dependency order on a feature branch that includes the required baseline. Continue after each milestone without asking for approval. A milestone-specific request authorizes that milestone.
+- The lead owns shared interfaces, scene wiring, and integrated verification. Choose configurable, reversible defaults for ordinary tuning. At each milestone, run the relevant Godot checks, record the outcome, decisions, pending checks, and next step in the roadmap, and continue. Diagnose failures and pursue independent work while resolving them. Reserve completion for milestones whose acceptance checks are satisfied.
+- Delegate when there is an independently checkable task, such as tracing a regression, reviewing an integration, or implementing an isolated component. Use GPT-6.2 Sol at medium effort when available. Keep delegation narrow and run one subagent at a time by default. Give it the relevant milestone excerpt, file scope, and acceptance criteria. Ask for a concise report with file references and check results. For write tasks, give the worker explicit file ownership and keep concurrent edits disjoint. The lead verifies every delegated result.
+- For a consequential technical decision with competing approaches, consult one read-only GPT-6.2 Astra subagent at medium effort when available. Give it the evidence, options, and constraints, and ask for a recommendation and tradeoffs. The lead decides within the authorized vision. If the model is unavailable, assess the tradeoffs with the available model.
+- Ask the user when the roadmap reserves a decision for them, including the M11 UI theme, or when a choice materially changes the agreed player experience or scope. State the options, your recommendation, and the work that depends on the answer. Continue independent work while waiting. Pause only when the remaining work depends on that answer or a genuine blocker. Apply the Git collaboration rules above throughout the run.

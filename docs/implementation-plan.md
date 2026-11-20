@@ -1,6 +1,6 @@
 # Vertical slice implementation plan
 
-The GitHub `main` gameplay baseline includes the beach, fishing, trash collection, pollution tracking, and HUD refinements through M4.5. M5 and M6 are implemented on `feature/dynamic-water`. Run their acceptance steps and test commands from a checkout that includes those features. M7 and M8 are planned.
+The GitHub `main` gameplay baseline includes the beach, fishing, trash collection, pollution tracking, and HUD refinements through M4.5. M5 and M6 are implemented on `feature/dynamic-water`. Run their acceptance steps and test commands from a checkout that includes those features. M7–M12 cover the planned gameplay progression.
 
 ## Definition of done
 
