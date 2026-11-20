@@ -10,7 +10,7 @@ const ShackPanelScript = preload("res://scripts/ui/shack_panel.gd")
 
 
 func _ready() -> void:
-	_hud.bind_cleanup(_world.pollution, _world.trash_manager, _world.rod, _world.sack, _world.shop)
+	_hud.bind_cleanup(_world.pollution, _world.catches, _world.rod, _world.sack, _world.shop)
 	_shack_panel.bind_shop(_world.shop, _world.sack, _world.rod)
 	_shack_panel.close_requested.connect(_close_shop)
 

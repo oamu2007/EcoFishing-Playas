@@ -1,5 +1,5 @@
 class_name OceanTrash
-extends Area2D
+extends FishingTarget
 
 signal entered_water
 
@@ -7,13 +7,10 @@ enum Kind { BOTTLE, CAN, BAG }
 
 @export var kind: Kind = Kind.BOTTLE
 @export_range(1, 30) var pollution_value: int = 5
-@export_range(8.0, 60.0) var catch_radius: float = 24.0
 @export var bob_amplitude: float = 2.5
 @export var bob_phase: float = 0.0
 @export_range(0.0, 20.0) var drift_speed: float = 6.0
 
-var hooked: bool = false
-var collected: bool = false
 var in_water: bool = true
 var is_arriving: bool = false
 var _entry_x: float
@@ -27,13 +24,8 @@ var _drift_center: float = 0.0
 var _drift_amplitude: float = 0.0
 var _drift_phase: float = 0.0
 
-@onready var visual: Node2D = $Visual
-
-
 func _ready() -> void:
-	var circle: CircleShape2D = CircleShape2D.new()
-	circle.radius = catch_radius
-	$CollisionShape2D.shape = circle
+	super._ready()
 	$Visual/Bottle.visible = kind == Kind.BOTTLE
 	$Visual/Can.visible = kind == Kind.CAN
 	$Visual/Bag.visible = kind == Kind.BAG
@@ -105,25 +97,5 @@ func display_name() -> String:
 	return "Trash"
 
 
-func can_hook_at(water_position: Vector2) -> bool:
-	return in_water and not hooked and not collected and global_position.distance_to(water_position) <= catch_radius
-
-
-func attach_to(anchor: Node2D, offset: Vector2 = Vector2(0, 14)) -> bool:
-	if not in_water or hooked or collected:
-		return false
-	hooked = true
-	set_deferred("monitorable", false)
-	reparent(anchor)
-	position = offset
-	visual.position = Vector2.ZERO
-	return true
-
-
-func finish_collection() -> bool:
-	if not hooked or collected:
-		return false
-	collected = true
-	hide()
-	queue_free()
-	return true
+func can_hook() -> bool:
+	return in_water and super.can_hook()

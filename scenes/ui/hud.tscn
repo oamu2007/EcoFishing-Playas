@@ -39,7 +39,7 @@ theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
 theme_override_constants/shadow_offset_x = 1
 theme_override_constants/shadow_offset_y = 2
 theme_override_font_sizes/font_size = 14
-text = "CONTROLS                         H to close\nMove: WASD / Arrow keys\nAim: Mouse (green = valid target)\nCast / Retrieve: Left click\nStarter rod: one piece per cast.\nNew trash drifts in from offshore.\nE: Sell catches and buy gear at the shack."
+text = "CONTROLS                         H to close\nMove: WASD / Arrow keys\nAim: Mouse (green = valid target)\nCast / Retrieve: Left click\nStarter rod: one piece per cast.\nFish with a ring arrive at 50% pollution.\nE: Sell catches and buy gear at the shack."
 
 [node name="ProgressPanel" type="PanelContainer" parent="."]
 offset_left = 12.0

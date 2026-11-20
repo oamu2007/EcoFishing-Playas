@@ -1,5 +1,7 @@
 extends CanvasLayer
 
+const CatchResolverScript = preload("res://scripts/systems/catch_resolver.gd")
+
 var _notification_remaining: float = 0.0
 var _startup_hint_remaining: float = 6.0
 var _hooked_count: int = 0
@@ -15,15 +17,15 @@ var _shop: ShackShop
 @onready var _gear: Label = $ProgressPanel/Margin/Readouts/Gear
 
 
-func bind_cleanup(pollution: PollutionSystem, trash: TrashManager, rod: FishingRod, sack: Sack, shop: ShackShop) -> void:
+func bind_cleanup(pollution: PollutionSystem, catches: CatchResolverScript, rod: FishingRod, sack: Sack, shop: ShackShop) -> void:
 	_sack = sack
 	_shop = shop
 	sack.contents_changed.connect(_update_inventory)
 	shop.purchases_changed.connect(_update_inventory)
 	_update_inventory()
 	pollution.pollution_changed.connect(_on_pollution_changed)
-	trash.trash_hooked.connect(_on_trash_hooked)
-	trash.trash_returned.connect(_on_trash_returned)
+	catches.catch_hooked.connect(_on_catch_hooked)
+	catches.catches_returned.connect(_on_catches_returned)
 	rod.state_changed.connect(_on_rod_state_changed)
 	_on_pollution_changed(pollution.normalized_pollution)
 
@@ -60,17 +62,22 @@ func _on_rod_state_changed(state: FishingRod.State) -> void:
 			_notify("Sack full. Sell your catch at the shack.")
 
 
-func _on_trash_hooked(type_name: String) -> void:
+func _on_catch_hooked(type_name: String) -> void:
 	_hooked_count += 1
 	_notify("Hooked %s" % type_name if _hooked_count == 1 else "Hooked %d items" % _hooked_count)
 
 
-func _on_trash_returned(count: int, type_name: String) -> void:
+func _on_catches_returned(count: int, type_name: String) -> void:
 	if _sack.free_slots == 0:
-		_notify("Sack full. Sell your catch at the shack.")
+		var catch_message: String = ""
+		if count == 1:
+			catch_message = "Collected %s. " % type_name
+		elif count > 1:
+			catch_message = "Collected %d items. " % count
+		_notify(catch_message + "Sack full. Sell your catch at the shack.")
 		return
 	match count:
-		0: _notify("Nothing caught. Aim at floating trash.")
+		0: _notify("Nothing caught. Aim at trash or a marked fish.")
 		1: _notify("Collected %s" % type_name)
 		_: _notify("Collected %d items" % count)
 

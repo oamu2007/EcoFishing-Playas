@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/gameplay/player.tscn" id="1_player"]
 [ext_resource type="Script" path="res://scripts/gameplay/playas_vertical_slice.gd" id="2_level"]
@@ -9,6 +9,9 @@
 [ext_resource type="PackedScene" path="res://scenes/gameplay/fishing_shack.tscn" id="7_shack"]
 
 [ext_resource type="PackedScene" path="res://scenes/gameplay/shack_shop.tscn" id="8_shop"]
+
+[ext_resource type="Script" path="res://scripts/systems/catch_resolver.gd" id="9_catches"]
+[ext_resource type="PackedScene" path="res://scenes/gameplay/catchable_fish_manager.tscn" id="10_fish_spawns"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_vertical"]
 size = Vector2(32, 900)
@@ -102,6 +105,11 @@ position = Vector2(520, 450)
 
 [node name="TrashManager" type="Node2D" parent="."]
 script = ExtResource("3_trash")
+
+[node name="CatchableFishManager" parent="." instance=ExtResource("10_fish_spawns")]
+
+[node name="CatchResolver" type="Node" parent="."]
+script = ExtResource("9_catches")
 
 [node name="PollutionSystem" type="Node" parent="."]
 script = ExtResource("4_pollution")

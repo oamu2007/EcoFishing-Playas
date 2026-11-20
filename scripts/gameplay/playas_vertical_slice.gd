@@ -7,6 +7,7 @@ const FootprintsScript = preload("res://scripts/gameplay/footprints.gd")
 var _footprints: Node2D
 const SandDetailsScript = preload("res://scripts/gameplay/sand_details.gd")
 const PlayerScript = preload("res://scripts/gameplay/player.gd")
+const CatchResolverScript = preload("res://scripts/systems/catch_resolver.gd")
 const SandShader: Shader = preload("res://shaders/sand.gdshader")
 
 var shore_start: Vector2
@@ -18,6 +19,8 @@ var shore_end: Vector2
 @onready var rod: FishingRod = $Player/FishingRod
 @onready var shop: ShackShop = $ShackShop
 @onready var sack: Sack = $ShackShop/Sack
+@onready var catches: CatchResolverScript = $CatchResolver
+@onready var catchable_fish: CatchableFishManager = $CatchableFishManager
 @onready var _shack: FishingShack = $FishingShack
 @onready var _beach: Polygon2D = $Environment/Beach
 @onready var _player: PlayerScript = $Player
@@ -41,11 +44,16 @@ func _ready() -> void:
 	var shore_x: float = barrier.position.x - (body.end.x - _player.global_position.x) - 2.0 + rod_offset.x
 	shore_start = Vector2(shore_x, top.end.y - (body.position.y - _player.global_position.y) + 2.0 + rod_offset.y)
 	shore_end = Vector2(shore_x, bottom.position.y - (body.end.y - _player.global_position.y) - 2.0 + rod_offset.y)
-	trash_manager.trash_collected.connect(_on_trash_collected)
+	trash_manager.trash_collected.connect(pollution.collect)
 	trash_manager.trash_arrived.connect(pollution.register_trash)
 	_player.sack = sack
 	shop.initialize(sack, rod, pollution)
-	trash_manager.initialize(rod, shore_start, shore_end, sack)
+	catches.initialize(rod, sack)
+	trash_manager.trash_spawned.connect(catches.register_target)
+	trash_manager.initialize(rod, shore_start, shore_end)
+	catchable_fish.fish_spawned.connect(catches.register_target)
+	catchable_fish.fish_departed.connect(catches.unregister_target)
+	catchable_fish.initialize(pollution, rod, shore_start, shore_end)
 	_water.global_position = bounds.position
 	_water.configure_size(bounds.size)
 	_water.bind_pollution(pollution)
@@ -78,10 +86,6 @@ func set_shop_open(value: bool) -> void:
 
 func _shape_bounds(collider: CollisionShape2D) -> Rect2:
 	return collider.global_transform * collider.shape.get_rect()
-
-
-func _on_trash_collected(item_id: int, _type_name: String) -> void:
-	pollution.collect(item_id)
 
 
 func _on_hook_landed(point: Vector2) -> void:

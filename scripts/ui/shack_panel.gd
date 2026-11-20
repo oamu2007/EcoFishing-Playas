@@ -73,6 +73,9 @@ func _refresh() -> void:
 	_summary.text = "%d gold   |   Sack %d/%d   |   Rod %d   |   Sack tier %d" % [_shop.coins, _sack.item_count, _sack.capacity, _shop.rod_tier + 1, _shop.sack_tier + 1]
 	_sell.text = "Sell Sack contents   +%d gold" % _sack.sale_total() if _sack.item_count > 0 else "Sack empty"
 	_sell.disabled = _sack.item_count == 0
+	_sell.tooltip_text = _sack.contents_description()
+	if _sack.fish_count > 0:
+		_sell.text = "Sell %d fish and %d trash   +%d gold" % [_sack.fish_count, _sack.item_count - _sack.fish_count, _sack.sale_total()]
 	for index: int in _rod_buttons.size():
 		_set_price(_rod_buttons[index], index, _shop.rod_tier, _shop.rod_upgrades[index].cost)
 	for index: int in _sack_buttons.size():
@@ -94,9 +97,12 @@ func _set_price(button: Button, index: int, current_tier: int, cost: int) -> voi
 
 
 func _sell_load() -> void:
+	var fish_sold: int = _sack.fish_count
 	var earned: int = _shop.sell_all()
 	if earned > 0:
 		_feedback.text = "Sold the load for %d gold." % earned
+		if fish_sold > 0:
+			_feedback.text = "Sold %d fish in the load for %d gold." % [fish_sold, earned]
 
 
 func _buy_rod(index: int) -> void:

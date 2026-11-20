@@ -8,7 +8,7 @@ A first-time player can start a session from the menu, learn to collect recurrin
 
 ## Next milestone
 
-Continue with [Milestone 10](#milestone-10--catchable-fish-and-fish-sales). Connect catchable fish to true pollution and let fish share the Sack and sales flow.
+Continue with [Milestone 11](#milestone-11--start-menu-onboarding-and-interface). Request the UI theme choice before styling the menu, HUD, and shop. Session creation, onboarding, and input work can proceed while the choice is pending.
 
 ## Completed baseline
 
@@ -264,7 +264,7 @@ Use only trash sales to buy the first meaningful upgrades and cleanup and reach 
 
 ## Milestone 10 — Catchable fish and fish sales
 
-**Planned.** The player starts seeing scarce catchable fish around 50% pollution remaining, sees them more often as the water clears, and can earn more coins from larger or rarer catches.
+**Verified November 19, 2026.** Catchable visitors appear at 50% true pollution and become more common as the water clears. Fish share the Sack and sale with trash.
 
 - Add catchable fish distinct from the [decorative ambient fish](../scripts/gameplay/ambient_fish.gd). Give catchable fish readable target cues. Drive their spawn chances from true total pollution, with the highest chance at 0%, while ambient silhouettes keep following the eased water visuals. Decide what happens to already-spawned catchable fish if pollution rises above the threshold.
 - Start with four or five species and variable sizes. Tune species, size ranges, rarity, spawn chances, and sale prices. Carry landed fish in the Sack with trash and sell them at the shack. Resolve competing targets through the existing cast and return lifecycle and honor available Sack space.
@@ -272,6 +272,15 @@ Use only trash sales to buy the first meaningful upgrades and cleanup and reach 
 **Verification**
 
 Use seeded trials above, near, and below the threshold and at 0% to check eligibility and increasing spawn chances. Raise pollution through the threshold again while the graphics are still easing. Check catchable fish behavior against the agreed rule and confirm ambient silhouettes cannot be hooked. Land fish and trash into the same Sack, verify a full load rejects extra catches, then sell controlled samples to check that larger fish of the same species and rarer fish of comparable size pay more.
+
+**Checkpoint results**
+
+- `CatchableFishManager` tries every four seconds, with a 24% chance at 50% pollution and 85% at 0%. The capped population swims in reachable nearshore routes with a white split-ring cue. Above 50%, new visits stop. Existing fish can complete their 26-second visit, and a hooked fish can finish retrieval.
+- Four configurable species are Topsmelt, Pacific sardine, Barred surfperch, and Kelp bass. The value is one gold plus length in centimeters plus a rarity bonus. The Sack retains species, length, and price in its sale details.
+- A single catch resolver chooses the nearest eligible fish or trash on landing and while waiting. Retrieval sweeps still collect trash in path order. The trash allowance is specific to trash, and one reserved Sack limit covers all held catches. The existing ambient silhouettes have no catch area.
+- Godot 4.7.2 editor import, main startup, eight smoke tests, and a 120-trial seeded sample at each level passed. At 51%, 50%, 25%, and 0%, the sample produced 0, 27, 65, and 101 visitors. Tests exercise true versus displayed threshold crossings, natural departure and hooked fish staying attached, nearest-target competition, swept trash, mixed and full loads, duplicate handling, and size/rarity sale prices.
+- Rendered fish cues remained distinct from ambient silhouettes and trash at 960 × 540 and 800 × 450 on Intel Iris Xe / OpenGL Compatibility.
+- Next action is the M11 theme decision and new-session flow. M12 covers full playthroughs from the menu through a fish sale and replay.
 
 ## Milestone 11 — Start menu, onboarding, and interface
 

@@ -2,9 +2,8 @@ class_name TrashManager
 extends Node2D
 
 signal trash_arrived(item_id: int, pollution_points: int)
-signal trash_hooked(type_name: String)
-signal trash_collected(item_id: int, type_name: String)
-signal trash_returned(count: int, type_name: String)
+signal trash_spawned(item: OceanTrash)
+signal trash_collected(item_id: int)
 
 const TRASH_SCENE: PackedScene = preload("res://scenes/gameplay/trash.tscn")
 
@@ -26,29 +25,21 @@ const TRASH_SCENE: PackedScene = preload("res://scenes/gameplay/trash.tscn")
 
 var items: Array[OceanTrash] = []
 var _rod: FishingRod
-var _sack: Sack
 var _shore_x: float
 var _drift_limits: Vector2
 var _near_stops: Vector2
 var _far_stops: Vector2
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
-var _caught: Array[OceanTrash] = []
 var _starter_items: Array[OceanTrash] = []
 var _clock: float = 0.0
 var _arrival_turn: int = 0
 var _spawned_count: int = 0
-var _last_returned_cast: int = 0
 
 
-func initialize(rod: FishingRod, shore_start: Vector2, shore_end: Vector2, sack: Sack) -> void:
+func initialize(rod: FishingRod, shore_start: Vector2, shore_end: Vector2) -> void:
 	if _rod != null:
 		return
 	_rod = rod
-	_sack = sack
-	_rod.hook_landed.connect(_on_hook_landed)
-	_rod.target_detected.connect(_on_target_detected)
-	_rod.retrieval_completed.connect(_on_retrieval_completed)
-	_rod.retrieval_advanced.connect(_on_retrieval_advanced)
 	_rng.seed = spawn_seed
 	_shore_x = shore_start.x
 	var margin: float = item_catch_radius + 8.0
@@ -112,6 +103,8 @@ func _add_item(point: Vector2, starter: bool, incoming: bool) -> void:
 	var item: OceanTrash = TRASH_SCENE.instantiate()
 	item.kind = (_spawned_count % OceanTrash.Kind.size()) as OceanTrash.Kind
 	item.pollution_value = pollution_per_item
+	item.sale_value = trash_sale_value
+	item.landed.connect(_on_item_landed)
 	item.catch_radius = item_catch_radius
 	item.bob_phase = _rng.randf_range(0.0, TAU)
 	_spawned_count += 1
@@ -129,86 +122,15 @@ func _add_item(point: Vector2, starter: bool, incoming: bool) -> void:
 		item.global_position = point
 		item.configure_drift(_drift_limits, speed, _rng.randf_range(0.0, TAU))
 		_on_item_arrived(item)
+	trash_spawned.emit(item)
 
 
 func _on_item_arrived(item: OceanTrash) -> void:
 	trash_arrived.emit(item.get_instance_id(), item.pollution_value)
 
 
-func _on_hook_landed(point: Vector2) -> void:
-	if _rod.state != FishingRod.State.WAITING or not _caught.is_empty():
-		return
-	# Physics overlap caches can lag by a frame on landing.
-	var nearest: OceanTrash
-	var nearest_distance: float = INF
-	for item: OceanTrash in items:
-		if item.can_hook_at(point):
-			var distance: float = item.global_position.distance_squared_to(point)
-			if distance < nearest_distance:
-				nearest = item
-				nearest_distance = distance
-	if nearest != null:
-		_attach_item(nearest)
-
-
-func _has_catch_space() -> bool:
-	return _caught.size() < mini(_rod.trash_per_cast, _sack.free_slots)
-
-
-func _attach_item(item: OceanTrash) -> void:
-	if not _has_catch_space():
-		return
-	var index: int = _caught.size()
-	var columns: Array[float] = [0.0, -22.0, 22.0, -44.0, 44.0]
-	var offset: Vector2 = Vector2(columns[index % 5], 14.0 + floorf(index / 5.0) * 24.0)
-	if item.attach_to(_rod.get_hook_attachment(), offset):
-		_caught.append(item)
-		trash_hooked.emit(item.display_name())
-
-
-func _on_retrieval_advanced(from: Vector2, to: Vector2, hook_radius: float) -> void:
-	if _rod.state != FishingRod.State.RETRIEVING:
-		return
-	for item: OceanTrash in items:
-		if not _has_catch_space():
-			break
-		if item.hooked or item.collected or not item.in_water:
-			continue
-		var nearest: Vector2 = Geometry2D.get_closest_point_to_segment(item.global_position, from, to)
-		var radius: float = item.catch_radius + hook_radius
-		if item.global_position.distance_squared_to(nearest) <= radius * radius:
-			_attach_item(item)
-
-
-func _on_target_detected(_target: Area2D) -> void:
-	if _rod.state == FishingRod.State.WAITING:
-		# Reparent outside physics signal flushing, and ignore stale casts.
-		_check_waiting_target.call_deferred(_rod.cast_number)
-
-
-func _check_waiting_target(cast_number: int) -> void:
-	if _rod.cast_number == cast_number:
-		_on_hook_landed(_rod.get_hook_water_position())
-
-
-func _on_retrieval_completed(_water_position: Vector2) -> void:
-	if _rod.state != FishingRod.State.IDLE or _last_returned_cast == _rod.cast_number:
-		return
-	_last_returned_cast = _rod.cast_number
-	var returned: Array[OceanTrash] = _caught.duplicate()
-	_caught.clear()
-	var type_name: String
-	var count: int = 0
-	for item: OceanTrash in returned:
-		if not is_instance_valid(item) or not item.hooked or item.collected:
-			continue
-		if not _sack.store(trash_sale_value):
-			push_error("A reserved trash catch could not fit in the Sack")
-			continue
-		item.finish_collection()
-		items.erase(item)
-		_starter_items.erase(item)
-		type_name = item.display_name()
-		count += 1
-		trash_collected.emit(item.get_instance_id(), type_name)
-	trash_returned.emit(count, type_name)
+func _on_item_landed(target: FishingTarget) -> void:
+	var item: OceanTrash = target as OceanTrash
+	items.erase(item)
+	_starter_items.erase(item)
+	trash_collected.emit(item.get_instance_id())
