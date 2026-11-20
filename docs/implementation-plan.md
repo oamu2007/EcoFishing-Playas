@@ -10,7 +10,7 @@ After the follow-up, trash arrives at a gentler pace, upgrades take several trip
 
 ## Next milestone
 
-Continue with [Milestone 15](#milestone-15--screen-based-shack-trader-and-coin-display) using the M13 catalog prices and M14 item artwork. The outstanding independent human onboarding and cross-device graphics checks carry forward to M18.
+Continue with [Milestone 16](#milestone-16--visible-permanent-cleanup-work). Build the work sequences around successful purchases from the dedicated trader. The outstanding independent human onboarding and cross-device graphics checks carry forward to M18.
 
 ## Completed baseline
 
@@ -371,7 +371,7 @@ Identify the four fish in motion at gameplay scale and compare every rod tier eq
 
 ## Milestone 15 — Screen-based shack trader and coin display
 
-**Planned.** Interacting at the shack opens a dedicated trader screen. The player can choose Sell or Buy and see their coin balance throughout the interaction.
+**Verified November 20, 2026.** The shack opens a full-screen trader with separate Sell and Buy pages and a shared coin balance.
 
 - Show the shack trader on a dedicated screen with Sell, Buy, and an exit back to the shoreline. The trader interaction is screen-based. Route focus, pointer, and cancel input through the trader while it is open.
 - On the Sell screen, show everything currently carried in the Sack, with item visuals and values. Let players drag items from the inventory side to a sale tray on the other side and drag them back to undo the selection. Show the pending total and confirm the sale explicitly. Confirmed sales remove only selected items and award their value once. Provide an accessible click or keyboard equivalent for selecting and removing items.
@@ -381,6 +381,13 @@ Identify the four fish in motion at gameplay scale and compare every rod tier eq
 **Verification**
 
 Enter the trader from shore, switch screens, and leave without triggering a cast. Select a mixed sale, undo an item, confirm, and verify that the unsold items remain and the top-left total is correct. Check cancel, invalid drops, repeated confirmation, unaffordable and already purchased items, and mouse and keyboard navigation at default and reduced window sizes.
+
+**Checkpoint results**
+
+- Sell shows individual fish and trash with their art and gold values. Drag either way or select a card with the mouse or keyboard. Confirming credits only the selected entries. Canceling discards the selection, and duplicate, stale, or repeated confirmations leave the Sack and balance alone.
+- Buy shows visual rod, Sack, and project cards with effects, prices, and purchase availability. The single top-left coin display stays visible at the shore, in each trader page, and in the pause menu.
+- Godot 4.7.2 passed import, focused regressions, and two live input playthroughs. The new trader smoke test passed headless and on Intel Iris Xe / OpenGL at 1280 × 720 and 800 × 450. It dragged between both columns, used keyboard selection, canceled a pending sale, sold a fish and one of two identical cans, and verified the remaining can, balance, locked and owned rod controls, and input isolation. The full route recorded its first fish sale at 284.1 seconds and displayed 0% at 447.7 seconds.
+- Next action is M16's visible project staging and session-long completed sites.
 
 ## Milestone 16 — Visible permanent cleanup work
 

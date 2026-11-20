@@ -99,3 +99,12 @@ func display_name() -> String:
 
 func can_hook() -> bool:
 	return in_water and super.can_hook()
+
+
+func inventory_art() -> Texture2D:
+	match kind:
+		Kind.CAN:
+			return preload("res://assets/trader/can.svg")
+		Kind.BAG:
+			return preload("res://assets/trader/bag.svg")
+	return preload("res://assets/trader/bottle.svg")

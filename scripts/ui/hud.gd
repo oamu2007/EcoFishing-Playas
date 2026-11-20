@@ -115,7 +115,7 @@ func _first_upgrade_cost() -> int:
 
 
 func _update_inventory() -> void:
-	_inventory.text = "SACK  %d/%d    GOLD  %d" % [_sack.item_count, _sack.capacity, _shop.coins]
+	_inventory.text = "SACK  %d/%d" % [_sack.item_count, _sack.capacity]
 	_gear.text = "Rod %d  •  Sack tier %d" % [_shop.rod_tier + 1, _shop.sack_tier + 1]
 
 

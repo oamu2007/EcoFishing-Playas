@@ -3,6 +3,7 @@ extends SceneTree
 const MainScene: PackedScene = preload("res://scenes/gameplay/main.tscn")
 const LevelScript = preload("res://scripts/gameplay/playas_vertical_slice.gd")
 const PlayerScript = preload("res://scripts/gameplay/player.gd")
+const TraderFixture = preload("res://tests/trader_fixture.gd")
 
 var _failures: int = 0
 var _main: Node
@@ -135,7 +136,9 @@ func _verify_onboarding(session: Node, world: LevelScript) -> void:
 		await process_frame
 		var sell: Button = shop_panel.get_node("%Sell")
 		_check(shop_panel.visible and sell.has_focus() and rod.state == FishingRod.State.IDLE, "Shop did not open with keyboard focus")
-		_press_button(sell)
+		TraderFixture.select_all(shop_panel)
+		await process_frame
+		_press_button(shop_panel.get_node("%ConfirmSale"))
 		_check(shop_panel.visible and sack.item_count == 0 and rod.state == FishingRod.State.IDLE, "Selling leaked a click through to fishing")
 		if trip == 0:
 			_key(KEY_ESCAPE)
@@ -144,10 +147,18 @@ func _verify_onboarding(session: Node, world: LevelScript) -> void:
 			_key(KEY_E)
 			await process_frame
 		if trip == 2:
+			_press_button(shop_panel.get_node("%Back"))
+			await process_frame
+			_press_button(shop_panel.get_node("%Buy"))
+			await process_frame
 			var gear: Control = shop_panel.get_node("%Gear")
 			_press_button(gear.find_children("*", "Button", true, false)[0])
 			_check(world.shop.rod_tier == 1, "First upgrade did not respond to its shop control")
 		elif trip == 5:
+			_press_button(shop_panel.get_node("%Back"))
+			await process_frame
+			_press_button(shop_panel.get_node("%Buy"))
+			await process_frame
 			var projects: Control = shop_panel.get_node("%Cleanup")
 			_press_button(projects.find_children("*", "Button", true, false)[0])
 			_check(world.shop.is_cleanup_complete(0), "Cleanup purchase did not persist before restart")

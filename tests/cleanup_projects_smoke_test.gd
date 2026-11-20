@@ -2,6 +2,7 @@ extends SceneTree
 
 const SESSION_SCENE: PackedScene = preload("res://scenes/gameplay/session.tscn")
 const LevelScript = preload("res://scripts/gameplay/playas_vertical_slice.gd")
+const TraderFixture = preload("res://tests/trader_fixture.gd")
 
 var _failures: int = 0
 var _session: Node
@@ -65,6 +66,7 @@ func _verify_new_session() -> void:
 	_check(_shop.coins == 0 and _shop.rod_tier == 0 and _sack.item_count == 0, "Session did not start with base gear and an empty Sack")
 	_check(_pollution.permanent_points == PollutionSystem.MAX_PERMANENT_POINTS and _meter.value == 100.0, "Session did not start with full pollution")
 	_open_shack()
+	_panel.get_node("%Buy").pressed.emit()
 	var catalog_points: int = 0
 	for index: int in _shop.cleanup_projects.size():
 		var project: CleanupProject = _shop.cleanup_projects[index]
@@ -101,6 +103,7 @@ func _verify_cleanup_path() -> void:
 	# Starter-range income funds the final project and the gear to retrieve offshore pieces.
 	_earn(_shop.cleanup_projects[2].cost + _shop.rod_upgrades[1].cost, 9)
 	_open_shack()
+	_panel.get_node("%Buy").pressed.emit()
 	var coins: int = _shop.coins
 	var pollution_before: int = _pollution.current_pollution
 	for index: int in range(2):
@@ -133,6 +136,7 @@ func _verify_cleanup_path() -> void:
 
 func _check_completed_projects(count: int) -> void:
 	_open_shack()
+	_panel.get_node("%Buy").pressed.emit()
 	for index: int in count:
 		var button: Button = _project_buttons[index]
 		_check(_shop.is_cleanup_complete(index) and button.disabled and button.text == "Complete", "Project did not stay complete across arrivals and shop visits")
@@ -141,6 +145,7 @@ func _check_completed_projects(count: int) -> void:
 
 func _purchase_project(index: int) -> void:
 	_open_shack()
+	_panel.get_node("%Buy").pressed.emit()
 	var project: CleanupProject = _shop.cleanup_projects[index]
 	var button: Button = _project_buttons[index]
 	var coins: int = _shop.coins
@@ -211,7 +216,8 @@ func _catch_reachable_trash(maximum_distance: float = INF) -> bool:
 
 func _sell_at_shack() -> void:
 	_open_shack()
-	var button: Button = _panel.get_node("%Sell")
+	TraderFixture.select_all(_panel)
+	var button: Button = _panel.get_node("%ConfirmSale")
 	var payout: int = _sack.item_count * _manager.trash_sale_value
 	var coins: int = _shop.coins
 	_check(payout > 0 and not button.disabled and button.text.contains(str(payout)), "Sale did not display the expected trash payout")

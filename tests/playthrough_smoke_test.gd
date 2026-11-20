@@ -173,6 +173,8 @@ func _record_threshold(normalized: float) -> void:
 func _buy(catalog: String, index: int, cost: int) -> bool:
 	if not await _fund(cost) or not await _open_shop():
 		return false
+	_click_button(_panel.get_node("%Buy"))
+	await process_frame
 	var column: Control = _panel.get_node("%" + catalog)
 	var button: Button = column.find_children("*", "Button", true, false)[index]
 	if not _check(not button.disabled, "Funded purchase remained unavailable"):
@@ -222,7 +224,16 @@ func _sell() -> bool:
 		var travel: float = _seconds_since(walk_started)
 		_check(travel < 4.0, "Walk to the shack exceeded four seconds")
 		print("First full Sack walk to the shack: %.2fs" % travel)
-	var sell: Button = _panel.get_node("%Sell")
+	_click_button(_panel.get_node("%Sell"))
+	await process_frame
+	var items: Control = _panel.get_node("%SackItems")
+	for index: int in _sack.item_count:
+		var item: Button = items.get_child(0) as Button
+		if not _check(item != null, "An item could not be added to the sale tray"):
+			return false
+		_click_button(item)
+		await process_frame
+	var sell: Button = _panel.get_node("%ConfirmSale")
 	var payout: int = _sack.sale_total()
 	var before: int = _shop.coins
 	var fish_in_load: bool = _sack.fish_count > 0

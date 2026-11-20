@@ -1,10 +1,11 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/levels/playas_vertical_slice.tscn" id="1_level"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="2_hud"]
 [ext_resource type="Script" path="res://scripts/gameplay/session.gd" id="3_main"]
 
 [ext_resource type="PackedScene" path="res://scenes/ui/shack_panel.tscn" id="4_shack_panel"]
+[ext_resource type="PackedScene" path="res://scenes/ui/coin_balance.tscn" id="5_balance"]
 
 [node name="Session" type="Node"]
 script = ExtResource("3_main")
@@ -14,3 +15,5 @@ script = ExtResource("3_main")
 [node name="HUD" parent="." instance=ExtResource("2_hud")]
 
 [node name="ShackPanel" parent="." instance=ExtResource("4_shack_panel")]
+
+[node name="CoinBalance" parent="." instance=ExtResource("5_balance")]

@@ -4,6 +4,7 @@ const SESSION_SCENE: PackedScene = preload("res://scenes/gameplay/session.tscn")
 const FishScene: PackedScene = preload("res://scenes/gameplay/catchable_fish.tscn")
 const LevelScript = preload("res://scripts/gameplay/playas_vertical_slice.gd")
 const PlayerScript = preload("res://scripts/gameplay/player.gd")
+const TraderFixture = preload("res://tests/trader_fixture.gd")
 
 var _failures: int = 0
 
@@ -156,8 +157,11 @@ func _test_recovery_and_sales() -> void:
 	open.physical_keycode = KEY_E
 	open.pressed = true
 	session._unhandled_input(open)
-	var sell: Button = session.get_node("ShackPanel").get_node("%Sell")
-	_check(sell.text.contains("1 fish") and sell.text.contains(str(expected)), "Shop quote did not itemize the mixed load")
+	var panel: CanvasLayer = session.get_node("ShackPanel")
+	TraderFixture.select_all(panel)
+	var sell: Button = panel.get_node("%ConfirmSale")
+	var tray: Control = panel.get_node("%TrayItems")
+	_check(tray.get_child(0).text.contains(" cm)") and tray.get_child(0).icon == fish.species.art and sell.text.contains(str(expected)), "Trader did not display the fish art and mixed sale quote")
 	sell.pressed.emit()
 	sell.pressed.emit()
 	_check(world.shop.coins == expected and sack.item_count == 0 and sack.fish_count == 0, "Mixed sale failed or credited twice")

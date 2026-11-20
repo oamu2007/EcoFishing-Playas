@@ -24,7 +24,7 @@ script = ExtResource("1")
 [node name="ControlsPanel" type="PanelContainer" parent="."]
 visible = false
 offset_left = 14.0
-offset_top = 111.0
+offset_top = 154.0
 mouse_filter = 2
 theme = ExtResource("2_theme")
 
@@ -51,9 +51,9 @@ text = "Move with WASD or arrow keys.\nAim with the mouse. Green means in range.
 
 [node name="ProgressPanel" type="PanelContainer" parent="."]
 offset_left = 14.0
-offset_top = 14.0
+offset_top = 56.0
 offset_right = 251.0
-offset_bottom = 98.0
+offset_bottom = 140.0
 mouse_filter = 2
 theme = ExtResource("2_theme")
 
@@ -92,17 +92,17 @@ theme_override_font_sizes/font_size = 13
 
 [node name="MenuButton" type="Button" parent="."]
 offset_left = 263.0
-offset_top = 14.0
+offset_top = 56.0
 offset_right = 347.0
-offset_bottom = 48.0
+offset_bottom = 90.0
 theme = ExtResource("2_theme")
 text = "Menu"
 
 [node name="HelpKey" type="Button" parent="."]
 offset_left = 263.0
-offset_top = 55.0
+offset_top = 97.0
 offset_right = 347.0
-offset_bottom = 84.0
+offset_bottom = 126.0
 theme = ExtResource("2_theme")
 theme_override_font_sizes/font_size = 13
 text = "H  Help"

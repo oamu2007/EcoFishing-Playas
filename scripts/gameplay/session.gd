@@ -5,16 +5,19 @@ signal menu_requested
 const LevelScript = preload("res://scripts/gameplay/playas_vertical_slice.gd")
 const HudScript = preload("res://scripts/ui/hud.gd")
 const ShackPanelScript = preload("res://scripts/ui/shack_panel.gd")
+const CoinBalanceScript = preload("res://scripts/ui/coin_balance.gd")
 
 @onready var _world: LevelScript = $World
 @onready var _hud: HudScript = $HUD
 @onready var _shack_panel: ShackPanelScript = $ShackPanel
+@onready var _coin_balance: CoinBalanceScript = $CoinBalance
 
 
 func _ready() -> void:
 	_hud.bind_session(_world.pollution, _world.catches, _world.rod, _world.sack, _world.shop, _world.catchable_fish.pollution_threshold)
 	_hud.menu_requested.connect(menu_requested.emit)
 	_shack_panel.bind_shop(_world.shop, _world.sack, _world.rod)
+	_coin_balance.bind_shop(_world.shop)
 	_shack_panel.close_requested.connect(_close_shop)
 
 
@@ -36,7 +39,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _close_shop() -> void:
-	_shack_panel.hide()
+	_shack_panel.close()
 	_world.set_shop_open(false)
 	set_hud_visible(true)
 

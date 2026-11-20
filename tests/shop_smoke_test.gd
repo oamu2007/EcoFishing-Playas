@@ -3,6 +3,7 @@ extends SceneTree
 const SESSION_SCENE: PackedScene = preload("res://scenes/gameplay/session.tscn")
 const LevelScript = preload("res://scripts/gameplay/playas_vertical_slice.gd")
 const PlayerScript = preload("res://scripts/gameplay/player.gd")
+const TraderFixture = preload("res://tests/trader_fixture.gd")
 
 var _failures: int = 0
 var _session: Node
@@ -75,7 +76,8 @@ func _run() -> void:
 	_check(_panel.visible and _rod.input_locked and _player.input_locked, "Shack did not block gameplay input")
 	_rod._unhandled_input(_click())
 	_check(_rod.state == FishingRod.State.IDLE, "Shop click leaked to fishing")
-	var sell: Button = _panel.get_node("%Sell")
+	TraderFixture.select_all(_panel)
+	var sell: Button = _panel.get_node("%ConfirmSale")
 	var expected: int = starter_capacity * _manager.trash_sale_value
 	_check(sell.text.contains(str(expected)) and not sell.disabled, "Sell button did not quote the exact payout")
 	sell.pressed.emit()
@@ -134,7 +136,8 @@ func _sell_at_shack() -> void:
 	_player.global_position = shack.global_position
 	_shack_key()
 	_check(_panel.visible, "Shack failed to open with a load")
-	_panel.get_node("%Sell").pressed.emit()
+	TraderFixture.select_all(_panel)
+	_panel.get_node("%ConfirmSale").pressed.emit()
 	_shack_key()
 	_check(not _panel.visible, "E failed to close the shop")
 

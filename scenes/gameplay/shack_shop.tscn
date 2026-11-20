@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene load_steps=20 format=3]
 
 [ext_resource type="Script" path="res://scripts/systems/shack_shop.gd" id="1_shop"]
 [ext_resource type="Script" path="res://scripts/systems/sack.gd" id="2_sack"]
@@ -8,6 +8,11 @@
 [ext_resource type="Script" path="res://scripts/systems/cleanup_project.gd" id="5_project"]
 [ext_resource type="Texture2D" path="res://assets/rods/shore.svg" id="6_shore_rod"]
 [ext_resource type="Texture2D" path="res://assets/rods/offshore.svg" id="7_offshore_rod"]
+[ext_resource type="Texture2D" path="res://assets/trader/canvas_sack.svg" id="8_canvas"]
+[ext_resource type="Texture2D" path="res://assets/trader/cargo_sack.svg" id="9_cargo"]
+[ext_resource type="Texture2D" path="res://assets/trader/stranded_debris.svg" id="10_debris"]
+[ext_resource type="Texture2D" path="res://assets/trader/abandoned_nets.svg" id="11_nets"]
+[ext_resource type="Texture2D" path="res://assets/trader/tide_pool.svg" id="12_pool"]
 
 [sub_resource type="Resource" id="Resource_shore_rod"]
 script = ExtResource("3_rod_tier")
@@ -28,28 +33,33 @@ trash_limit = 3
 [sub_resource type="Resource" id="Resource_canvas_sack"]
 script = ExtResource("4_sack_tier")
 title = "Canvas Sack"
+art = ExtResource("8_canvas")
 cost = 21
 
 [sub_resource type="Resource" id="Resource_cargo_sack"]
 script = ExtResource("4_sack_tier")
 title = "Cargo Sack"
+art = ExtResource("9_cargo")
 cost = 39
 capacity = 8
 
 [sub_resource type="Resource" id="Resource_shore_cleanup"]
 script = ExtResource("5_project")
 title = "Clear stranded debris"
+art = ExtResource("10_debris")
 cost = 24
 
 [sub_resource type="Resource" id="Resource_net_removal"]
 script = ExtResource("5_project")
 title = "Remove abandoned nets"
+art = ExtResource("11_nets")
 cost = 30
 pollution_reduction = 20
 
 [sub_resource type="Resource" id="Resource_pool_restoration"]
 script = ExtResource("5_project")
 title = "Restore the tide pool"
+art = ExtResource("12_pool")
 cost = 36
 pollution_reduction = 20
 

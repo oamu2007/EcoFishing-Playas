@@ -53,17 +53,28 @@ func sale_total() -> int:
 	return total
 
 
-func contents_description() -> String:
-	var labels: PackedStringArray = []
-	for item: Entry in _items:
-		labels.append("%s · %d gold" % [item.label, item.value])
-	return "\n".join(labels)
+func entries() -> Array[Entry]:
+	return _items.duplicate()
 
 
-func empty() -> void:
-	if item_count > 0:
-		_items.clear()
-		contents_changed.emit()
+func has_entry(entry: Entry) -> bool:
+	return _items.has(entry)
+
+
+func sale_quote(selection: Array[Entry]) -> int:
+	var total: int = 0
+	var seen: Dictionary[Entry, bool] = {}
+	for entry: Entry in selection:
+		if not _items.has(entry) or seen.has(entry):
+			return -1
+		seen[entry] = true
+		total += entry.value
+	return total
+
+
+func remove_entries(selection: Array[Entry]) -> void:
+	_items = _items.filter(func(entry: Entry) -> bool: return not selection.has(entry))
+	contents_changed.emit()
 
 
 func expand(new_capacity: int) -> void:

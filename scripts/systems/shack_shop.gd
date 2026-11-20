@@ -23,17 +23,23 @@ func initialize(sack: Sack, rod: FishingRod, pollution: PollutionSystem) -> void
 
 
 func sell_all() -> int:
-	if _sack.item_count == 0:
+	return sell_selected(_sack.entries())
+
+
+func sell_selected(selection: Array[Sack.Entry]) -> int:
+	if selection.is_empty():
 		return 0
-	var earned: int = _sack.sale_total()
+	var earned: int = _sack.sale_quote(selection)
+	if earned < 0:
+		return 0
 	coins += earned
-	_sack.empty()
+	_sack.remove_entries(selection)
 	purchases_changed.emit()
 	return earned
 
 
 func buy_rod(index: int) -> bool:
-	if index != rod_tier or index >= rod_upgrades.size() or _rod.is_active():
+	if index != rod_tier or index < 0 or index >= rod_upgrades.size() or _rod.is_active():
 		return false
 	var upgrade: RodUpgrade = rod_upgrades[index]
 	if coins < upgrade.cost:
@@ -50,7 +56,7 @@ func buy_rod(index: int) -> bool:
 
 
 func buy_sack(index: int) -> bool:
-	if index != sack_tier or index >= sack_upgrades.size():
+	if index != sack_tier or index < 0 or index >= sack_upgrades.size():
 		return false
 	var upgrade: SackUpgrade = sack_upgrades[index]
 	if coins < upgrade.cost or upgrade.capacity <= _sack.capacity:
