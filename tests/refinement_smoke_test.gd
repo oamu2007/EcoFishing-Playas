@@ -1,6 +1,6 @@
 extends SceneTree
 
-const MAIN_SCENE: PackedScene = preload("res://scenes/gameplay/main.tscn")
+const SESSION_SCENE: PackedScene = preload("res://scenes/gameplay/session.tscn")
 const LevelScript = preload("res://scripts/gameplay/playas_vertical_slice.gd")
 const HudScript = preload("res://scripts/ui/hud.gd")
 
@@ -18,12 +18,12 @@ func _check(condition: bool, message: String) -> void:
 
 
 func _run() -> void:
-	var main: Node = MAIN_SCENE.instantiate()
-	var manager: TrashManager = main.get_node("World/TrashManager")
+	var session: Node = SESSION_SCENE.instantiate()
+	var manager: TrashManager = session.get_node("World/TrashManager")
 	manager.initial_item_count = 0
-	root.add_child(main)
-	var world: LevelScript = main.get_node("World")
-	var hud: HudScript = main.get_node("HUD")
+	root.add_child(session)
+	var world: LevelScript = session.get_node("World")
+	var hud: HudScript = session.get_node("HUD")
 	var rod: FishingRod = world.rod
 	manager.set_physics_process(false)
 	var stops: Dictionary[Vector2, bool] = {}
@@ -100,6 +100,6 @@ func _run() -> void:
 	_check(not help.visible, "H did not close help")
 	await process_frame
 	_check(hud.get_node("ProgressPanel").size.x < 320.0 and hud.get_node("ProgressPanel").size.y <= 100.0, "HUD is no longer compact")
-	main.free()
+	session.free()
 	print("Refinement smoke test: %d failures" % _failures)
 	quit(0 if _failures == 0 else 1)

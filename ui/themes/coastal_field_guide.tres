@@ -1,0 +1,146 @@
+[gd_resource type="Theme" load_steps=10 format=3]
+
+[sub_resource type="SystemFont" id="HeadingFont"]
+font_names = PackedStringArray("Georgia", "Liberation Serif", "DejaVu Serif")
+
+[sub_resource type="StyleBoxFlat" id="Paper"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(0.968, 0.926, 0.834, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.695, 0.580, 0.429, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_left = 8
+corner_radius_bottom_right = 8
+shadow_color = Color(0.076, 0.062, 0.050, 0.26)
+shadow_size = 5
+shadow_offset = Vector2(0, 3)
+
+[sub_resource type="StyleBoxFlat" id="Note"]
+content_margin_left = 10.0
+content_margin_top = 5.0
+content_margin_right = 10.0
+content_margin_bottom = 5.0
+bg_color = Color(0.968, 0.926, 0.834, 0.96)
+border_width_left = 3
+border_color = Color(0.613, 0.411, 0.261, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_left = 5
+corner_radius_bottom_right = 5
+
+[sub_resource type="StyleBoxFlat" id="Button"]
+content_margin_left = 12.0
+content_margin_top = 6.0
+content_margin_right = 12.0
+content_margin_bottom = 6.0
+bg_color = Color(0.914, 0.853, 0.723, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.666, 0.530, 0.367, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_left = 5
+corner_radius_bottom_right = 5
+
+[sub_resource type="StyleBoxFlat" id="WarmButton"]
+content_margin_left = 12.0
+content_margin_top = 6.0
+content_margin_right = 12.0
+content_margin_bottom = 6.0
+bg_color = Color(0.850, 0.755, 0.602, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.52, 0.40, 0.28, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_left = 5
+corner_radius_bottom_right = 5
+
+[sub_resource type="StyleBoxFlat" id="QuietButton"]
+content_margin_left = 12.0
+content_margin_top = 6.0
+content_margin_right = 12.0
+content_margin_bottom = 6.0
+bg_color = Color(0.921, 0.873, 0.777, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_left = 5
+corner_radius_bottom_right = 5
+
+[sub_resource type="StyleBoxFlat" id="Focus"]
+draw_center = false
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.762, 0.495, 0.249, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_left = 5
+corner_radius_bottom_right = 5
+
+[sub_resource type="StyleBoxFlat" id="TealButton"]
+content_margin_left = 12.0
+content_margin_top = 6.0
+content_margin_right = 12.0
+content_margin_bottom = 6.0
+bg_color = Color(0.118, 0.329, 0.304, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_left = 5
+corner_radius_bottom_right = 5
+
+[sub_resource type="StyleBoxFlat" id="TealHover"]
+content_margin_left = 12.0
+content_margin_top = 6.0
+content_margin_right = 12.0
+content_margin_bottom = 6.0
+bg_color = Color(0.167, 0.413, 0.376, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_left = 5
+corner_radius_bottom_right = 5
+
+[resource]
+default_font_size = 16
+PanelContainer/styles/panel = SubResource("Paper")
+Label/colors/font_color = Color(0.157, 0.208, 0.202, 1)
+FieldTitle/base_type = &"Label"
+FieldTitle/colors/font_color = Color(0.163, 0.224, 0.218, 1)
+FieldTitle/font_sizes/font_size = 42
+FieldTitle/fonts/font = SubResource("HeadingFont")
+FieldSection/base_type = &"Label"
+FieldSection/colors/font_color = Color(0.387, 0.268, 0.183, 1)
+FieldSection/font_sizes/font_size = 22
+FieldSection/fonts/font = SubResource("HeadingFont")
+FieldNote/base_type = &"Label"
+FieldNote/styles/normal = SubResource("Note")
+Button/colors/font_color = Color(0.223, 0.165, 0.131, 1)
+Button/colors/font_focus_color = Color(0.223, 0.165, 0.131, 1)
+Button/colors/font_hover_color = Color(0.223, 0.165, 0.131, 1)
+Button/colors/font_pressed_color = Color(0.223, 0.165, 0.131, 1)
+Button/colors/font_disabled_color = Color(0.403, 0.340, 0.285, 1)
+Button/styles/normal = SubResource("Button")
+Button/styles/hover = SubResource("WarmButton")
+Button/styles/pressed = SubResource("WarmButton")
+Button/styles/disabled = SubResource("QuietButton")
+Button/styles/focus = SubResource("Focus")
+FieldPrimary/base_type = &"Button"
+FieldPrimary/colors/font_color = Color(0.998, 0.961, 0.874, 1)
+FieldPrimary/colors/font_focus_color = Color(0.998, 0.961, 0.874, 1)
+FieldPrimary/colors/font_hover_color = Color(0.998, 0.961, 0.874, 1)
+FieldPrimary/colors/font_pressed_color = Color(0.998, 0.961, 0.874, 1)
+FieldPrimary/styles/normal = SubResource("TealButton")
+FieldPrimary/styles/hover = SubResource("TealHover")
+FieldPrimary/styles/pressed = SubResource("TealButton")

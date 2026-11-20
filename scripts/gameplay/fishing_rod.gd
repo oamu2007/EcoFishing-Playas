@@ -2,6 +2,7 @@ class_name FishingRod
 extends Node2D
 
 signal state_changed(new_state: State)
+signal cast_rejected(reason: String)
 signal hook_landed(water_position: Vector2)
 signal retrieval_completed(water_position: Vector2)
 signal retrieval_advanced(previous_position: Vector2, current_position: Vector2, hook_radius: float)
@@ -58,11 +59,15 @@ func get_hook_water_position() -> Vector2:
 	return _hook.global_position
 
 
+func is_near_shore(origin: Vector2) -> bool:
+	var closest_water: Vector2 = origin.clamp(water_bounds.position, water_bounds.end)
+	return water_bounds.has_area() and origin.distance_to(closest_water) <= shoreline_distance
+
+
 func invalid_target_reason_from(origin: Vector2, target: Vector2) -> String:
 	if not water_bounds.has_area():
 		return "No fishing water configured"
-	var closest_water: Vector2 = origin.clamp(water_bounds.position, water_bounds.end)
-	if origin.distance_to(closest_water) > shoreline_distance:
+	if not is_near_shore(origin):
 		return "Move closer to the shoreline"
 	if not water_bounds.has_point(target):
 		return "Aim at the ocean"
@@ -79,10 +84,14 @@ func _unhandled_input(event: InputEvent) -> void:
 	match state:
 		State.IDLE:
 			var aim: Vector2 = get_global_mouse_position()
-			if invalid_target_reason(aim).is_empty():
+			if event is InputEventMouseButton:
+				aim = get_canvas_transform().affine_inverse() * event.position
+			var reason: String = invalid_target_reason(aim)
+			if reason.is_empty():
 				_start_cast(aim)
 			else:
 				_invalid_feedback = 0.7
+				cast_rejected.emit(reason)
 		State.WAITING:
 			_start = _hook.global_position
 			_set_state(State.RETRIEVING)
@@ -122,7 +131,7 @@ func _process(delta: float) -> void:
 				retrieval_completed.emit(_target)
 	if is_active():
 		_line.connect_endpoints(_tip.global_position, _hook.get_line_endpoint())
-	_status.visible = not input_locked and (state != State.IDLE or show_idle_status)
+	_status.visible = not input_locked and (state != State.IDLE or (show_idle_status and is_near_shore(global_position)))
 	_status.modulate = Color(1.0, 0.4, 0.3) if _invalid_feedback > 0.0 else Color.WHITE
 	queue_redraw()
 

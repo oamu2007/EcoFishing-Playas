@@ -1,33 +1,57 @@
 extends Node
 
-const LevelScript = preload("res://scripts/gameplay/playas_vertical_slice.gd")
-const HudScript = preload("res://scripts/ui/hud.gd")
-const ShackPanelScript = preload("res://scripts/ui/shack_panel.gd")
+const SESSION_SCENE: PackedScene = preload("res://scenes/gameplay/session.tscn")
+const SessionScript = preload("res://scripts/gameplay/session.gd")
+const MenuScript = preload("res://scripts/ui/session_menu.gd")
 
-@onready var _world: LevelScript = $World
-@onready var _hud: HudScript = $HUD
-@onready var _shack_panel: ShackPanelScript = $ShackPanel
+var _session: SessionScript
+var _starting_session: bool = false
+
+@onready var _menu: MenuScript = $SessionMenu
 
 
 func _ready() -> void:
-	_hud.bind_cleanup(_world.pollution, _world.catches, _world.rod, _world.sack, _world.shop)
-	_shack_panel.bind_shop(_world.shop, _world.sack, _world.rod)
-	_shack_panel.close_requested.connect(_close_shop)
+	_menu.start_requested.connect(_request_start)
+	_menu.resume_requested.connect(_resume)
+	_menu.open(false)
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_echo():
-		return
-	if _shack_panel.visible:
-		if event.is_action_pressed("ui_cancel") or event.is_action_pressed("open_shack"):
-			get_viewport().set_input_as_handled()
-			_close_shop()
-	elif event.is_action_pressed("open_shack") and _world.can_open_shack():
+	if _menu.visible and _session != null and event.is_action_pressed("ui_cancel") and not event.is_echo():
 		get_viewport().set_input_as_handled()
-		_world.set_shop_open(true)
-		_shack_panel.open()
+		_resume()
 
 
-func _close_shop() -> void:
-	_shack_panel.hide()
-	_world.set_shop_open(false)
+func _request_start() -> void:
+	if _starting_session or not _menu.visible:
+		return
+	_starting_session = true
+	_menu.set_transition_pending()
+	_start_session.call_deferred()
+
+
+func _start_session() -> void:
+	if _session != null:
+		remove_child(_session)
+		_session.queue_free()
+	_session = SESSION_SCENE.instantiate()
+	_session.menu_requested.connect(_open_menu)
+	add_child(_session)
+	_menu.hide()
+	_starting_session = false
+
+
+func _open_menu() -> void:
+	if _menu.visible or _starting_session:
+		return
+	_session.process_mode = Node.PROCESS_MODE_DISABLED
+	_session.set_hud_visible(false)
+	_menu.open(true)
+
+
+func _resume() -> void:
+	if _starting_session or not _menu.visible or _session == null:
+		return
+	_menu.hide()
+	_session.process_mode = Node.PROCESS_MODE_INHERIT
+	_session.set_hud_visible(true)

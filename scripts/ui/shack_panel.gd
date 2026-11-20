@@ -4,6 +4,7 @@ signal close_requested
 
 var _shop: ShackShop
 var _sack: Sack
+var _rod: FishingRod
 var _rod_buttons: Array[Button] = []
 var _sack_buttons: Array[Button] = []
 var _cleanup_buttons: Array[Button] = []
@@ -24,9 +25,10 @@ func _ready() -> void:
 func bind_shop(shop: ShackShop, sack: Sack, rod: FishingRod) -> void:
 	_shop = shop
 	_sack = sack
+	_rod = rod
 	for index: int in shop.rod_upgrades.size():
 		var upgrade: RodUpgrade = shop.rod_upgrades[index]
-		var effect: String = "%d px, %.2fs cast / %.2fs return, %d trash" % [upgrade.cast_range, upgrade.cast_time, upgrade.retrieval_time, upgrade.trash_limit]
+		var effect: String = "%d px · %.2fs cast / %.2fs reel · %d trash" % [upgrade.cast_range, upgrade.cast_time, upgrade.retrieval_time, upgrade.trash_limit]
 		var button: Button = _add_catalog_button(_gear, upgrade.title, effect)
 		button.pressed.connect(_buy_rod.bind(index))
 		_rod_buttons.append(button)
@@ -40,7 +42,6 @@ func bind_shop(shop: ShackShop, sack: Sack, rod: FishingRod) -> void:
 		var button: Button = _add_catalog_button(_cleanup, project.title, "Removes %d permanent points" % project.pollution_reduction)
 		button.pressed.connect(_buy_cleanup.bind(index))
 		_cleanup_buttons.append(button)
-	%StarterGear.text = "Starter rod  •  %d px, %d trash    |    Starter Sack  •  %d slots" % [rod.maximum_cast_range, rod.trash_per_cast, sack.capacity]
 	shop.purchases_changed.connect(_refresh)
 	sack.contents_changed.connect(_refresh)
 	_refresh()
@@ -59,10 +60,12 @@ func open() -> void:
 func _add_catalog_button(catalog: VBoxContainer, title: String, effect: String) -> Button:
 	var row: HBoxContainer = HBoxContainer.new()
 	var details: Label = Label.new()
+	details.add_theme_font_size_override("font_size", 14)
 	details.text = "%s\n%s" % [title, effect]
 	details.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var button: Button = Button.new()
-	button.custom_minimum_size = Vector2(116.0, 34.0)
+	button.custom_minimum_size = Vector2(144.0, 34.0)
+	button.add_theme_font_size_override("font_size", 14)
 	row.add_child(details)
 	row.add_child(button)
 	catalog.add_child(row)
@@ -70,9 +73,13 @@ func _add_catalog_button(catalog: VBoxContainer, title: String, effect: String) 
 
 
 func _refresh() -> void:
+	%CurrentGear.text = "Equipped   |   %d px reach, %d trash per cast   |   %d Sack slots" % [_rod.maximum_cast_range, _rod.trash_per_cast, _sack.capacity]
 	_summary.text = "%d gold   |   Sack %d/%d   |   Rod %d   |   Sack tier %d" % [_shop.coins, _sack.item_count, _sack.capacity, _shop.rod_tier + 1, _shop.sack_tier + 1]
 	_sell.text = "Sell Sack contents   +%d gold" % _sack.sale_total() if _sack.item_count > 0 else "Sack empty"
+	var sale_had_focus: bool = visible and _sell.has_focus()
 	_sell.disabled = _sack.item_count == 0
+	if sale_had_focus and _sell.disabled:
+		_close.grab_focus()
 	_sell.tooltip_text = _sack.contents_description()
 	if _sack.fish_count > 0:
 		_sell.text = "Sell %d fish and %d trash   +%d gold" % [_sack.fish_count, _sack.item_count - _sack.fish_count, _sack.sale_total()]
@@ -91,7 +98,7 @@ func _set_price(button: Button, index: int, current_tier: int, cost: int) -> voi
 	if index < current_tier:
 		status = "Owned"
 	elif index > current_tier:
-		status = "Locked · %d" % cost
+		status = "Locked · %d gold" % cost
 	button.disabled = index != current_tier or _shop.coins < cost
 	button.text = status
 

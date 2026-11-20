@@ -1,10 +1,10 @@
 extends SceneTree
 
-const MAIN_SCENE: PackedScene = preload("res://scenes/gameplay/main.tscn")
+const SESSION_SCENE: PackedScene = preload("res://scenes/gameplay/session.tscn")
 const LevelScript = preload("res://scripts/gameplay/playas_vertical_slice.gd")
 
 var _failures: int = 0
-var _main: Node
+var _session: Node
 var _world: LevelScript
 var _player: CharacterBody2D
 var _panel: CanvasLayer
@@ -34,22 +34,22 @@ func _run() -> void:
 	if _failures == 0:
 		_verify_new_session()
 		_verify_cleanup_path()
-		_main.free()
+		_session.free()
 		_start_session()
 		_verify_new_session()
-	_main.free()
+	_session.free()
 	print("Cleanup projects smoke test: %d failures" % _failures)
 	quit(0 if _failures == 0 else 1)
 
 
 func _start_session() -> void:
-	_main = MAIN_SCENE.instantiate()
-	root.add_child(_main)
-	_world = _main.get_node("World")
+	_session = SESSION_SCENE.instantiate()
+	root.add_child(_session)
+	_world = _session.get_node("World")
 	_player = _world.get_node("Player")
-	_panel = _main.get_node("ShackPanel")
+	_panel = _session.get_node("ShackPanel")
 	_project_buttons = _panel.get_node("%Cleanup").find_children("*", "Button", true, false)
-	_meter = _main.get_node("HUD/ProgressPanel/Margin/Readouts/PollutionBar")
+	_meter = _session.get_node("HUD/ProgressPanel/Margin/Readouts/PollutionBar")
 	_rod = _world.rod
 	_starter_range = _rod.maximum_cast_range
 	_manager = _world.trash_manager
@@ -226,7 +226,7 @@ func _open_shack() -> void:
 	var key: InputEventKey = InputEventKey.new()
 	key.physical_keycode = KEY_E
 	key.pressed = true
-	_main._unhandled_input(key)
+	_session._unhandled_input(key)
 	_check(_panel.visible, "Shack did not open at its entrance")
 
 

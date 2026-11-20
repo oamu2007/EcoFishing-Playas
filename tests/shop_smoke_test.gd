@@ -1,11 +1,11 @@
 extends SceneTree
 
-const MainScene: PackedScene = preload("res://scenes/gameplay/main.tscn")
+const SESSION_SCENE: PackedScene = preload("res://scenes/gameplay/session.tscn")
 const LevelScript = preload("res://scripts/gameplay/playas_vertical_slice.gd")
 const PlayerScript = preload("res://scripts/gameplay/player.gd")
 
 var _failures: int = 0
-var _main: Node
+var _session: Node
 var _world: LevelScript
 var _player: PlayerScript
 var _panel: CanvasLayer
@@ -26,11 +26,11 @@ func _check(condition: bool, message: String) -> void:
 
 
 func _run() -> void:
-	_main = MainScene.instantiate()
-	root.add_child(_main)
-	_world = _main.get_node("World")
+	_session = SESSION_SCENE.instantiate()
+	root.add_child(_session)
+	_world = _session.get_node("World")
 	_player = _world.get_node("Player")
-	_panel = _main.get_node("ShackPanel")
+	_panel = _session.get_node("ShackPanel")
 	_rod = _world.rod
 	_manager = _world.trash_manager
 	_sack = _world.sack
@@ -56,7 +56,7 @@ func _run() -> void:
 	var remaining: int = _manager.items.size()
 	_catch_one()
 	_check(_world.pollution.trash_collected == collected and _manager.items.size() == remaining, "Full Sack removed an extra item")
-	_check(_main.get_node("HUD/Notification").text.begins_with("Sack full"), "Missing full Sack feedback")
+	_check(_session.get_node("HUD/Notification").text.begins_with("Sack full"), "Missing full Sack feedback")
 	_place_on_shore(shack.global_position.y)
 	Input.action_press("move_left")
 	await physics_frame
@@ -104,7 +104,7 @@ func _run() -> void:
 	_earn(_shop.sack_upgrades[1].cost)
 	_check(_shop.buy_sack(1) and _sack.capacity == 8 and not _shop.buy_sack(1), "Second Sack upgrade failed")
 
-	_main.free()
+	_session.free()
 	print("Shop smoke test: %d failures" % _failures)
 	quit(0 if _failures == 0 else 1)
 
@@ -175,7 +175,7 @@ func _shack_key() -> void:
 	var key: InputEventKey = InputEventKey.new()
 	key.physical_keycode = KEY_E
 	key.pressed = true
-	_main._unhandled_input(key)
+	_session._unhandled_input(key)
 
 
 func _click() -> InputEventMouseButton:

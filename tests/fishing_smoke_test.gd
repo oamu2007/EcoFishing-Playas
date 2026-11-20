@@ -14,10 +14,10 @@ func _check(condition: bool, message: String) -> void:
 
 
 func _run() -> void:
-	var main: Node = load("res://scenes/gameplay/main.tscn").instantiate()
-	root.add_child(main)
+	var session: Node = load("res://scenes/gameplay/session.tscn").instantiate()
+	root.add_child(session)
 	await process_frame
-	var player: CharacterBody2D = main.get_node("World/Player")
+	var player: CharacterBody2D = session.get_node("World/Player")
 	var rod: FishingRod = player.get_node("FishingRod")
 	var hook: FishingHook = rod.get_node("FishingHook")
 	var line: Line2D = rod.get_node("FishingLine")
@@ -58,7 +58,7 @@ func _run() -> void:
 	_check(rod.state == FishingRod.State.IDLE and not rod.is_active(), "Retrieval did not unlock player")
 	_check(not hook.visible and not line.visible, "Idle tackle remained visible")
 	_check(hook.global_position.is_equal_approx(tip.global_position), "Hook did not return to tip")
-	main.free()
+	session.free()
 	print("Fishing smoke test: %d failures" % _failures)
 	quit(0 if _failures == 0 else 1)
 

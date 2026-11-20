@@ -8,28 +8,30 @@ The first vertical slice should support a compact Playas de Tijuana shoreline wh
 
 ```text
 Main (Node)
-├── World (Node2D)
-│   ├── Environment (Node2D)
-│   │   ├── Ocean (hidden Polygon2D, authoritative water bounds)
-│   │   ├── Water (Node2D)
-│   │   │   ├── Seabed (Node2D)
-│   │   │   └── Surface (ColorRect)
-│   │   └── AmbientFish (Node2D)
-│   ├── WorldBounds (StaticBody2D)
-│   ├── Player (CharacterBody2D)
-│   │   └── FishingRod (Node2D)
-│   ├── FishingShack (Node2D)
-│   ├── ShackShop (Node)
-│   │   └── Sack (Node)
-│   ├── TrashManager (Node2D)
-│   ├── CatchableFishManager (Node2D)
-│   ├── CatchResolver (Node)
-│   └── PollutionSystem (Node)
-├── HUD (CanvasLayer)
-└── ShackPanel (CanvasLayer)
+├── SessionMenu (CanvasLayer)
+└── Session (Node, created when a session starts)
+    ├── World (Node2D)
+    │   ├── Environment (Node2D)
+    │   │   ├── Ocean (hidden Polygon2D, authoritative water bounds)
+    │   │   ├── Water (Node2D)
+    │   │   │   ├── Seabed (Node2D)
+    │   │   │   └── Surface (ColorRect)
+    │   │   └── AmbientFish (Node2D)
+    │   ├── WorldBounds (StaticBody2D)
+    │   ├── Player (CharacterBody2D)
+    │   │   └── FishingRod (Node2D)
+    │   ├── FishingShack (Node2D)
+    │   ├── ShackShop (Node)
+    │   │   └── Sack (Node)
+    │   ├── TrashManager (Node2D)
+    │   ├── CatchableFishManager (Node2D)
+    │   ├── CatchResolver (Node)
+    │   └── PollutionSystem (Node)
+    ├── HUD (CanvasLayer)
+    └── ShackPanel (CanvasLayer)
 ```
 
-The tree omits decorative nodes. `Main` instantiates the level and HUD, and the level owns local gameplay and environmental presentation.
+The tree omits decorative nodes. The entry point owns the menu and running session. The session composes the world, HUD, and shop. The level owns local gameplay and environmental presentation.
 
 The level also creates footprint and splash nodes at runtime, plus a shader-backed sand overlay and static sand-detail node under `Environment`.
 
@@ -47,7 +49,7 @@ Typed rod signals: `state_changed`, `hook_landed`, `retrieval_advanced(previous_
 
 ### Implemented cleanup composition
 
-`World` owns a `TrashManager` (which contains unhooked trash), a `PollutionSystem`, and the existing player/environment. `Main` binds the HUD to these local instances. The rod supplies the total trash allowance for a cast and remains independent of the pollution model.
+`World` owns a `TrashManager` (which contains unhooked trash), a `PollutionSystem`, and the existing player/environment. `Session` binds the HUD to these local instances. The rod supplies the total trash allowance for a cast and remains independent of the pollution model.
 
 - `OceanTrash` is a reusable `Area2D` scene with bottle, can, and bag visuals. Each instance has a catch circle, type, and configurable pollution value. Vertical current moves the Area2D itself during physics updates; bobbing remains visual-only. All three types contribute five floating points by default.
 - `TrashManager` starts with six nearshore items by default (seed 2026). The level computes a reachable shoreline segment from actual boundary shapes, player collider extents, and rod offset. Starter and offshore stop bands use the shoreline segment and the rod's base range. Every ten seconds the manager schedules an arrival if either band's slots allow it. Eight of twelve slots are reserved for the starter band. Candidates are spaced from floating items and reserved stop positions. Arrivals begin beyond the camera's ocean edge, ease toward their stops, and register for pollution as their centers enter the water.
@@ -60,7 +62,7 @@ Typed rod signals: `state_changed`, `hook_landed`, `retrieval_advanced(previous_
 
 ### Compact interface
 
-The normal HUD is a 264 × 85 px translucent corner card with live pollution, Sack usage, gold, and gear tiers. Catch notifications use small unboxed text and aggregate successful returns. Detailed instructions are hidden until the `toggle_help` action (H); key repeat does not toggle repeatedly. A six-second startup hint reduces to “H Help”. All HUD controls ignore mouse input, preserving cast clicks. The help panel is explicitly toggled and does not pause gameplay.
+The compact HUD shows live pollution, Sack usage, gold, and gear tiers. Short prompts follow movement, cast state, the Sack, and affordability. Rejected casts and results appear in a separate note. H toggles detailed controls without pausing. Informational controls ignore mouse input and the Menu button consumes its own clicks.
 
 Swept detection samples each item's current physics position rather than solving continuous relative motion for moving trash. At the configured gentle current speed this keeps the implementation small; unusually fast currents would need relative-motion sweeps. The shoreline/water validator still assumes this axis-aligned rectangular level.
 
@@ -68,7 +70,7 @@ Swept detection samples each item's current physics position rather than solving
 
 The level injects its Sack into `Player` and `CatchResolver`. The Sack holds names and sale values across casts, applies a linear movement multiplier as it fills, and has three slots and a 12% full-load slowdown by default. The resolver checks Sack space and the rod's trash limit before attachment. It stores a successful return before finishing collection. Full Sack casts leave excess trash in the water.
 
-`FishingShack` marks a short route inland from starter-range water. The player presses E in range with the rod idle. `Main` opens the modal `ShackPanel` and gates both movement and rod input until the panel closes. `ShackShop` owns the session wallet and purchase state. It credits the sum of the Sack's sale values once, then empties it. Typed `RodUpgrade` and `SackUpgrade` resources configure ordered upgrade tiers, their prices, and their effects. A purchase addresses a specific tier and debits only on success. The same shop sells configurable `CleanupProject` resources. It owns the completion flags for the session, and applies each project’s stated reduction to `PollutionSystem` exactly once. Projects remove the entire 70-point permanent contribution when all are funded. Arrivals affect only floating points.
+`FishingShack` marks a short route inland from starter-range water. The player presses E in range with the rod idle. The session opens the modal `ShackPanel` and gates both movement and rod input until the panel closes. `ShackShop` owns the session wallet and purchase state. It credits the sum of the Sack's sale values once, then empties it. Typed `RodUpgrade` and `SackUpgrade` resources configure ordered upgrade tiers, their prices, and their effects. A purchase addresses a specific tier and debits only on success. The same shop sells configurable `CleanupProject` resources. It owns the completion flags for the session, and applies each project’s stated reduction to `PollutionSystem` exactly once. Projects remove the entire 70-point permanent contribution when all are funded. Arrivals affect only floating points.
 
 ### Pollution-responsive water
 
@@ -105,9 +107,11 @@ Commit `2589291` adds three local presentation scripts and `shaders/sand.gdshade
 
 The sand overlay and detail positions derive from the authored Beach polygon. The detail inset keeps pebbles and shells away from wet sand. Footprint and splash nodes continue processing/redrawing while empty. Most effect settings are script constants rather than exported Inspector controls. Extracting a reusable presentation scene and exposing tuning are follow-up maintenance work.
 
-### Planned replay
+### Menu and replay
 
-Milestone 11 adds a fresh-session action owned by `Main`. See the [implementation plan](implementation-plan.md) for exit checks.
+`Main` starts at `SessionMenu` and owns a single instanced `session.tscn`. The HUD Menu button and Esc open the menu. Esc closes the shack first while it is open. The pause menu suspends session processing and hides the HUD, and Resume restores both. Start fresh detaches and disposes of the old tree before adding a fresh instance. The entry point guards queued start and restart requests, so the same input cannot create two sessions. Gameplay fixtures can instantiate the session scene directly.
+
+The menu, HUD, and shack panel share `ui/themes/coastal_field_guide.tres`. It defines sand-colored panels, brown borders and focus, ink text, and teal actions. The menu's static shoreline illustration is a local Control. Shop and session menu panels capture pointer input before the rod's unhandled-input phase. The rod transforms mouse button event coordinates through the active viewport's canvas transform for aim accuracy after resizing.
 
 ## Systems and data flow
 

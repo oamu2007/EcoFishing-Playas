@@ -8,7 +8,7 @@ A first-time player can start a session from the menu, learn to collect recurrin
 
 ## Next milestone
 
-Continue with [Milestone 11](#milestone-11--start-menu-onboarding-and-interface). Request the UI theme choice before styling the menu, HUD, and shop. Session creation, onboarding, and input work can proceed while the choice is pending.
+Continue with [Milestone 12](#milestone-12--playtest-and-stabilize-the-slice). Run two sessions through a fish sale and a 0% cleanup window, then recheck the standalone graphics preview and full regression suite.
 
 ## Completed baseline
 
@@ -284,7 +284,7 @@ Use seeded trials above, near, and below the threshold and at 0% to check eligib
 
 ## Milestone 11 — Start menu, onboarding, and interface
 
-**Planned.** A first-time player can start from a menu, learn the cleanup and exchange loop from short prompts, and use a coherent HUD and shop at both default and reduced window sizes.
+**Verified November 19, 2026.** The menu starts and replaces sessions. The HUD and shack shop share the Coastal field guide theme chosen by the user.
 
 - Consult the user at the start of this milestone before choosing the visual direction. The theme is open. Apply the agreed theme across the start menu, in-game HUD, and shop. Show pollution, Sack capacity, coins, current gear tiers, upgrade effects and prices, and cleanup purchase status where players need them.
 - Bring forward concise shoreline, cast, retrieve, and miss cues from the earlier onboarding plan. Add turn-in and upgrade guidance and retain access to detailed controls.
@@ -293,6 +293,14 @@ Use seeded trials above, near, and below the threshold and at 0% to check eligib
 **Verification**
 
 Ask a first-time player to start, make a catch, exchange a load, and buy an upgrade using the on-screen cues. Resize the window and check labels, focus, and aim accuracy. Click and close shop and menu controls without casting or retrieving, then resume fishing. Start two fresh sessions and verify the spawn, gear, Sack, coins, projects, arrivals, pollution, and visuals reset each time.
+
+**Checkpoint results**
+
+- The user chose Coastal field guide with sand and shed browns. The shared theme uses sand paper, brown borders and focus outlines, ocean ink, and teal actions. The menu illustration uses the same palette and the shack as its landmark.
+- The HUD cues movement, aiming, retrieval, first turn-in, affordability, and fish recovery. Full or partial loads give a clear next action. Detailed controls open with H or the Help button. Esc closes an open shop before it can open the session menu. Start fresh rebuilds the world, inventory, wallet, gear, projects, seed, and visuals.
+- Godot 4.7.2 passed editor import, 120-frame startup, nine smoke tests, and the OpenGL water render check. Actual viewport clicks drove start, an empty return, catches, sales, first gear and cleanup purchases, pause and resume with a waiting hook, and two resets. Resized aim reached the selected world point. Layout and focus checks passed at 1280 × 720 and 800 × 450.
+- An independent first look used the desktop UI to start and review the cues. Desktop input offered key taps without sustained movement, so the end-to-end onboarding route was verified with scripted Godot inputs. That review led to a clickable Help control and a prompt that explains the first upgrade's remaining gold cost.
+- Next action is the two end-to-end playthroughs, cleanup rebound verification, preview, and documentation review.
 
 ## Milestone 12 — Playtest and stabilize the slice
 

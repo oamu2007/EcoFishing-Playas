@@ -1,59 +1,66 @@
 [gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1"]
-
-[sub_resource type="StyleBoxFlat" id="Panel"]
-bg_color = Color(0.025, 0.08, 0.11, 0.8)
-corner_radius_top_left = 7
-corner_radius_top_right = 7
-corner_radius_bottom_left = 7
-corner_radius_bottom_right = 7
+[ext_resource type="Theme" path="res://ui/themes/coastal_field_guide.tres" id="2_theme"]
 
 [sub_resource type="StyleBoxFlat" id="BarBackground"]
-bg_color = Color(0.13, 0.23, 0.26, 0.7)
+bg_color = Color(0.84, 0.76, 0.61, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
 
 [sub_resource type="StyleBoxFlat" id="BarFill"]
-bg_color = Color(0.31, 0.82, 0.7, 1)
+bg_color = Color(0.25, 0.45, 0.40, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
 
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1")
 
 [node name="ControlsPanel" type="PanelContainer" parent="."]
 visible = false
+offset_left = 14.0
+offset_top = 111.0
 mouse_filter = 2
-offset_left = 12.0
-offset_top = 144.0
-theme_override_styles/panel = SubResource("Panel")
+theme = ExtResource("2_theme")
 
 [node name="MarginContainer" type="MarginContainer" parent="ControlsPanel"]
 mouse_filter = 2
-theme_override_constants/margin_left = 12
-theme_override_constants/margin_top = 10
-theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 10
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 11
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 11
 
-[node name="Instructions" type="Label" parent="ControlsPanel/MarginContainer"]
+[node name="Controls" type="VBoxContainer" parent="ControlsPanel/MarginContainer"]
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.94, 0.98, 0.96, 1)
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
-theme_override_constants/shadow_offset_x = 1
-theme_override_constants/shadow_offset_y = 2
+theme_override_constants/separation = 5
+
+[node name="Heading" type="Label" parent="ControlsPanel/MarginContainer/Controls"]
+mouse_filter = 2
+theme_type_variation = &"FieldSection"
+text = "Controls"
+
+[node name="Instructions" type="Label" parent="ControlsPanel/MarginContainer/Controls"]
+mouse_filter = 2
 theme_override_font_sizes/font_size = 14
-text = "CONTROLS                         H to close\nMove: WASD / Arrow keys\nAim: Mouse (green = valid target)\nCast / Retrieve: Left click\nStarter rod: one piece per cast.\nFish with a ring arrive at 50% pollution.\nE: Sell catches and buy gear at the shack."
+text = "Move with WASD or arrow keys.\nAim with the mouse. Green means in range.\nLeft click to cast. Left click again to reel in.\nPress E at the shack to sell, upgrade, or fund cleanup.\nPress Esc for the session menu.\nPress H to close these controls."
 
 [node name="ProgressPanel" type="PanelContainer" parent="."]
-offset_left = 12.0
-offset_top = 12.0
-offset_right = 276.0
-offset_bottom = 97.0
+offset_left = 14.0
+offset_top = 14.0
+offset_right = 251.0
+offset_bottom = 98.0
 mouse_filter = 2
-theme_override_styles/panel = SubResource("Panel")
+theme = ExtResource("2_theme")
 
 [node name="Margin" type="MarginContainer" parent="ProgressPanel"]
 mouse_filter = 2
-theme_override_constants/margin_left = 10
+theme_override_constants/margin_left = 12
 theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 10
+theme_override_constants/margin_right = 12
 theme_override_constants/margin_bottom = 8
 
 [node name="Readouts" type="VBoxContainer" parent="ProgressPanel/Margin"]
@@ -62,11 +69,11 @@ theme_override_constants/separation = 4
 
 [node name="Progress" type="Label" parent="ProgressPanel/Margin/Readouts"]
 mouse_filter = 2
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 15
 text = "POLLUTION  100%"
 
 [node name="PollutionBar" type="ProgressBar" parent="ProgressPanel/Margin/Readouts"]
-custom_minimum_size = Vector2(0, 3)
+custom_minimum_size = Vector2(0, 5)
 mouse_filter = 2
 theme_override_styles/background = SubResource("BarBackground")
 theme_override_styles/fill = SubResource("BarFill")
@@ -79,24 +86,54 @@ theme_override_font_sizes/font_size = 14
 
 [node name="Gear" type="Label" parent="ProgressPanel/Margin/Readouts"]
 mouse_filter = 2
+theme_override_colors/font_color = Color(0.39, 0.29, 0.21, 1)
 theme_override_font_sizes/font_size = 13
+
+[node name="MenuButton" type="Button" parent="."]
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -98.0
+offset_top = 14.0
+offset_right = -14.0
+offset_bottom = 48.0
+grow_horizontal = 0
+theme = ExtResource("2_theme")
+text = "Menu"
+
+[node name="HelpKey" type="Button" parent="."]
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -98.0
+offset_top = 55.0
+offset_right = -14.0
+offset_bottom = 84.0
+theme = ExtResource("2_theme")
+theme_override_font_sizes/font_size = 13
+text = "H  Help"
 
 [node name="Hint" type="Label" parent="."]
+anchor_top = 1.0
+anchor_bottom = 1.0
 offset_left = 14.0
-offset_top = 101.0
+offset_top = -44.0
+offset_right = 556.0
+offset_bottom = -14.0
+grow_vertical = 0
 mouse_filter = 2
-theme_override_font_sizes/font_size = 13
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
-theme_override_constants/shadow_offset_x = 1
-theme_override_constants/shadow_offset_y = 1
-
-
+theme = ExtResource("2_theme")
+theme_type_variation = &"FieldNote"
+theme_override_font_sizes/font_size = 15
 
 [node name="Notification" type="Label" parent="."]
+visible = false
+anchor_top = 1.0
+anchor_bottom = 1.0
 offset_left = 14.0
-offset_top = 120.0
+offset_top = -78.0
+offset_right = 556.0
+offset_bottom = -48.0
+grow_vertical = 0
 mouse_filter = 2
-theme_override_font_sizes/font_size = 14
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
-theme_override_constants/shadow_offset_x = 1
-theme_override_constants/shadow_offset_y = 2
+theme = ExtResource("2_theme")
+theme_type_variation = &"FieldNote"
+theme_override_font_sizes/font_size = 15

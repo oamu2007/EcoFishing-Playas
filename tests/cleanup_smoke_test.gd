@@ -1,6 +1,6 @@
 extends SceneTree
 
-const MAIN_SCENE: PackedScene = preload("res://scenes/gameplay/main.tscn")
+const SESSION_SCENE: PackedScene = preload("res://scenes/gameplay/session.tscn")
 const LevelScript = preload("res://scripts/gameplay/playas_vertical_slice.gd")
 
 var _failures: int = 0
@@ -17,21 +17,21 @@ func _check(condition: bool, message: String) -> void:
 
 
 func _run() -> void:
-	var main: Node = MAIN_SCENE.instantiate()
-	root.add_child(main)
-	var world: LevelScript = main.get_node("World")
+	var session: Node = SESSION_SCENE.instantiate()
+	root.add_child(session)
+	var world: LevelScript = session.get_node("World")
 	var player: CharacterBody2D = world.get_node("Player")
 	var rod: FishingRod = world.rod
 	var manager: TrashManager = world.trash_manager
 	var pollution: PollutionSystem = world.pollution
-	var notification: Label = main.get_node("HUD/Notification")
-	var meter: ProgressBar = main.get_node("HUD/ProgressPanel/Margin/Readouts/PollutionBar")
+	var notification: Label = session.get_node("HUD/Notification")
+	var meter: ProgressBar = session.get_node("HUD/ProgressPanel/Margin/Readouts/PollutionBar")
 	manager.arrivals_enabled = false
 	world.sack.expand(manager.maximum_active_items)
 	rod.set_process(false)
 	player.set_physics_process(false)
 	_check(manager.items.size() == 6 and pollution.current_pollution == 100, "Unexpected starting load")
-	var replay: Node = MAIN_SCENE.instantiate()
+	var replay: Node = SESSION_SCENE.instantiate()
 	root.add_child(replay)
 	var replay_manager: TrashManager = replay.get_node("World/TrashManager")
 	var kinds: Dictionary[int, bool] = {}
@@ -84,7 +84,7 @@ func _run() -> void:
 		_cast(rod, item.global_position)
 		_retrieve(rod)
 	_check(manager.items.is_empty() and pollution.floating_points == 0, "Floating contribution did not clear")
-	_check(pollution.current_pollution == 70 and not main.has_node("HUD/Completion"), "An empty shore counted as completion")
+	_check(pollution.current_pollution == 70 and not session.has_node("HUD/Completion"), "An empty shore counted as completion")
 	player.global_position = Vector2(world.shore_start.x, target.y) - rod_offset
 	_cast(rod, target)
 	_retrieve(rod)
@@ -93,7 +93,7 @@ func _run() -> void:
 	_check(meter.value == 58.0 and pollution.remove_permanent(999) == 58 and meter.value == 0.0, "Permanent contribution did not clamp to zero")
 	pollution.register_trash(-2, 100)
 	_check(pollution.current_pollution == 30 and not pollution.register_trash(-2, 5), "Floating limit or duplicate registration failed")
-	main.free()
+	session.free()
 	print("Cleanup smoke test: %d failures" % _failures)
 	quit(0 if _failures == 0 else 1)
 

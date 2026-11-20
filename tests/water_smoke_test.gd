@@ -1,6 +1,6 @@
 extends SceneTree
 
-const MAIN_SCENE: PackedScene = preload("res://scenes/gameplay/main.tscn")
+const SESSION_SCENE: PackedScene = preload("res://scenes/gameplay/session.tscn")
 const WATER_SCENE: PackedScene = preload("res://scenes/gameplay/water.tscn")
 
 var _failures: int = 0
@@ -21,13 +21,13 @@ func _uniform(water: WaterVisuals) -> float:
 
 
 func _run() -> void:
-	var main: Node = MAIN_SCENE.instantiate()
-	var manager: TrashManager = main.get_node("World/TrashManager")
+	var session: Node = SESSION_SCENE.instantiate()
+	var manager: TrashManager = session.get_node("World/TrashManager")
 	manager.arrivals_enabled = false
 	manager.initial_item_count = 0
-	root.add_child(main)
-	var water: WaterVisuals = main.get_node("World/Environment/Water")
-	var model: PollutionSystem = main.get_node("World/PollutionSystem")
+	root.add_child(session)
+	var water: WaterVisuals = session.get_node("World/Environment/Water")
+	var model: PollutionSystem = session.get_node("World/PollutionSystem")
 	_check(is_equal_approx(_uniform(water), 0.7), "World without floating trash did not show permanent pollution")
 	var full_load: Dictionary[int, int] = {1: 30}
 	model.initialize(full_load, 70)
@@ -37,9 +37,9 @@ func _run() -> void:
 	model.remove_permanent(50)
 	_check(model.current_pollution == 50 and water.target_pollution == 0.5, "Half-pollution fixture did not update visual target")
 	_check(_uniform(water) == 1.0, "Visual jumped instead of transitioning")
-	var bar: ProgressBar = main.get_node("HUD/ProgressPanel/Margin/Readouts/PollutionBar")
+	var bar: ProgressBar = session.get_node("HUD/ProgressPanel/Margin/Readouts/PollutionBar")
 	_check(absf(bar.value - model.normalized_pollution * 100.0) <= maxf(bar.step, 0.0001), "HUD waited for water smoothing")
-	var hud_text: String = main.get_node("HUD/ProgressPanel/Margin/Readouts/Progress").text
+	var hud_text: String = session.get_node("HUD/ProgressPanel/Margin/Readouts/Progress").text
 	_check(hud_text.ends_with("%d%%" % roundi(model.normalized_pollution * 100.0)), "Numerical HUD pollution did not update immediately")
 	water._process(water.transition_duration * 0.5)
 	_check(_uniform(water) < 1.0 and _uniform(water) > water.target_pollution, "Intermediate interpolation outside boundaries")
@@ -81,14 +81,14 @@ func _run() -> void:
 	_check(water.target_pollution == 0.0, "Old model still controls rebound water")
 	other.free()
 	empty.free()
-	main.free()
+	session.free()
 	# Scene reset starts at fresh state, never the previous water material value.
-	main = MAIN_SCENE.instantiate()
-	root.add_child(main)
-	water = main.get_node("World/Environment/Water")
+	session = SESSION_SCENE.instantiate()
+	root.add_child(session)
+	water = session.get_node("World/Environment/Water")
 	_check(_uniform(water) == 1.0 and water.displayed_pollution == 1.0, "Reload inherited previous pollution")
 	_check(water.get_node("Surface").size == Vector2(760, 900), "Water presentation changed authored bounds")
-	_check(water.z_index < 0 and water.get_node("Surface").material != main.get_node("World/Player").material, "Water shader leaked into gameplay draw layer")
-	main.free()
+	_check(water.z_index < 0 and water.get_node("Surface").material != session.get_node("World/Player").material, "Water shader leaked into gameplay draw layer")
+	session.free()
 	print("Water smoke test: %d failures" % _failures)
 	quit(0 if _failures == 0 else 1)

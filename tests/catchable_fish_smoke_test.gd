@@ -1,6 +1,6 @@
 extends SceneTree
 
-const MainScene: PackedScene = preload("res://scenes/gameplay/main.tscn")
+const SESSION_SCENE: PackedScene = preload("res://scenes/gameplay/session.tscn")
 const FishScene: PackedScene = preload("res://scenes/gameplay/catchable_fish.tscn")
 const LevelScript = preload("res://scripts/gameplay/playas_vertical_slice.gd")
 const PlayerScript = preload("res://scripts/gameplay/player.gd")
@@ -31,9 +31,9 @@ func _run() -> void:
 
 
 func _spawn_trials(points: int) -> int:
-	var main: Node = MainScene.instantiate()
-	root.add_child(main)
-	var world: LevelScript = main.get_node("World")
+	var session: Node = SESSION_SCENE.instantiate()
+	root.add_child(session)
+	var world: LevelScript = session.get_node("World")
 	var model: PollutionSystem = world.pollution
 	var manager: CatchableFishManager = world.catchable_fish
 	var empty: Dictionary[int, int] = {}
@@ -57,14 +57,14 @@ func _spawn_trials(points: int) -> int:
 		_check(manager.fish.is_empty() and not fish.can_hook(), "Expired fish was still eligible or counted against cap")
 	if points == 0:
 		_check(species_seen.size() == 4, "Clean-water sample did not exercise all species")
-	main.free()
+	session.free()
 	return spawned
 
 
 func _test_recovery_and_sales() -> void:
-	var main: Node = MainScene.instantiate()
-	root.add_child(main)
-	var world: LevelScript = main.get_node("World")
+	var session: Node = SESSION_SCENE.instantiate()
+	root.add_child(session)
+	var world: LevelScript = session.get_node("World")
 	var player: PlayerScript = world.get_node("Player")
 	var manager: CatchableFishManager = world.catchable_fish
 	var trash: TrashManager = world.trash_manager
@@ -83,7 +83,7 @@ func _test_recovery_and_sales() -> void:
 	var fish: CatchableFish = _next_fish(manager)
 	if fish == null:
 		_check(false, "No fish appeared at the threshold while water visuals were easing")
-		main.free()
+		session.free()
 		return
 	fish.set_physics_process(false)
 	var empty: Dictionary[int, int] = {}
@@ -143,13 +143,13 @@ func _test_recovery_and_sales() -> void:
 	var open: InputEventKey = InputEventKey.new()
 	open.physical_keycode = KEY_E
 	open.pressed = true
-	main._unhandled_input(open)
-	var sell: Button = main.get_node("ShackPanel").get_node("%Sell")
+	session._unhandled_input(open)
+	var sell: Button = session.get_node("ShackPanel").get_node("%Sell")
 	_check(sell.text.contains("1 fish") and sell.text.contains(str(expected)), "Shop quote did not itemize the mixed load")
 	sell.pressed.emit()
 	sell.pressed.emit()
 	_check(world.shop.coins == expected and sack.item_count == 0 and sack.fish_count == 0, "Mixed sale failed or credited twice")
-	main.get_node("ShackPanel").get_node("%Close").pressed.emit()
+	session.get_node("ShackPanel").get_node("%Close").pressed.emit()
 	if excess != null:
 		player.global_position = Vector2(world.shore_start.x, spot.y) - offset
 		_cast(rod, spot + Vector2(48, 0))
@@ -157,7 +157,7 @@ func _test_recovery_and_sales() -> void:
 		_check(not excess.hooked and sack.item_count == 0, "Retrieval sweep hooked a fish without a landing")
 	await process_frame
 	_check(not is_instance_valid(fish), "Landed fish did not leave the water")
-	main.free()
+	session.free()
 
 
 func _next_fish(manager: CatchableFishManager) -> CatchableFish:

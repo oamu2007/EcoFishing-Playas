@@ -1,0 +1,78 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/session_menu.gd" id="1"]
+[ext_resource type="Theme" path="res://ui/themes/coastal_field_guide.tres" id="2_theme"]
+[ext_resource type="Script" path="res://scripts/ui/shoreline_illustration.gd" id="3_coast"]
+
+[node name="SessionMenu" type="CanvasLayer"]
+layer = 20
+script = ExtResource("1")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.064, 0.130, 0.133, 1)
+
+[node name="Center" type="CenterContainer" parent="Backdrop"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 1
+
+[node name="Panel" type="PanelContainer" parent="Backdrop/Center"]
+layout_mode = 2
+theme = ExtResource("2_theme")
+
+[node name="Margin" type="MarginContainer" parent="Backdrop/Center/Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 34
+theme_override_constants/margin_top = 22
+theme_override_constants/margin_right = 22
+theme_override_constants/margin_bottom = 22
+
+[node name="Layout" type="HBoxContainer" parent="Backdrop/Center/Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 32
+
+[node name="Body" type="VBoxContainer" parent="Backdrop/Center/Panel/Margin/Layout"]
+custom_minimum_size = Vector2(346, 0)
+layout_mode = 2
+theme_override_constants/separation = 13
+alignment = 1
+
+[node name="Title" type="Label" parent="Backdrop/Center/Panel/Margin/Layout/Body"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"FieldTitle"
+theme_override_constants/line_spacing = -2
+
+[node name="Introduction" type="Label" parent="Backdrop/Center/Panel/Margin/Layout/Body"]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 2
+
+[node name="Actions" type="VBoxContainer" parent="Backdrop/Center/Panel/Margin/Layout/Body"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Resume" type="Button" parent="Backdrop/Center/Panel/Margin/Layout/Body/Actions"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 45)
+layout_mode = 2
+theme_type_variation = &"FieldPrimary"
+text = "Resume session"
+
+[node name="StartSession" type="Button" parent="Backdrop/Center/Panel/Margin/Layout/Body/Actions"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 45)
+layout_mode = 2
+theme_type_variation = &"FieldPrimary"
+text = "Start session"
+
+[node name="Shoreline" type="Control" parent="Backdrop/Center/Panel/Margin/Layout"]
+clip_contents = true
+custom_minimum_size = Vector2(302, 340)
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("3_coast")
