@@ -50,6 +50,8 @@ var _help_visible: bool = false
 
 @onready var _pivot: Node2D = $Pivot
 @onready var _rod_art: Sprite2D = $Pivot/Rod
+@onready var _slip_guard_art: Sprite2D = $Pivot/SlipGuard
+@onready var _quick_spool_art: Sprite2D = $Pivot/QuickSpool
 @onready var _tip: Marker2D = $Pivot/Tip
 @onready var _hook: FishingHook = $FishingHook
 @onready var _line: FishingLineScript = $FishingLine
@@ -79,6 +81,8 @@ func set_rod_art(art: Texture2D) -> void:
 func configure_add_ons(forgiven_misses: int, duration_discount: float) -> void:
 	_forgiven_misses = forgiven_misses
 	_duration_discount = duration_discount
+	_slip_guard_art.visible = forgiven_misses > 0
+	_quick_spool_art.visible = duration_discount > 0.0
 
 
 func equipped_cast_duration() -> float:

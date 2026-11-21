@@ -36,7 +36,7 @@ var _rod_add_on_buttons: Array[Button] = []
 @onready var _cleanup: VBoxContainer = %Cleanup
 @onready var _current_gear: Label = %CurrentGear
 @onready var _rod_add_ons_section: VBoxContainer = %RodAddOnsSection
-@onready var _rod_add_ons: VBoxContainer = %RodAddOns
+@onready var _rod_add_ons: HBoxContainer = %RodAddOns
 @onready var _rod_add_ons_heading: Label = %RodAddOnsHeading
 @onready var _rod_add_on_ownership: Label = %RodAddOnOwnership
 
@@ -77,7 +77,7 @@ func bind_shop(shop: ShackShop, sack: Sack, rod: FishingRod) -> void:
 	_rod_add_ons_section.visible = not shop.rod_add_ons.is_empty()
 	for index: int in shop.rod_add_ons.size():
 		var add_on: RodAddOn = shop.rod_add_ons[index]
-		var button: Button = _add_catalog_card(_rod_add_ons, add_on.title, add_on.effect_text())
+		var button: Button = _add_rod_add_on_card(add_on)
 		button.pressed.connect(_buy_rod_add_on.bind(index))
 		_rod_add_on_buttons.append(button)
 	shop.purchases_changed.connect(_refresh_catalog)
@@ -103,6 +103,15 @@ func cancel_page() -> void:
 	else:
 		_show_page(Page.HOME)
 		cancelled.emit()
+
+
+func handle_back(event: InputEvent) -> bool:
+	if not visible or _page == Page.HOME or not event.is_action_pressed(&"trader_back"):
+		return false
+	if get_viewport().gui_is_dragging():
+		get_viewport().gui_cancel_drag()
+	cancel_page()
+	return true
 
 
 func handle_sell_all(event: InputEvent) -> bool:
@@ -289,6 +298,46 @@ func _add_catalog_card(catalog: VBoxContainer, title: String, effect: String, ar
 	return button
 
 
+func _add_rod_add_on_card(add_on: RodAddOn) -> Button:
+	var card: PanelContainer = PanelContainer.new()
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var margin: MarginContainer = MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 12)
+	margin.add_theme_constant_override("margin_right", 12)
+	margin.add_theme_constant_override("margin_top", 10)
+	margin.add_theme_constant_override("margin_bottom", 10)
+	var row: HBoxContainer = HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	var picture: TextureRect = TextureRect.new()
+	picture.texture = add_on.art
+	picture.custom_minimum_size = Vector2(42, 42)
+	picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	var details: VBoxContainer = VBoxContainer.new()
+	details.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	details.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	details.add_theme_constant_override("separation", 2)
+	var title: Label = Label.new()
+	title.theme_type_variation = &"FieldSection"
+	title.text = add_on.title
+	var effect: Label = Label.new()
+	effect.text = add_on.effect_text()
+	effect.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var button: Button = Button.new()
+	button.custom_minimum_size.x = 130.0
+	button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	button.add_theme_font_size_override("font_size", 14)
+	details.add_child(title)
+	details.add_child(effect)
+	row.add_child(picture)
+	row.add_child(details)
+	row.add_child(button)
+	margin.add_child(row)
+	card.add_child(margin)
+	_rod_add_ons.add_child(card)
+	return button
+
+
 func _refresh_catalog() -> void:
 	var rod_title: String = _shop.rod_title(_shop.rod_tier)
 	_current_gear.text = "Equipped   ·   %s   ·   %d px reach   ·   %d Sack slots" % [rod_title, _rod.maximum_cast_range, _sack.capacity]
@@ -324,7 +373,7 @@ func _refresh_rod_add_on_ownership() -> void:
 					owned_titles.append(_shop.rod_add_ons[index].title)
 			status = "No add-ons owned" if owned_titles.is_empty() else "%s owned" % ", ".join(owned_titles)
 		rod_statuses.append("%s · %s" % [_shop.rod_title(tier), status])
-	_rod_add_on_ownership.text = "\n".join(rod_statuses)
+	_rod_add_on_ownership.text = "    •    ".join(rod_statuses)
 	_rod_add_on_ownership.visible = not rod_statuses.is_empty()
 
 

@@ -1,10 +1,12 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/gameplay/fishing_rod.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/gameplay/fishing_hook.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/gameplay/fishing_line.tscn" id="3"]
 [ext_resource type="Texture2D" path="res://assets/rods/starter.svg" id="4_starter"]
 [ext_resource type="Theme" path="res://ui/themes/coastal_field_guide.tres" id="5_theme"]
+[ext_resource type="Texture2D" path="res://assets/rods/slip_guard.svg" id="6_guard"]
+[ext_resource type="Texture2D" path="res://assets/rods/quick_spool.svg" id="7_spool"]
 
 [node name="FishingRod" type="Node2D"]
 z_index = 5
@@ -16,6 +18,18 @@ script = ExtResource("1")
 position = Vector2(-4, -12)
 texture = ExtResource("4_starter")
 centered = false
+
+[node name="SlipGuard" type="Sprite2D" parent="Pivot"]
+visible = false
+position = Vector2(34, -5)
+scale = Vector2(0.36, 0.36)
+texture = ExtResource("6_guard")
+
+[node name="QuickSpool" type="Sprite2D" parent="Pivot"]
+visible = false
+position = Vector2(20, 8)
+scale = Vector2(0.42, 0.42)
+texture = ExtResource("7_spool")
 
 [node name="Tip" type="Marker2D" parent="Pivot"]
 position = Vector2(48, 0)

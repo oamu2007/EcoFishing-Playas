@@ -2,6 +2,7 @@ class_name RodAddOn
 extends Resource
 
 @export var title: String
+@export var art: Texture2D
 @export_range(1, 100) var cost: int = 12
 @export_range(0, 1) var forgiven_misses: int = 0
 @export_range(0.0, 0.5, 0.01) var duration_discount: float = 0.0

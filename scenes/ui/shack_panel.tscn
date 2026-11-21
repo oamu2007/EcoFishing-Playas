@@ -44,7 +44,7 @@ text = "Fishing shack"
 
 [node name="Back" type="Button" parent="Backdrop/Panel/Margin/Layout/Header"]
 unique_name_in_owner = true
-text = "Back"
+text = "Back (B)"
 
 [node name="Close" type="Button" parent="Backdrop/Panel/Margin/Layout/Header"]
 unique_name_in_owner = true
@@ -171,20 +171,34 @@ horizontal_scroll_mode = 0
 size_flags_horizontal = 3
 theme_override_constants/separation = 12
 
+[node name="RodAddOnsSection" type="VBoxContainer" parent="Backdrop/Panel/Margin/Layout/BuyScreen/BuyScroll/Catalog"]
+unique_name_in_owner = true
+theme_override_constants/separation = 8
+
+[node name="RodAddOnsHeading" type="Label" parent="Backdrop/Panel/Margin/Layout/BuyScreen/BuyScroll/Catalog/RodAddOnsSection"]
+unique_name_in_owner = true
+theme_type_variation = &"FieldSection"
+text = "Rod add-ons"
+
+[node name="RodAddOns" type="HBoxContainer" parent="Backdrop/Panel/Margin/Layout/BuyScreen/BuyScroll/Catalog/RodAddOnsSection"]
+unique_name_in_owner = true
+theme_override_constants/separation = 12
+
+[node name="RodAddOnOwnership" type="Label" parent="Backdrop/Panel/Margin/Layout/BuyScreen/BuyScroll/Catalog/RodAddOnsSection"]
+unique_name_in_owner = true
+theme_override_font_sizes/font_size = 14
+autowrap_mode = 3
+
 [node name="GearAndCleanup" type="HBoxContainer" parent="Backdrop/Panel/Margin/Layout/BuyScreen/BuyScroll/Catalog"]
 size_flags_horizontal = 3
 theme_override_constants/separation = 15
 
-[node name="GearOffers" type="VBoxContainer" parent="Backdrop/Panel/Margin/Layout/BuyScreen/BuyScroll/Catalog/GearAndCleanup"]
-size_flags_horizontal = 3
-theme_override_constants/separation = 12
-
-[node name="Gear" type="VBoxContainer" parent="Backdrop/Panel/Margin/Layout/BuyScreen/BuyScroll/Catalog/GearAndCleanup/GearOffers"]
+[node name="Gear" type="VBoxContainer" parent="Backdrop/Panel/Margin/Layout/BuyScreen/BuyScroll/Catalog/GearAndCleanup"]
 unique_name_in_owner = true
 size_flags_horizontal = 3
 theme_override_constants/separation = 5
 
-[node name="GearHeading" type="Label" parent="Backdrop/Panel/Margin/Layout/BuyScreen/BuyScroll/Catalog/GearAndCleanup/GearOffers/Gear"]
+[node name="GearHeading" type="Label" parent="Backdrop/Panel/Margin/Layout/BuyScreen/BuyScroll/Catalog/GearAndCleanup/Gear"]
 theme_type_variation = &"FieldSection"
 text = "Gear upgrades"
 
@@ -196,24 +210,6 @@ theme_override_constants/separation = 5
 [node name="CleanupHeading" type="Label" parent="Backdrop/Panel/Margin/Layout/BuyScreen/BuyScroll/Catalog/GearAndCleanup/Cleanup"]
 theme_type_variation = &"FieldSection"
 text = "Cleanup projects"
-
-[node name="RodAddOnsSection" type="VBoxContainer" parent="Backdrop/Panel/Margin/Layout/BuyScreen/BuyScroll/Catalog/GearAndCleanup/GearOffers"]
-unique_name_in_owner = true
-theme_override_constants/separation = 5
-
-[node name="RodAddOnsHeading" type="Label" parent="Backdrop/Panel/Margin/Layout/BuyScreen/BuyScroll/Catalog/GearAndCleanup/GearOffers/RodAddOnsSection"]
-unique_name_in_owner = true
-theme_type_variation = &"FieldSection"
-text = "Rod add-ons"
-
-[node name="RodAddOns" type="VBoxContainer" parent="Backdrop/Panel/Margin/Layout/BuyScreen/BuyScroll/Catalog/GearAndCleanup/GearOffers/RodAddOnsSection"]
-unique_name_in_owner = true
-theme_override_constants/separation = 5
-
-[node name="RodAddOnOwnership" type="Label" parent="Backdrop/Panel/Margin/Layout/BuyScreen/BuyScroll/Catalog/GearAndCleanup/GearOffers/RodAddOnsSection"]
-unique_name_in_owner = true
-theme_override_font_sizes/font_size = 14
-autowrap_mode = 3
 
 [node name="Feedback" type="Label" parent="Backdrop/Panel/Margin/Layout"]
 unique_name_in_owner = true

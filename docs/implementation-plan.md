@@ -14,7 +14,7 @@ The next playtest pass makes catchable fish more active and gives common, rare, 
 
 ## Current checkpoint
 
-[Milestones 26 and 27](#milestone-26--fish-motion-and-timing-feel) are verified. Player review called for a clearer common-to-rare difficulty gap, which informed the rare and trophy windows. Continue with the trader and Sack feedback. The first-time-player run, human listening pass, and cross-device checks from [M25](#milestone-25--integrated-playtest-and-stabilization) carry forward to M30.
+[Milestones 26–28](#milestone-26--fish-motion-and-timing-feel) are verified. Player review called for a clearer common-to-rare difficulty gap, which informed the rare and trophy windows. Continue with Sack feedback and footsteps in M29. The first-time-player run, human listening pass, and cross-device checks from [M25](#milestone-25--integrated-playtest-and-stabilization) carry forward to M30.
 
 ## Completed baseline
 
@@ -647,7 +647,7 @@ The trophy is configured for approximately one in 401 spawned fish, 55–85 cm, 
 
 ## Milestone 28 — Roomier rod add-on cards and trader shortcut
 
-**Planned.** The Buy page makes rod add-ons easy to browse, fitted add-ons are visible on the rod, and B returns to the trader home from Buy or Sell.
+**Verified November 21, 2026.** The Buy page opens with two spacious add-on cards above the gear and cleanup listings. Fitted add-ons appear on the held rod. B returns to the trader home from Buy or Sell.
 
 - Give add-on cards more spacing and clearer visual hierarchy. Show each add-on's icon, effect, price, and ownership for the equipped rod without crowding the surrounding catalog. Keep controls readable and reachable at reduced window sizes.
 - Give Slip guard and Quick spool distinct fitted details on the in-hand rod. Show the corresponding detail immediately after purchase and derive it from the equipped rod's add-on ownership. Check the art with either or both add-ons and keep the grip, rod tip, and line aligned.
@@ -656,6 +656,8 @@ The trophy is configured for approximately one in 401 spawned fish, 55–85 cm, 
 **Verification**
 
 Review Buy at 1280 × 720 and 800 × 450. Fit each add-on, inspect the held rod with both, and buy another rod to verify that its art reflects its separate ownership. Use B from Buy and Sell, including a staged sale or drag, and check focus, balance, and inventory. Recheck Esc, F, and keyboard repeat.
+
+The trader smoke test passed headless and on Intel Iris Xe / OpenGL at both sizes. Rendered Buy captures showed both icons, effects, and prices above the catalog, with Back visible. The test bought both add-ons, fit Quick spool independently on the next rod, and confirmed that prices and ownership followed the equipped rod. Held-rod captures showed Slip guard alone, both pieces with a line attached at the tip, and Quick spool alone. B from a scrolled Buy page or Sell with a staged drag returned focus to Sell and preserved gold and Sack contents. The Esc drag-only press, F, keyboard repeat, and out-of-page B all passed. Continue M29.
 
 ## Milestone 29 — Full Sack feedback and quieter walking
 

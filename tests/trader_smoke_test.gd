@@ -105,9 +105,28 @@ func _play(main: Node) -> void:
 	_check(trader.visible and sell.has_focus() and not pause.visible and sack.item_count == 1 and world.rod.cast_number == 0, "Escape in Sell did not return to the trader home without selling or pausing")
 	_key(KEY_F)
 	_check(sack.item_count == 1 and world.shop.coins == 29, "F in trader home sold the Sack")
+	_key(KEY_B)
+	_check(trader.visible and sell.has_focus(), "B at trader home changed the page or focus")
 	_click(sell)
 	await process_frame
 	_check(confirm.disabled and tray.get_child(0) is Label, "A canceled selection survived returning to Sell")
+	var back: Button = trader.get_node("%Back")
+	_check(back.text == "Back (B)" and back.is_visible_in_tree(), "Sell did not advertise the B shortcut")
+	_click(inventory.get_child(0))
+	await process_frame
+	_begin_drag(tray.get_child(0))
+	_check(root.gui_is_dragging(), "The B shortcut test did not start a staged drag")
+	_send_key(KEY_B, true, true)
+	_send_key(KEY_B, false)
+	_check(root.gui_is_dragging() and not confirm.disabled, "B repeat or release changed the sale")
+	_send_key(KEY_B, true)
+	_check(not root.gui_is_dragging() and sell.has_focus(), "B did not cancel the drag and return home")
+	_mouse(false)
+	_send_key(KEY_B, false)
+	_check(sack.entries() == [opening_entries[1]] and world.shop.coins == 29, "B during a drag changed the inventory or balance")
+	_click(sell)
+	await process_frame
+	_check(confirm.disabled and tray.get_child(0) is Label, "B did not clear the pending sale")
 	_click(trader.get_node("%Back"))
 	await process_frame
 	_click(trader.get_node("%Buy"))
@@ -117,14 +136,28 @@ func _play(main: Node) -> void:
 	var gear: Control = trader.get_node("%Gear")
 	var offers: Array[Node] = gear.find_children("*", "Button", true, false)
 	var shore_rod: Button = offers[0]
+	var catalog: ScrollContainer = trader.get_node("%BuyScroll")
+	var add_ons: Control = trader.get_node("%RodAddOns")
+	_check(back.is_visible_in_tree() and back.text == "Back (B)" and catalog.get_global_rect().encloses(add_ons.get_global_rect()), "Buy did not show both add-on cards and Back at entry")
+	var buttons: Array[Node] = add_ons.find_children("*", "Button", true, false)
+	var guard: Button = buttons[0]
+	var spool: Button = buttons[1]
+	var guard_art: Sprite2D = world.rod.get_node("Pivot/SlipGuard")
+	var spool_art: Sprite2D = world.rod.get_node("Pivot/QuickSpool")
+	for index: int in add_ons.get_child_count():
+		var card: Control = add_ons.get_child(index)
+		var icon: TextureRect = card.find_children("*", "TextureRect", true, false)[0]
+		var labels: Array[Node] = card.find_children("*", "Label", true, false)
+		var add_on: RodAddOn = world.shop.rod_add_ons[index]
+		_check(icon.texture == add_on.art and labels[0].text == add_on.title and labels[1].text == add_on.effect_text(), "An add-on card did not show its icon, name, and effect")
+	_check(not guard_art.visible and not spool_art.visible, "A stock rod displayed fitted art")
 	_check(not shore_rod.disabled and offers[1].disabled and offers[1].text.begins_with("Locked"), "Buy did not show correct rod availability")
+	catalog.ensure_control_visible(shore_rod)
+	await process_frame
 	_click(shore_rod)
 	await process_frame
 	_check(shore_rod.disabled and shore_rod.text == "Owned" and balance.text == "5 gold", "Purchase did not update the visible balance and ownership")
 	_click(shore_rod)
-	var add_ons: Control = trader.get_node("%RodAddOns")
-	var guard: Button = add_ons.find_children("*", "Button", true, false)[0]
-	var catalog: ScrollContainer = trader.get_node("%BuyScroll")
 	_check(guard.disabled and guard.text == "12 gold", "The equipped rod add-on did not show its price and affordability")
 	world.shop.coins += 15
 	world.shop.purchases_changed.emit()
@@ -133,6 +166,38 @@ func _play(main: Node) -> void:
 	_click(guard)
 	await process_frame
 	_check(guard.disabled and guard.text == "Owned · 12 gold" and world.shop.owns_rod_add_on(1, 0) and balance.text == "8 gold", "Trader input did not equip and charge for the add-on once")
+	_check(guard_art.visible and not spool_art.visible, "Slip guard did not appear independently")
+	world.shop.coins += world.shop.rod_add_ons[1].cost
+	world.shop.purchases_changed.emit()
+	_click(spool)
+	await process_frame
+	_check(guard_art.visible and spool_art.visible and guard_art.texture != spool_art.texture and spool.text == "Owned · 15 gold", "Fitting Quick spool did not display both distinct add-ons")
+	var offshore_rod: Button = offers[1]
+	world.shop.coins += world.shop.rod_upgrades[1].cost
+	world.shop.purchases_changed.emit()
+	catalog.ensure_control_visible(offshore_rod)
+	await process_frame
+	_click(offshore_rod)
+	await process_frame
+	_check(world.shop.rod_tier == 2 and not guard_art.visible and not spool_art.visible and guard.text == "12 gold" and spool.text == "15 gold", "Buying a new rod retained another rod's fitted art or card ownership")
+	world.shop.coins += world.shop.rod_add_ons[1].cost
+	world.shop.purchases_changed.emit()
+	catalog.ensure_control_visible(spool)
+	await process_frame
+	_click(spool)
+	await process_frame
+	_check(not guard_art.visible and spool_art.visible and balance.text == "8 gold", "Quick spool did not appear independently on the new rod")
+	var buy: Button = trader.get_node("%Buy")
+	var cleanup_offer: Button = trader.get_node("%Cleanup").find_children("*", "Button", true, false).back()
+	catalog.ensure_control_visible(cleanup_offer)
+	await process_frame
+	_check(catalog.scroll_vertical > 0, "The B test did not scroll Buy")
+	_key(KEY_B)
+	await process_frame
+	_check(trader.visible and not back.visible and sell.has_focus() and not pause.visible and world.shop.coins == 8 and sack.entries() == [opening_entries[1]], "B in Buy did not return home with focus and inventory intact")
+	_click(buy)
+	await process_frame
+	_check(catalog.scroll_vertical == 0 and back.has_focus(), "Reopening Buy did not restore the top and focus")
 	_key(KEY_ESCAPE)
 	await process_frame
 	_check(trader.visible and sell.has_focus() and not pause.visible, "Escape in Buy did not return to the trader home")
@@ -141,6 +206,8 @@ func _play(main: Node) -> void:
 	_check(not trader.visible and not pause.visible and world.rod.cast_number == 0, "Escape at the trader home did not return to shore without pausing")
 	_key(KEY_F)
 	_check(sack.item_count == 1 and world.shop.coins == 8, "F on shore sold the Sack")
+	_key(KEY_B)
+	_check(not trader.visible and not pause.visible and world.rod.cast_number == 0, "B on shore activated a menu or the rod")
 	_key(KEY_E)
 	await process_frame
 	_click(sell)

@@ -1,4 +1,4 @@
-[gd_scene load_steps=33 format=3]
+[gd_scene load_steps=35 format=3]
 
 [ext_resource type="Script" path="res://scripts/systems/shack_shop.gd" id="1_shop"]
 [ext_resource type="Script" path="res://scripts/systems/sack.gd" id="2_sack"]
@@ -17,6 +17,8 @@
 
 [ext_resource type="Texture2D" path="res://assets/trader/shore_drain.svg" id="14_drain"]
 [ext_resource type="Texture2D" path="res://assets/trader/surface_skim.svg" id="15_skim"]
+[ext_resource type="Texture2D" path="res://assets/rods/slip_guard.svg" id="16_guard"]
+[ext_resource type="Texture2D" path="res://assets/rods/quick_spool.svg" id="17_spool"]
 
 [sub_resource type="Resource" id="Resource_shore_rod"]
 script = ExtResource("3_rod_tier")
@@ -43,12 +45,14 @@ cost = 21
 [sub_resource type="Resource" id="Resource_forgiveness"]
 script = ExtResource("13_add_on")
 title = "Slip guard"
+art = ExtResource("16_guard")
 cost = 12
 forgiven_misses = 1
 
 [sub_resource type="Resource" id="Resource_speed"]
 script = ExtResource("13_add_on")
 title = "Quick spool"
+art = ExtResource("17_spool")
 cost = 15
 duration_discount = 0.15
 

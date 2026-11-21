@@ -34,7 +34,7 @@ func bind_audio(audio: AudioScript) -> void:
 
 
 func _input(event: InputEvent) -> void:
-	if _shack_panel.visible and _shack_panel.handle_sell_all(event):
+	if _shack_panel.visible and (_shack_panel.handle_back(event) or _shack_panel.handle_sell_all(event)):
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_cancel"):
 		var viewport: Viewport = get_viewport()
