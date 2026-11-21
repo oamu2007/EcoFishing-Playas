@@ -14,7 +14,7 @@ The next playtest pass makes catchable fish more active and gives common, rare, 
 
 ## Current checkpoint
 
-[Milestone 26](#milestone-26--fish-motion-and-timing-feel) is ready for player review. Work on the trader and Sack feedback can proceed during review. Trophy difficulty in M27 depends on that feedback. The first-time-player run, human listening pass, and cross-device checks from [M25](#milestone-25--integrated-playtest-and-stabilization) carry forward to M30.
+[Milestones 26 and 27](#milestone-26--fish-motion-and-timing-feel) are verified. Player review called for a clearer common-to-rare difficulty gap, which informed the rare and trophy windows. Continue with the trader and Sack feedback. The first-time-player run, human listening pass, and cross-device checks from [M25](#milestone-25--integrated-playtest-and-stabilization) carry forward to M30.
 
 ## Completed baseline
 
@@ -620,11 +620,11 @@ Watch several fish swim farther while staying in valid, reachable water. Exercis
 
 The first-check sample across 128 fish spanned 50.3–82.6%. Each second check moved at least 10 percentage points from the first. Slip guard restarted the same check with the same arc on a missed input. Timeout still released the fish. Seeded spawn counts at 51%, 50%, 25%, and 0% were unchanged at 0, 27, 65, and 101 out of 120 trials per level. Route samples checked the moving cue and collider against the catch point and the full swim loop against stock casting reach and water bounds.
 
-Godot 4.7.2 passed fishing, catchable fish, main startup, and the seeded cleanup playthrough. The stock practice fixture landed common and rare fish at 1280 × 720 and 800 × 450 and checked stage-two pause, resume, and a click over the dial. Both colored counters were legible in rendered captures. The editor import completed with a local settings safe-save error. Player feedback on the common and rare difficulty gap is pending. Continue M28 and M29 during that review.
+Godot 4.7.2 passed fishing, catchable fish, main startup, and the seeded cleanup playthrough. The stock practice fixture landed common and rare fish at 1280 × 720 and 800 × 450 and checked stage-two pause, resume, and a click over the dial. Both colored counters were legible in rendered captures. The editor import completed with a local settings safe-save error. Player review requested a bigger difficulty gap for rare fish. M27 addresses that feedback.
 
 ## Milestone 27 — Trophy fish
 
-**Planned.** A new, exceptionally rare species provides an occasional large, high-value catch.
+**Verified November 21, 2026.** California sheephead joins the roster as a rare, high-value trophy with distinctive dark and coral art.
 
 - Add one visually distinctive trophy species to the existing roster. Give it an exceptionally low encounter weight when fish are eligible, a larger average size, and a substantially higher sale value than ordinary fish. Keep rarity, size range, and payout configurable.
 - Use the timing framework from M26 to make a trophy encounter rewarding to land. Keep it catchable with stock gear and optional for earning upgrades, funding cleanup, or reaching 0% pollution.
@@ -632,6 +632,18 @@ Godot 4.7.2 passed fishing, catchable fish, main startup, and the seeded cleanup
 **Verification**
 
 Use a large seeded sample to compare encounter frequency, average size, and sale value with the existing fish. Use a forced encounter to check the full swim, hook, timing, landing, inventory art, and sale path. Confirm the ordinary progression route works without encountering a trophy fish.
+
+The common check keeps its 204 ms window. Barred surfperch and kelp bass now have two 168 ms checks following the M26 player review. The trophy uses three 150 ms checks, with the same 1.20-second sweep. The added check makes the trophy harder while leaving time to react in each window with stock gear. Press **3** in the practice scene for a controlled trophy encounter. Human review of these revised windows remains open.
+
+| Species | Encounters in 100,000 weighted draws | Mean length | Mean payout |
+| --- | ---: | ---: | ---: |
+| Topsmelt | 49,861 | 16.0 cm | 13.1 gold |
+| Pacific sardine | 29,887 | 18.5 cm | 17.0 gold |
+| Barred surfperch | 15,064 | 23.5 cm | 22.8 gold |
+| Kelp bass | 4,948 | 29.4 cm | 30.2 gold |
+| California sheephead | 240 | 70.9 cm | 96.9 gold |
+
+The trophy is configured for approximately one in 401 spawned fish, 55–85 cm, and 81–111 gold. The forced encounter passed swim, hook, three stock checks, landing, Sack and trader art, and exact sale credit. Both seeded ordinary playthroughs reached 0% and its live rebound without a trophy visit. The editor imported the new art and reported the existing local settings safe-save error. Continue M28 and M29.
 
 ## Milestone 28 — Roomier rod add-on cards and trader shortcut
 

@@ -6,7 +6,7 @@ const CREAM: Color = Color("#fff2ce")
 const INK: Color = Color("#153b3b")
 const MISS: Color = Color("#ac4545")
 const SUCCESS: Color = Color("#3f9462")
-const STAGE_COLORS: Array[Color] = [Color("#f4ce80"), Color("#a4e7f1")]
+const STAGE_COLORS: Array[Color] = [Color("#f4ce80"), Color("#a4e7f1"), Color("#b2e8b7")]
 
 var _progress: float
 var _zone: Vector2

@@ -31,6 +31,7 @@ var _starter_range: float
 var _seen_starter_items: Dictionary[int, bool]
 var _new_starter_times: Array[float]
 var _cleanup_cues: int
+var _trophy_visits: int
 
 
 func _initialize() -> void:
@@ -107,6 +108,7 @@ func _start_session(restarting: bool = false) -> bool:
 	_sale_count = 0
 	_first_threshold_time = -1.0
 	_cleanup_cues = 0
+	_trophy_visits = 0
 	_starter_range = _rod.maximum_cast_range
 	_seen_starter_items.clear()
 	_new_starter_times.clear()
@@ -114,6 +116,7 @@ func _start_session(restarting: bool = false) -> bool:
 		_seen_starter_items[item.get_instance_id()] = true
 	_world.pollution.pollution_changed.connect(_record_threshold)
 	_world.cleanup_work.work_started.connect(_count_cleanup_cue)
+	_world.catchable_fish.fish_spawned.connect(_count_trophy_visit)
 	_check(_sack.item_count == 0 and _sack.capacity == 3 and _shop.coins == 0 and _coin_amount.text == "0 gold" and _shop.rod_tier == 0 and _shop.sack_tier == 0, "Fresh session retained Sack, gold, or gear progress")
 	for tier: int in range(_shop.rod_upgrades.size() + 1):
 		for add_on: int in _shop.rod_add_ons.size():
@@ -194,6 +197,7 @@ func _play_session(window: String) -> void:
 	_check(is_equal_approx(_water.displayed_pollution, rebound_target) and _visible_ambient_count() == zero_ambient, "Water and ambient fish did not settle after the rebound")
 	print("Clean-water window at %.1fs, live rebound to %d%%, %d ambient fish" % [clean_time, _world.pollution.current_pollution, _visible_ambient_count()])
 	await _check_cleanup_sites()
+	_check(_trophy_visits == 0, "The seeded ordinary progression route encountered a trophy")
 	var longest_gap: float = 0.0
 	for index: int in range(1, _new_starter_times.size()):
 		longest_gap = maxf(longest_gap, _new_starter_times[index] - _new_starter_times[index - 1])
@@ -219,6 +223,11 @@ func _record_threshold(normalized: float) -> void:
 
 func _count_cleanup_cue(_watch_cue: String) -> void:
 	_cleanup_cues += 1
+
+
+func _count_trophy_visit(fish: CatchableFish) -> void:
+	if fish.species.timing_checks == 3:
+		_trophy_visits += 1
 
 
 func _check_cleanup_sites() -> void:

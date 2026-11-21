@@ -39,6 +39,7 @@ var fish_timing_saves_left: int = 0
 var fish_secured: bool = false
 var _timing_rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var _timing_zone: Vector2
+var _timing_window: float
 var _forgiven_misses: int = 0
 var _duration_discount: float = 0.0
 var _elapsed: float = 0.0
@@ -88,11 +89,12 @@ func equipped_retrieval_duration() -> float:
 	return retrieval_duration * (1.0 - _duration_discount)
 
 
-func start_fish_timing(checks: int) -> void:
+func start_fish_timing(checks: int, window: float = 0.0) -> void:
 	if state == State.WAITING:
 		fish_timing_stage = 1
 		fish_timing_checks = checks
 		fish_timing_saves_left = _forgiven_misses
+		_timing_window = clampf(window, 0.05, 0.6) if window > 0.0 else fish_timing_window
 		_place_fish_timing_zone()
 		_set_state(State.TIMING)
 
@@ -106,7 +108,7 @@ func fish_timing_zone() -> Vector2:
 
 
 func _place_fish_timing_zone() -> void:
-	var half_window: float = fish_timing_window * 0.5
+	var half_window: float = _timing_window * 0.5
 	var latest_center: float = 1.0 - half_window
 	var earliest_center: float = minf(latest_center, half_window + fish_timing_reaction_time / fish_timing_duration)
 	var first_center: float = clampf(fish_timing_centers.x, earliest_center, latest_center)

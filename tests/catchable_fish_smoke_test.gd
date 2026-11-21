@@ -30,6 +30,7 @@ func _run() -> void:
 	print("Catchable fish seeded trials per 120 at 51/50/25/0: %s" % str([dirty, threshold, halfway_to_clean, clean]))
 	_test_timing_placement()
 	await _test_recovery_and_sales()
+	await _test_trophy()
 	print("Catchable fish smoke test: %d failures" % _failures)
 	quit(0 if _failures == 0 else 1)
 
@@ -67,7 +68,9 @@ func _spawn_trials(points: int) -> int:
 		fish._physics_process(fish.lifetime)
 		_check(manager.fish.is_empty() and not fish.can_hook(), "Expired fish was still eligible or counted against cap")
 	if points == 0:
-		_check(species_seen.size() == 4, "Clean-water sample did not exercise all species")
+		for species: FishSpecies in manager.species_catalog:
+			if species.timing_checks < 3:
+				_check(species_seen.has(species.title), "Clean-water sample missed %s" % species.title)
 	session.free()
 	return spawned
 
@@ -259,6 +262,7 @@ func _test_rare_timing_and_add_ons(world: LevelScript, spot: Vector2, dial: Timi
 	var title: Label = dial.get_node("Title")
 	var first_color: Color = title.get_theme_color("font_color")
 	_check(title.text == "1/2" and dial._zone == rod.fish_timing_zone(), "The first check did not display the current stage and arc")
+	_check(is_equal_approx((dial._zone.y - dial._zone.x) * rod.fish_timing_duration, 0.168), "Rare fish did not use the narrowed window")
 	_press_in_zone(rod, timing_key)
 	_check(rod.state == FishingRod.State.TIMING and rod.fish_timing_stage == 2, "Rare fish became secured before the second check")
 	_check(title.text == "2/2" and dial._zone == rod.fish_timing_zone() and title.get_theme_color("font_color") != first_color, "The second check did not display its new stage and arc")
@@ -307,7 +311,7 @@ func _hook_rare(manager: CatchableFishManager, rod: FishingRod, spot: Vector2) -
 	var rare: CatchableFish = _next_fish(manager)
 	_check(rare != null, "No fish for a two-check fixture")
 	if rare != null:
-		rare.species = manager.species_catalog.back()
+		rare.species = manager.species_catalog[3]
 		rare.set_physics_process(false)
 		rare.global_position = spot
 		_cast(rod, spot)
@@ -336,10 +340,94 @@ func _test_prices(species: Array[FishSpecies], trash_price: int) -> void:
 	var small: int = sample.sale_price()
 	sample.length_cm = species[0].maximum_length_cm
 	var large: int = sample.sale_price()
-	sample.species = species.back()
+	sample.species = species[3]
 	var rare: int = sample.sale_price()
 	_check(small > trash_price and large > small and rare > large, "Size and rarity did not increase fish sale value")
 	sample.free()
+
+
+func _test_trophy() -> void:
+	var session: Node = SESSION_SCENE.instantiate()
+	root.add_child(session)
+	var world: LevelScript = session.get_node("World")
+	var manager: CatchableFishManager = world.catchable_fish
+	var rod: FishingRod = world.rod
+	var trophy: FishSpecies = manager.species_catalog.back()
+	var specimen: CatchableFish = FishScene.instantiate()
+	var sizes: RandomNumberGenerator = RandomNumberGenerator.new()
+	sizes.seed = 27
+	manager._rng.seed = 27
+	var sample_size: int = 100000
+	var counts: Dictionary[FishSpecies, int] = {}
+	var lengths: Dictionary[FishSpecies, int] = {}
+	var values: Dictionary[FishSpecies, int] = {}
+	for draw: int in sample_size:
+		var species: FishSpecies = manager._roll_species()
+		specimen.species = species
+		specimen.length_cm = sizes.randi_range(species.minimum_length_cm, species.maximum_length_cm)
+		counts[species] = counts.get(species, 0) + 1
+		lengths[species] = lengths.get(species, 0) + specimen.length_cm
+		values[species] = values.get(species, 0) + specimen.sale_price()
+	specimen.free()
+	var trophy_count: int = counts.get(trophy, 0)
+	_check(trophy_count >= 150 and trophy_count <= 350, "Seeded trophy frequency fell outside 0.15–0.35 percent")
+	for species: FishSpecies in manager.species_catalog:
+		var count: int = counts.get(species, 0)
+		if count == 0:
+			_check(false, "Seeded catalog sample missed %s" % species.title)
+			continue
+		var mean_length: float = float(lengths[species]) / count
+		var mean_value: float = float(values[species]) / count
+		print("%s: %d/%d, mean %.1f cm, %.1f gold" % [species.title, count, sample_size, mean_length, mean_value])
+		if species != trophy:
+			_check(count > trophy_count and mean_length < trophy.minimum_length_cm and mean_value < 40.0, "Trophy rarity, size, or value did not stand apart")
+
+	world.trash_manager.arrivals_enabled = false
+	manager.spawns_enabled = false
+	rod.set_process(false)
+	var player: Node2D = world.get_node("Player")
+	var offset: Vector2 = rod.global_position - player.global_position
+	player.global_position = Vector2(world.shore_start.x, manager._spawn_bounds().get_center().y) - offset
+	var spot: Vector2 = manager._spawn_bounds().get_center()
+	manager._add_fish(spot, trophy)
+	var fish: CatchableFish = manager.fish.back()
+	var sprite: Sprite2D = fish.get_node("Visual/Silhouette/Sprite")
+	var start: Vector2 = fish.global_position
+	fish._physics_process(0.5)
+	_check(fish.species == trophy and sprite.texture == trophy.art and not fish.global_position.is_equal_approx(start) and fish.can_hook_at(spot), "Trophy did not show its own art or swim inside the catch route")
+	_cast(rod, spot)
+	var timing_key: InputEventKey = InputEventKey.new()
+	timing_key.physical_keycode = KEY_SPACE
+	timing_key.pressed = true
+	var dial: TimingDialScript = session.get_node("HUD/FishTiming")
+	var title: Label = dial.get_node("Title")
+	for stage: int in range(1, 4):
+		var zone: Vector2 = rod.fish_timing_zone()
+		_check(fish.hooked and rod.state == FishingRod.State.TIMING and title.text == "%d/3" % stage, "Trophy did not show its expected stage")
+		_check(is_equal_approx((zone.y - zone.x) * rod.fish_timing_duration, 0.150), "Trophy did not use a 150 ms window")
+		_press_in_zone(rod, timing_key)
+	_check(rod.fish_secured and world.shop.rod_tier == 0 and rod.fish_timing_saves_left == 0, "Stock timing did not secure the trophy")
+	_retrieve(rod)
+	var entries: Array[Sack.Entry] = world.sack.entries()
+	var price: int = fish.sale_price()
+	_check(fish.collected and world.sack.fish_count == 1 and manager.fish.is_empty() and price >= 81 and price <= 111, "Trophy landing or payout was wrong")
+	if not entries.is_empty():
+		_check(entries[0].art == trophy.art and entries[0].label == fish.display_name() and entries[0].value == price, "The Sack did not preserve trophy art, size, or payout")
+	player.global_position = session.get_node("World/FishingShack").global_position
+	var open: InputEventKey = InputEventKey.new()
+	open.physical_keycode = KEY_E
+	open.pressed = true
+	session._unhandled_input(open)
+	var panel: CanvasLayer = session.get_node("ShackPanel")
+	TraderFixture.select_all(panel)
+	var tray: Control = panel.get_node("%TrayItems")
+	var sell: Button = panel.get_node("%ConfirmSale")
+	var card: Button = tray.get_child(0) as Button
+	_check(card != null and card.icon == trophy.art and sell.text.contains(str(price)), "The trophy did not appear with its art and quote in Sell")
+	sell.pressed.emit()
+	_check(world.sack.fish_count == 0 and world.shop.coins == price, "Trophy sale did not credit the exact value")
+	await process_frame
+	session.free()
 
 
 func _cast(rod: FishingRod, point: Vector2) -> void:

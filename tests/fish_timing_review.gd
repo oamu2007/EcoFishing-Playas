@@ -26,7 +26,7 @@ func _start_session() -> void:
 	instructions.theme_type_variation = &"FieldNote"
 	instructions.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	instructions.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	instructions.text = "1  Common fish    ·    2  Rare fish\nClick or press Space in green, then click to reel in."
+	instructions.text = "1  Common fish    ·    2  Rare fish    ·    3  Trophy fish\nClick or press Space in green, then click to reel in."
 	_session.get_node("HUD").add_child(instructions)
 	instructions.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE, 18)
 
@@ -34,7 +34,7 @@ func _start_session() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not event is InputEventKey or not event.pressed or event.echo:
 		return
-	if event.physical_keycode not in [KEY_1, KEY_2] or _session == null or not _session.can_process():
+	if event.physical_keycode not in [KEY_1, KEY_2, KEY_3] or _session == null or not _session.can_process():
 		return
 	var world: LevelScript = _session.get_node("World")
 	var rod: FishingRod = world.rod
@@ -43,9 +43,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	get_viewport().set_input_as_handled()
 	if world.sack.free_slots == 0:
 		world.sack.remove_entries(world.sack.entries())
-	var band: int = 0 if event.physical_keycode == KEY_1 else 2
+	var checks: int = event.physical_keycode - KEY_1 + 1
 	var manager: CatchableFishManager = world.catchable_fish
-	var species: FishSpecies = manager.species_catalog[band + manager._rng.randi_range(0, 1)]
+	var choices: Array[FishSpecies] = manager.species_catalog.filter(func(species: FishSpecies) -> bool: return species.timing_checks == checks)
+	var species: FishSpecies = choices[manager._rng.randi_range(0, choices.size() - 1)]
 	var player: CharacterBody2D = world.get_node("Player")
 	var rod_offset: Vector2 = rod.global_position - player.global_position
 	var shore_y: float = (world.shore_start.y + world.shore_end.y) * 0.5

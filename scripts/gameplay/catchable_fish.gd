@@ -21,7 +21,9 @@ func _ready() -> void:
 	super._ready()
 	swim_center = global_position
 	_sprite.texture = inventory_art()
-	_silhouette.scale = Vector2.ONE * remap(clampf(length_cm, 10.0, 38.0), 10.0, 38.0, 0.85, 1.14)
+	var base_scale: float = remap(clampf(length_cm, 10.0, 38.0), 10.0, 38.0, 0.85, 1.14)
+	var large_fish_scale: float = remap(clampf(length_cm, 38.0, 85.0), 38.0, 85.0, 0.0, 0.12)
+	_silhouette.scale = Vector2.ONE * (base_scale + large_fish_scale)
 
 
 func configure_visit(center: Vector2, radius: Vector2, phase: float, speed: float) -> void:

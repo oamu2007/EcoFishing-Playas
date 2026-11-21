@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://scripts/systems/catchable_fish_manager.gd" id="1_manager"]
 [ext_resource type="Script" path="res://scripts/systems/fish_species.gd" id="2_species"]
@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" path="res://assets/fish/pacific_sardine.svg" id="4_sardine"]
 [ext_resource type="Texture2D" path="res://assets/fish/barred_surfperch.svg" id="5_surfperch"]
 [ext_resource type="Texture2D" path="res://assets/fish/kelp_bass.svg" id="6_bass"]
+[ext_resource type="Texture2D" path="res://assets/fish/california_sheephead.svg" id="7_sheephead"]
 
 [sub_resource type="Resource" id="Resource_topsmelt"]
 script = ExtResource("2_species")
@@ -30,6 +31,7 @@ maximum_length_cm = 30
 spawn_weight = 15.0
 rarity_bonus = 4
 timing_checks = 2
+timing_window = 0.14
 art = ExtResource("5_surfperch")
 
 [sub_resource type="Resource" id="Resource_bass"]
@@ -40,8 +42,21 @@ maximum_length_cm = 38
 spawn_weight = 5.0
 rarity_bonus = 7
 timing_checks = 2
+timing_window = 0.14
 art = ExtResource("6_bass")
+
+[sub_resource type="Resource" id="Resource_sheephead"]
+script = ExtResource("2_species")
+title = "California sheephead"
+minimum_length_cm = 55
+maximum_length_cm = 85
+spawn_weight = 0.25
+rarity_bonus = 25
+timing_checks = 3
+timing_window = 0.125
+gold_per_centimeter = 1.0
+art = ExtResource("7_sheephead")
 
 [node name="CatchableFishManager" type="Node2D"]
 script = ExtResource("1_manager")
-species_catalog = Array[ExtResource("2_species")]([SubResource("Resource_topsmelt"), SubResource("Resource_sardine"), SubResource("Resource_surfperch"), SubResource("Resource_bass")])
+species_catalog = Array[ExtResource("2_species")]([SubResource("Resource_topsmelt"), SubResource("Resource_sardine"), SubResource("Resource_surfperch"), SubResource("Resource_bass"), SubResource("Resource_sheephead")])

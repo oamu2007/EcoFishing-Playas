@@ -94,8 +94,10 @@ func _attach(target: FishingTarget) -> void:
 		if target is OceanTrash:
 			_trash_held += 1
 		elif target is CatchableFish:
-			var checks: int = target.species.timing_checks if target.species != null else 1
-			_rod.start_fish_timing(checks)
+			var species: FishSpecies = target.species
+			var checks: int = species.timing_checks if species != null else 1
+			var window: float = species.timing_window if species != null else 0.0
+			_rod.start_fish_timing(checks, window)
 		catch_hooked.emit(target.display_name())
 
 
