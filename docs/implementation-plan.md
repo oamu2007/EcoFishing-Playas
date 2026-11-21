@@ -1,6 +1,6 @@
 # Vertical slice implementation plan
 
-The `roadmap-implementation` branch starts from playable revision `f812046` on `feature/dynamic-water`. Revision `0ee166b` completes M7–M12, and `97b5709` completes the verified M13–M18 follow-up. M19–M25 build on the M18 checkpoint.
+The `roadmap-implementation` branch starts from playable revision `f812046` on `feature/dynamic-water`. Revision `0ee166b` completes M7–M12, `97b5709` completes M13–M18, and `d91844c` completes the verified M19–M25 follow-up. M26–M30 build on the M25 checkpoint.
 
 ## Definition of done
 
@@ -10,9 +10,11 @@ After the follow-up, trash arrives at a gentler pace, upgrades take several trip
 
 In the next pass, incoming trash keeps moving inward until it reaches the equipped rod's horizontal range. Fish take more precise timing to land, optional add-ons are bought for individual rods, and more cleanup purchases deliver smaller improvements. The title and pause screens have separate layouts, contextual help stays hidden until requested, the trader supports a one-action sale, and music and sound effects cover the full session.
 
+The next playtest pass makes catchable fish more active and gives common, rare, and trophy encounters distinct stakes. The trader has roomier add-on cards and a shortcut back from Buy or Sell. Purchased add-ons are visible on the rod. A full Sack gives brief feedback at cast time, and footsteps sit lower in the mix.
+
 ## Current checkpoint
 
-M19–M25 are implemented and verified against the M18 checkpoint. The next checks are an independent first-time-player run, a human listening pass, and graphics and performance verification on another device. See [Milestone 25](#milestone-25--integrated-playtest-and-stabilization) for measurements and pending checks.
+Start with [Milestone 26](#milestone-26--fish-motion-and-timing-feel) and share a playable comparison before finalizing trophy fish difficulty. Continue independent work during review under the workflow in [AGENTS.md](../AGENTS.md). The first-time-player run, human listening pass, and cross-device checks from [M25](#milestone-25--integrated-playtest-and-stabilization) carry forward to M30.
 
 ## Completed baseline
 
@@ -588,6 +590,63 @@ Both routes left all eleven sites complete and showed six ambient fish at 0% bef
 - Run an independent first-time playthrough to assess discovery of Help, the trader, and two-stage fishing, and how the first three trips feel.
 - Listen through the full music transition and overlapping gameplay and interface sounds to judge the seam, clarity, and balance by ear.
 - Check graphics, frame pacing, UI legibility, and audio on another device.
+
+## Milestone 26 — Fish motion and timing feel
+
+**Next.** Catchable fish cover more water. Common fish require attention, and rare fish are noticeably harder to land.
+
+- Increase the travel speed or route variation of catchable fish so they visibly swim farther over the same time. Keep their target cue and catch area aligned to the moving fish. Preserve reachable routes, water bounds, and the current pollution threshold.
+- Shorten the dial sweep slightly from the M25 baseline of 1.30 seconds. Vary the green success zone across a noticeably wider spread of positions between fish and between checks. Keep the zone steady during each check, preserve enough reaction time for the earliest position, and keep the whole window inside the sweep.
+- Replace the multi-check label with a compact, colored stage counter such as `1/2` and `2/2`. Keep the count readable over the dial and use the digits to communicate progress independently of color. Keep one deliberate check for common fish and use the existing multi-check distinction for rare fish, with a more demanding window only if playtesting calls for it.
+
+**Playable review checkpoint**
+
+Share a build or quick test scene with repeatable common and rare encounters. Let the player try several of each without waiting for natural spawns. Record sweep time, effective success-window duration, and the spread of zone positions relative to M25. Ask whether common fish take attention and rare fish feel clearly harder. Continue the independent trader and feedback work during the review, and use the feedback to settle trophy timing in M27.
+
+**Verification**
+
+Watch several fish swim farther while staying in valid, reachable water. Exercise early and late zone positions, both multi-check labels, second-stage misses, Slip guard, pause and resume, and successful landing with stock gear. Confirm that the displayed green zone and the accepted input interval agree.
+
+## Milestone 27 — Trophy fish
+
+**Planned.** A new, exceptionally rare species provides an occasional large, high-value catch.
+
+- Add one visually distinctive trophy species to the existing roster. Give it an exceptionally low encounter weight when fish are eligible, a larger average size, and a substantially higher sale value than ordinary fish. Keep rarity, size range, and payout configurable.
+- Use the timing framework from M26 to make a trophy encounter rewarding to land. Keep it catchable with stock gear and optional for earning upgrades, funding cleanup, or reaching 0% pollution.
+
+**Verification**
+
+Use a large seeded sample to compare encounter frequency, average size, and sale value with the existing fish. Use a forced encounter to check the full swim, hook, timing, landing, inventory art, and sale path. Confirm the ordinary progression route works without encountering a trophy fish.
+
+## Milestone 28 — Roomier rod add-on cards and trader shortcut
+
+**Planned.** The Buy page makes rod add-ons easy to browse, fitted add-ons are visible on the rod, and B returns to the trader home from Buy or Sell.
+
+- Give add-on cards more spacing and clearer visual hierarchy. Show each add-on's icon, effect, price, and ownership for the equipped rod without crowding the surrounding catalog. Keep controls readable and reachable at reduced window sizes.
+- Give Slip guard and Quick spool distinct fitted details on the in-hand rod. Show the corresponding detail immediately after purchase and derive it from the equipped rod's add-on ownership. Check the art with either or both add-ons and keep the grip, rod tip, and line aligned.
+- Add a visible `Back (B)` shortcut in Buy and Sell. A fresh B press returns to trader home. On Sell, cancel any active drag or pending selection without selling or changing the Sack. Ignore B on trader home and outside the trader, and preserve the existing Esc and Sell All behavior.
+
+**Verification**
+
+Review Buy at 1280 × 720 and 800 × 450. Fit each add-on, inspect the held rod with both, and buy another rod to verify that its art reflects its separate ownership. Use B from Buy and Sell, including a staged sale or drag, and check focus, balance, and inventory. Recheck Esc, F, and keyboard repeat.
+
+## Milestone 29 — Full Sack feedback and quieter walking
+
+**Planned.** Casting with a full Sack gives immediate, brief feedback, and walking sounds quieter.
+
+- Show a small, short-lived `Sack full` pop-up as soon as a cast is attempted with no space. Keep it available with Help off as action feedback. Reuse or refresh the same pop-up on repeated attempts, and keep it clear of the aim point and timing dial. Preserve the existing cast and inventory rules.
+- Lower the volume of footsteps relative to M25 while keeping them audible. Adjust the footstep cue independently of the music and other action effects.
+
+**Verification**
+
+Cast with a full Sack and with one free slot, with Help both on and off. Verify that the pop-up appears immediately only for the full Sack, clears on its own, and never stacks. Listen while walking into the next cast and compare footsteps, music, and fishing effects against M25.
+
+## Milestone 30 — Focused playtest and regression checks
+
+**Planned.** A stock-gear session demonstrates the revised fishing feel, trader navigation, and action feedback, with a separate controlled trophy encounter.
+
+- Play common and rare catches back to back, exercise a controlled trophy encounter and sale, fit add-ons, and return to the trader home with B from both pages. Check a full-Sack cast and listen for the quieter steps. Record which game-feel feedback was reviewed and what remains open.
+- Run Godot import, main-scene startup, and relevant fishing, trader, session, audio, and graphics checks at the supported test sizes. Check that cleanup progression and continuous music still work. Update the README and architecture notes where controls, behavior, or ownership changed. Record pending human or cross-device checks separately from automated results.
 
 ## Scope guardrails
 
