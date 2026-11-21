@@ -19,6 +19,7 @@ const FISH_SCENE: PackedScene = preload("res://scenes/gameplay/catchable_fish.ts
 @export var starter_band: Vector2 = Vector2(88.0, 136.0)
 @export var shore_search_distance: float = 190.0
 @export var swim_radius: Vector2 = Vector2(10.0, 22.0)
+@export var swim_speed: Vector2 = Vector2(1.15, 1.60)
 @export var minimum_spacing: float = 82.0
 
 var fish: Array[CatchableFish] = []
@@ -70,7 +71,9 @@ func _spawn() -> void:
 	for _attempt: int in range(12):
 		var center: Vector2 = Vector2(_rng.randf_range(bounds.position.x, bounds.end.x), _rng.randf_range(bounds.position.y, bounds.end.y))
 		if _route_is_clear(center):
-			_add_fish(center)
+			var species: FishSpecies = _roll_species()
+			if species != null:
+				_add_fish(center, species)
 			return
 
 
@@ -97,10 +100,7 @@ func _route_is_clear(center: Vector2) -> bool:
 	return true
 
 
-func _add_fish(center: Vector2) -> void:
-	var species: FishSpecies = _roll_species()
-	if species == null:
-		return
+func _add_fish(center: Vector2, species: FishSpecies) -> void:
 	var visitor: CatchableFish = FISH_SCENE.instantiate()
 	visitor.species = species
 	visitor.length_cm = _rng.randi_range(species.minimum_length_cm, species.maximum_length_cm)
@@ -109,7 +109,7 @@ func _add_fish(center: Vector2) -> void:
 	visitor.visit_ended.connect(_on_fish_visit_ended)
 	visitor.landed.connect(_on_fish_landed)
 	add_child(visitor)
-	visitor.configure_visit(center, swim_radius, _rng.randf_range(0.0, TAU), _rng.randf_range(0.65, 0.95))
+	visitor.configure_visit(center, swim_radius, _rng.randf_range(0.0, TAU), _rng.randf_range(swim_speed.x, swim_speed.y))
 	fish.append(visitor)
 	fish_spawned.emit(visitor)
 

@@ -6,28 +6,36 @@ const CREAM: Color = Color("#fff2ce")
 const INK: Color = Color("#153b3b")
 const MISS: Color = Color("#ac4545")
 const SUCCESS: Color = Color("#3f9462")
+const STAGE_COLORS: Array[Color] = [Color("#f4ce80"), Color("#a4e7f1")]
 
 var _progress: float
 var _zone: Vector2
 var _showing_result: bool
+
+@onready var _title: Label = $Title
+@onready var _cue: Label = $Cue
+@onready var _guard: Label = $Guard
 
 
 func update_timing(rod: FishingRod, guard_used: bool) -> void:
 	_showing_result = false
 	_progress = rod.fish_timing_progress()
 	_zone = rod.fish_timing_zone()
-	$Title.text = "Fish on!" if rod.fish_timing_checks == 1 else "Check %d of %d" % [rod.fish_timing_stage, rod.fish_timing_checks]
-	$Cue.text = "Click or press Space in the green arc"
-	$Guard.visible = guard_used or rod.fish_timing_saves_left > 0
-	$Guard.text = "Slip guard used · try again" if guard_used else "Slip guard ready"
+	var multi_check: bool = rod.fish_timing_checks > 1
+	_title.text = "%d/%d" % [rod.fish_timing_stage, rod.fish_timing_checks] if multi_check else "Fish on!"
+	_title.add_theme_color_override("font_color", STAGE_COLORS[(rod.fish_timing_stage - 1) % STAGE_COLORS.size()] if multi_check else CREAM)
+	_cue.text = "Click or press Space in the green arc"
+	_guard.visible = guard_used or rod.fish_timing_saves_left > 0
+	_guard.text = "Slip guard used · try again" if guard_used else "Slip guard ready"
 	queue_redraw()
 
 
 func show_result(title: String, cue: String) -> void:
 	_showing_result = true
-	$Title.text = title
-	$Cue.text = cue
-	$Guard.hide()
+	_title.text = title
+	_title.add_theme_color_override("font_color", CREAM)
+	_cue.text = cue
+	_guard.hide()
 	show()
 	queue_redraw()
 

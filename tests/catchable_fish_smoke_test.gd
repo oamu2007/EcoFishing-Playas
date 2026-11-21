@@ -2,6 +2,8 @@ extends SceneTree
 
 const SESSION_SCENE: PackedScene = preload("res://scenes/gameplay/session.tscn")
 const FishScene: PackedScene = preload("res://scenes/gameplay/catchable_fish.tscn")
+const RodScene: PackedScene = preload("res://scenes/gameplay/fishing_rod.tscn")
+const TimingDialScript = preload("res://scripts/ui/fish_timing_dial.gd")
 const LevelScript = preload("res://scripts/gameplay/playas_vertical_slice.gd")
 const PlayerScript = preload("res://scripts/gameplay/player.gd")
 const TraderFixture = preload("res://tests/trader_fixture.gd")
@@ -26,6 +28,7 @@ func _run() -> void:
 	var clean: int = _spawn_trials(0)
 	_check(dirty == 0 and threshold > 0 and threshold < halfway_to_clean and halfway_to_clean < clean, "Seeded spawn rates did not rise with actual water quality")
 	print("Catchable fish seeded trials per 120 at 51/50/25/0: %s" % str([dirty, threshold, halfway_to_clean, clean]))
+	_test_timing_placement()
 	await _test_recovery_and_sales()
 	print("Catchable fish smoke test: %d failures" % _failures)
 	quit(0 if _failures == 0 else 1)
@@ -54,12 +57,55 @@ func _spawn_trials(points: int) -> int:
 		var point: Vector2 = fish.global_position
 		var shore: Vector2 = Vector2(world.shore_start.x, point.y)
 		_check(not point.is_equal_approx(start) and world.rod.invalid_target_reason_from(shore, point).is_empty(), "Fish did not swim within reachable water")
+		_check(fish._swim_speed > 0.95, "Fish did not swim faster than the M25 speed range")
+		var cast_origin: Vector2 = Vector2(world.shore_start.x, clampf(world.rod.global_position.y, world.shore_start.y, world.shore_end.y))
+		for sample: int in 12:
+			fish._physics_process(TAU / (12.0 * fish._swim_speed))
+			var route_point: Vector2 = fish.global_position
+			_check(world.rod.invalid_target_reason_from(cast_origin, route_point).is_empty(), "Fish route left starter reach or water")
+			_check(fish.can_hook_at(route_point) and fish.get_node("CollisionShape2D").global_position.is_equal_approx(route_point) and fish.visual.global_position.is_equal_approx(route_point), "Fish cue or catch area left the moving target")
 		fish._physics_process(fish.lifetime)
 		_check(manager.fish.is_empty() and not fish.can_hook(), "Expired fish was still eligible or counted against cap")
 	if points == 0:
 		_check(species_seen.size() == 4, "Clean-water sample did not exercise all species")
 	session.free()
 	return spawned
+
+
+func _test_timing_placement() -> void:
+	var rod: FishingRod = RodScene.instantiate()
+	root.add_child(rod)
+	rod._timing_rng.seed = 26
+	var first_center: float = 1.0
+	var last_center: float = 0.0
+	for attempt: int in 128:
+		rod._set_state(FishingRod.State.WAITING)
+		rod.start_fish_timing(2)
+		var first_zone: Vector2 = rod.fish_timing_zone()
+		var center: float = (first_zone.x + first_zone.y) * 0.5
+		first_center = minf(first_center, center)
+		last_center = maxf(last_center, center)
+		rod._process(rod.fish_timing_duration * center)
+		_check(rod.fish_timing_zone() == first_zone, "The green arc moved during a check")
+		rod._press_fish_timing()
+		var second_zone: Vector2 = rod.fish_timing_zone()
+		_check(rod.fish_timing_stage == 2 and absf((second_zone.x + second_zone.y) * 0.5 - center) >= 0.099, "The next check did not place a distinct arc")
+		for zone: Vector2 in [first_zone, second_zone]:
+			_check(zone.x * rod.fish_timing_duration >= rod.fish_timing_reaction_time and zone.y < 1.0 and is_equal_approx(zone.y - zone.x, rod.fish_timing_window), "Timing window crossed reaction or sweep bounds")
+	_check(first_center < 0.52 and last_center > 0.81, "Seeded checks did not exercise both ends of the center range")
+	print("M26 seeded first-check centers: %.3f–%.3f over 128 fish" % [first_center, last_center])
+	for center: float in [0.50, 0.83]:
+		rod.fish_timing_centers = Vector2(center, center)
+		for edge: int in 2:
+			for inside: bool in [true, false]:
+				rod._set_state(FishingRod.State.WAITING)
+				rod.start_fish_timing(1)
+				var zone: Vector2 = rod.fish_timing_zone()
+				var offset: float = 0.001 if inside == (edge == 0) else -0.001
+				rod._process(rod.fish_timing_duration * (zone[edge] + offset))
+				rod._press_fish_timing()
+				_check(rod.fish_secured == inside, "Input near a visible arc edge had the wrong result")
+	rod.free()
 
 
 func _test_recovery_and_sales() -> void:
@@ -174,7 +220,7 @@ func _test_recovery_and_sales() -> void:
 		_retrieve(rod)
 		_check(not excess.hooked and sack.item_count == 0, "Retrieval sweep hooked a fish without a landing")
 		_test_misses(manager, rod, sack, spot)
-		_test_rare_timing_and_add_ons(world, spot)
+		_test_rare_timing_and_add_ons(world, spot, session.get_node("HUD/FishTiming"))
 	await process_frame
 	_check(not is_instance_valid(fish), "Landed fish did not leave the water")
 	session.free()
@@ -200,7 +246,7 @@ func _test_misses(manager: CatchableFishManager, rod: FishingRod, sack: Sack, sp
 	_check(rod.state == FishingRod.State.IDLE, "A new cast did not recover after timing failures")
 
 
-func _test_rare_timing_and_add_ons(world: LevelScript, spot: Vector2) -> void:
+func _test_rare_timing_and_add_ons(world: LevelScript, spot: Vector2, dial: TimingDialScript) -> void:
 	var rod: FishingRod = world.rod
 	var shop: ShackShop = world.shop
 	var manager: CatchableFishManager = world.catchable_fish
@@ -210,8 +256,12 @@ func _test_rare_timing_and_add_ons(world: LevelScript, spot: Vector2) -> void:
 	var rare: CatchableFish = _hook_rare(manager, rod, spot)
 	if rare == null:
 		return
+	var title: Label = dial.get_node("Title")
+	var first_color: Color = title.get_theme_color("font_color")
+	_check(title.text == "1/2" and dial._zone == rod.fish_timing_zone(), "The first check did not display the current stage and arc")
 	_press_in_zone(rod, timing_key)
 	_check(rod.state == FishingRod.State.TIMING and rod.fish_timing_stage == 2, "Rare fish became secured before the second check")
+	_check(title.text == "2/2" and dial._zone == rod.fish_timing_zone() and title.get_theme_color("font_color") != first_color, "The second check did not display its new stage and arc")
 	_retrieve(rod)
 	_check(rod.state == FishingRod.State.IDLE and rare.is_queued_for_deletion(), "Missing the second check did not release the fish")
 	rare = _hook_rare(manager, rod, spot)
@@ -235,8 +285,10 @@ func _test_rare_timing_and_add_ons(world: LevelScript, spot: Vector2) -> void:
 		rare = _hook_rare(manager, rod, spot)
 		if rare == null:
 			return
-		_retrieve(rod)
+		var first_zone: Vector2 = rod.fish_timing_zone()
+		rod._input(timing_key)
 		_check(rod.state == FishingRod.State.TIMING and not rare.is_queued_for_deletion() and rod.fish_timing_saves_left == 0, "Slip guard did not allow one retry")
+		_check(rod.fish_timing_stage == 1 and rod.fish_timing_zone() == first_zone and is_zero_approx(rod.fish_timing_progress()), "Slip guard changed the check it retried")
 		_press_in_zone(rod, timing_key)
 		_retrieve(rod)
 		_check(rod.state == FishingRod.State.IDLE and rare.is_queued_for_deletion(), "Slip guard retried another missed input")
@@ -244,8 +296,9 @@ func _test_rare_timing_and_add_ons(world: LevelScript, spot: Vector2) -> void:
 		if rare == null:
 			return
 		_check(rod.fish_timing_saves_left == 1, "Slip guard did not reset for the next fish")
+		_press_in_zone(rod, timing_key)
 		rod._process(rod.fish_timing_duration)
-		_check(rod.state == FishingRod.State.IDLE and rare.is_queued_for_deletion(), "A timeout was forgiven without an input")
+		_check(rod.state == FishingRod.State.IDLE and rare.is_queued_for_deletion() and rod.fish_timing_saves_left == 1, "A stage-two timeout consumed Slip guard")
 		_check(shop.buy_rod(tier), "Add-on fixture could not upgrade to the next rod")
 	_check(shop.owns_rod_add_on(0, 0) and shop.owns_rod_add_on(1, 0) and not shop.owns_rod_add_on(2, 0), "Slip guard ownership did not stay with each rod")
 

@@ -48,6 +48,7 @@ func bind_session(pollution: PollutionSystem, catches: CatchResolverScript, rod:
 	rod.state_changed.connect(_on_rod_state_changed)
 	rod.cast_rejected.connect(_notify)
 	rod.fish_timing_finished.connect(_on_fish_timing_finished)
+	rod.fish_timing_advanced.connect(_on_fish_timing_advanced)
 	rod.fish_timing_saved.connect(_on_fish_timing_saved)
 	_on_pollution_changed(pollution.normalized_pollution)
 	_hint.text = _guidance()
@@ -168,6 +169,11 @@ func _on_fish_timing_finished(succeeded: bool) -> void:
 
 func _on_fish_timing_saved() -> void:
 	_guard_used = true
+	_timing_dial.update_timing(_rod, _guard_used)
+
+
+func _on_fish_timing_advanced() -> void:
+	_timing_dial.update_timing(_rod, _guard_used)
 
 
 func _on_catch_hooked(type_name: String) -> void:

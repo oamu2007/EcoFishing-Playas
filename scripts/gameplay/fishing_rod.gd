@@ -22,9 +22,11 @@ const FishingLineScript = preload("res://scripts/gameplay/fishing_line.gd")
 @export_range(0.1, 3.0) var retrieval_duration: float = 0.85
 @export_range(1, 10) var trash_per_cast: int = 1
 @export var cast_height: float = 100.0
-@export_range(0.5, 5.0, 0.05) var fish_timing_duration: float = 1.30
+@export_range(0.5, 5.0, 0.05) var fish_timing_duration: float = 1.20
 @export_range(0.05, 0.6, 0.01) var fish_timing_window: float = 0.17
-@export var fish_timing_centers: Vector2 = Vector2(0.64, 0.70)
+@export var fish_timing_centers: Vector2 = Vector2(0.50, 0.83)
+@export_range(0.0, 1.0, 0.01) var fish_timing_reaction_time: float = 0.45
+@export_range(0.0, 0.5, 0.01) var fish_timing_center_shift: float = 0.10
 
 var state: State = State.IDLE
 var cast_number: int = 0
@@ -35,6 +37,8 @@ var fish_timing_stage: int = 1
 var fish_timing_checks: int = 1
 var fish_timing_saves_left: int = 0
 var fish_secured: bool = false
+var _timing_rng: RandomNumberGenerator = RandomNumberGenerator.new()
+var _timing_zone: Vector2
 var _forgiven_misses: int = 0
 var _duration_discount: float = 0.0
 var _elapsed: float = 0.0
@@ -89,6 +93,7 @@ func start_fish_timing(checks: int) -> void:
 		fish_timing_stage = 1
 		fish_timing_checks = checks
 		fish_timing_saves_left = _forgiven_misses
+		_place_fish_timing_zone()
 		_set_state(State.TIMING)
 
 
@@ -97,8 +102,25 @@ func fish_timing_progress() -> float:
 
 
 func fish_timing_zone() -> Vector2:
-	var center: float = fish_timing_centers.x if fish_timing_stage == 1 else fish_timing_centers.y
-	return Vector2(center - fish_timing_window * 0.5, center + fish_timing_window * 0.5)
+	return _timing_zone
+
+
+func _place_fish_timing_zone() -> void:
+	var half_window: float = fish_timing_window * 0.5
+	var latest_center: float = 1.0 - half_window
+	var earliest_center: float = minf(latest_center, half_window + fish_timing_reaction_time / fish_timing_duration)
+	var first_center: float = clampf(fish_timing_centers.x, earliest_center, latest_center)
+	var last_center: float = clampf(fish_timing_centers.y, first_center, latest_center)
+	var center: float
+	var span: float = last_center - first_center
+	if fish_timing_stage > 1 and span > 0.0:
+		# Wrap around the allowed center range while avoiding the previous center.
+		var shift: float = minf(fish_timing_center_shift, span * 0.5)
+		var previous_center: float = (_timing_zone.x + _timing_zone.y) * 0.5 - first_center
+		center = first_center + fposmod(previous_center + _timing_rng.randf_range(shift, span - shift), span)
+	else:
+		center = _timing_rng.randf_range(first_center, last_center)
+	_timing_zone = Vector2(center - half_window, center + half_window)
 
 
 func invalid_target_reason(target: Vector2) -> String:
@@ -242,6 +264,7 @@ func _press_fish_timing() -> void:
 		else:
 			fish_timing_stage += 1
 			_elapsed = 0.0
+			_place_fish_timing_zone()
 			fish_timing_advanced.emit()
 	elif fish_timing_saves_left > 0:
 		fish_timing_saves_left -= 1

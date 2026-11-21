@@ -14,7 +14,7 @@ The next playtest pass makes catchable fish more active and gives common, rare, 
 
 ## Current checkpoint
 
-Start with [Milestone 26](#milestone-26--fish-motion-and-timing-feel) and share a playable comparison before finalizing trophy fish difficulty. Continue independent work during review under the workflow in [AGENTS.md](../AGENTS.md). The first-time-player run, human listening pass, and cross-device checks from [M25](#milestone-25--integrated-playtest-and-stabilization) carry forward to M30.
+[Milestone 26](#milestone-26--fish-motion-and-timing-feel) is ready for player review. Work on the trader and Sack feedback can proceed during review. Trophy difficulty in M27 depends on that feedback. The first-time-player run, human listening pass, and cross-device checks from [M25](#milestone-25--integrated-playtest-and-stabilization) carry forward to M30.
 
 ## Completed baseline
 
@@ -593,7 +593,7 @@ Both routes left all eleven sites complete and showed six ambient fish at 0% bef
 
 ## Milestone 26 — Fish motion and timing feel
 
-**Next.** Catchable fish cover more water. Common fish require attention, and rare fish are noticeably harder to land.
+**Playable checkpoint verified November 21, 2026.** Catchable fish swim faster. Common fish have one check, and rare fish have two, with a counter that changes color as the player advances.
 
 - Increase the travel speed or route variation of catchable fish so they visibly swim farther over the same time. Keep their target cue and catch area aligned to the moving fish. Preserve reachable routes, water bounds, and the current pollution threshold.
 - Shorten the dial sweep slightly from the M25 baseline of 1.30 seconds. Vary the green success zone across a noticeably wider spread of positions between fish and between checks. Keep the zone steady during each check, preserve enough reaction time for the earliest position, and keep the whole window inside the sweep.
@@ -603,9 +603,24 @@ Both routes left all eleven sites complete and showed six ambient fish at 0% bef
 
 Share a build or quick test scene with repeatable common and rare encounters. Let the player try several of each without waiting for natural spawns. Record sweep time, effective success-window duration, and the spread of zone positions relative to M25. Ask whether common fish take attention and rare fish feel clearly harder. Continue the independent trader and feedback work during the review, and use the feedback to settle trophy timing in M27.
 
+In Godot, open [`tests/fish_timing_review.tscn`](../tests/fish_timing_review.tscn) and press **F6**. Press **1** for a common encounter or **2** for a rare one. Each key casts into a live swim route with stock gear. Click or press Space in the green arc, then click to reel in. After a catch or miss, press 1 or 2 to try again. The fixture makes space when the practice Sack fills.
+
 **Verification**
 
 Watch several fish swim farther while staying in valid, reachable water. Exercise early and late zone positions, both multi-check labels, second-stage misses, Slip guard, pause and resume, and successful landing with stock gear. Confirm that the displayed green zone and the accepted input interval agree.
+
+| Timing and motion | M25 | M26 |
+| --- | ---: | ---: |
+| One-way sweep | 1.30 s | 1.20 s |
+| Effective success window per check | 221 ms | 204 ms |
+| Zone center positions | Fixed at 64% and 70% by stage | Sampled within 50–83% |
+| Full center spread | 6 percentage points / 78 ms | 33 percentage points / 396 ms |
+| Earliest green arc opens | 722 ms | 498 ms |
+| Swim speed along the same ellipse | 0.65–0.95 rad/s | 1.15–1.60 rad/s |
+
+The first-check sample across 128 fish spanned 50.3–82.6%. Each second check moved at least 10 percentage points from the first. Slip guard restarted the same check with the same arc on a missed input. Timeout still released the fish. Seeded spawn counts at 51%, 50%, 25%, and 0% were unchanged at 0, 27, 65, and 101 out of 120 trials per level. Route samples checked the moving cue and collider against the catch point and the full swim loop against stock casting reach and water bounds.
+
+Godot 4.7.2 passed fishing, catchable fish, main startup, and the seeded cleanup playthrough. The stock practice fixture landed common and rare fish at 1280 × 720 and 800 × 450 and checked stage-two pause, resume, and a click over the dial. Both colored counters were legible in rendered captures. The editor import completed with a local settings safe-save error. Player feedback on the common and rare difficulty gap is pending. Continue M28 and M29 during that review.
 
 ## Milestone 27 — Trophy fish
 
