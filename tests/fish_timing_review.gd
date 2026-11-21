@@ -28,7 +28,7 @@ func _start_session() -> void:
 	instructions.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	instructions.text = "1  Common fish    ·    2  Rare fish    ·    3  Trophy fish\nClick or press Space in green, then click to reel in."
 	_session.get_node("HUD").add_child(instructions)
-	instructions.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE, 18)
+	instructions.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_MINSIZE, 18)
 
 
 func _unhandled_input(event: InputEvent) -> void:

@@ -14,7 +14,7 @@ The next playtest pass makes catchable fish more active and gives common, rare, 
 
 ## Current checkpoint
 
-[Milestones 26–29](#milestone-26--fish-motion-and-timing-feel) are verified. Player review called for a clearer common-to-rare difficulty gap, which informed the rare and trophy windows. Continue with the focused M30 playtest and regression checks. The first-time-player run, human listening pass, and cross-device checks from [M25](#milestone-25--integrated-playtest-and-stabilization) carry forward to M30.
+[Milestones 26–30](#milestone-26--fish-motion-and-timing-feel) are verified on `roadmap-implementation`. Player review called for a clearer common-to-rare difficulty gap, which informed the rare and trophy windows. [M30](#milestone-30--focused-playtest-and-regression-checks) records the final checks and remaining human review.
 
 ## Completed baseline
 
@@ -676,10 +676,29 @@ The WASAPI comparison against `d91844c` measured the isolated footstep at −14.
 
 ## Milestone 30 — Focused playtest and regression checks
 
-**Planned.** A stock-gear session demonstrates the revised fishing feel, trader navigation, and action feedback, with a separate controlled trophy encounter.
+**Verified November 21, 2026.** The focused playtest landed common and rare fish with stock gear, then landed and sold a controlled trophy. It exercised the trader and cast feedback through the regular game controls.
 
 - Play common and rare catches back to back, exercise a controlled trophy encounter and sale, fit add-ons, and return to the trader home with B from both pages. Check a full-Sack cast and listen for the quieter steps. Record which game-feel feedback was reviewed and what remains open.
 - Run Godot import, main-scene startup, and relevant fishing, trader, session, audio, and graphics checks at the supported test sizes. Check that cleanup progression and continuous music still work. Update the README and architecture notes where controls, behavior, or ownership changed. Record pending human or cross-device checks separately from automated results.
+
+**Player review**
+
+The player tried the M26 common and rare comparison and asked for a bigger difficulty gap for rare fish. The common check stayed at 204 ms. The rare window was reduced to 168 ms per check, and the controlled trophy uses three 150 ms checks. The new windows passed stock-gear input tests.
+
+**Automated and rendered checks**
+
+- Godot 4.7.2 imported a fresh project copy and started the main scene for 120 frames. All twelve smoke tests passed, covering fishing, cleanup, fish arrivals, trader transactions and navigation, session flow, audio, and water state.
+- The focused playtest passed at 1280 × 720 and 800 × 450 in a scripted run through the viewport controls, both headless and on Intel Iris Xe / OpenGL 3.3 Compatibility. It landed common and rare fish in succession, paused at rare stage two, caught a trophy through all three stages, walked into a full-Sack cast with Help off, and verified the popup and Help remained legible together. B cleared the staged trophy sale and preserved the Sack and gold. The subsequent sale credited the exact quote, and both add-ons fitted before B returned from Buy.
+- Both seeded progression sessions completed all eleven projects and reached 0% with six ambient fish, followed by the live rebound to 5%. They recorded zero trophy visits. The GPU water check passed and the standalone water preview ran for 120 rendered frames.
+- Audio passed on WASAPI. The same playback instance continued through game and menu transitions and wrapped at about 117.45 seconds of elapsed time. The measured footstep peak was 5 dB below M25. Cast, splash, and reel peaks matched the baseline.
+- The README, in-game Help, practice scene instructions, and architecture notes reflect the revised controls and timing. The practice instructions sit above the play area so Help can stay open during review.
+
+**Remaining manual checks**
+
+- Try the revised rare and trophy timing by hand and assess how the difficulty feels across repeated catches. The practice scene supports all three encounters.
+- Run an independent first-time session to check discovery of Help, the trader, and multi-check fishing, and assess the first three Sack trips.
+- Listen to the loop seam and the mix while walking into a cast, including the quieter footsteps and overlapping interface and fishing cues.
+- Check graphics, frame pacing, UI legibility, and audio on a second device.
 
 ## Scope guardrails
 

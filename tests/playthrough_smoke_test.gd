@@ -98,6 +98,7 @@ func _start_session(restarting: bool = false) -> bool:
 	_panel = _session.get_node("ShackPanel")
 	_water = _world.get_node("Environment/Water")
 	_rod = _world.rod
+	_rod._timing_rng.seed = 26
 	_sack = _world.sack
 	_shop = _world.shop
 	_coin_amount = _session.get_node("CoinBalance").get_node("%Amount")

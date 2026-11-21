@@ -47,7 +47,7 @@ text = "Controls"
 [node name="Instructions" type="Label" parent="ControlsPanel/MarginContainer/Controls"]
 mouse_filter = 2
 theme_override_font_sizes/font_size = 14
-text = "Move with WASD or arrow keys.\nAim with the mouse. Green means in range.\nLeft click to cast. Left click again to reel in.\nFor fish, click or press Space in the green arc.\nRarer fish need two successful checks.\nPress E at the shack to trade.\nPress F on Sell to sell the entire Sack.\nPress Esc to go back or pause. Press H to hide Help."
+text = "Move with WASD or arrow keys.\nAim with the mouse. Green means in range.\nLeft click to cast. Left click again to reel in.\nFor fish, click or press Space in the green arc.\nRarer fish need two or three successful checks.\nPress E at the shack to trade.\nPress B on Buy or Sell to return to trader home.\nPress F on Sell to sell the entire Sack.\nPress Esc to go back or pause. Press H to hide Help."
 
 [node name="ProgressPanel" type="PanelContainer" parent="."]
 offset_left = 14.0
@@ -112,10 +112,10 @@ text = "H  Help"
 
 [node name="SackFull" type="Label" parent="."]
 visible = false
-offset_left = 263.0
-offset_top = 130.0
-offset_right = 347.0
-offset_bottom = 152.0
+offset_left = 355.0
+offset_top = 97.0
+offset_right = 439.0
+offset_bottom = 126.0
 mouse_filter = 2
 theme = ExtResource("2_theme")
 theme_type_variation = &"FieldNote"
