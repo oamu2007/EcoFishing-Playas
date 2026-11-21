@@ -22,6 +22,8 @@ var _fish_result_remaining: float = 0.0
 @onready var _hint: Label = $Hint
 @onready var _pollution_bar: ProgressBar = $ProgressPanel/Margin/Readouts/PollutionBar
 @onready var _inventory: Label = $ProgressPanel/Margin/Readouts/Inventory
+@onready var _sack_full: Label = $SackFull
+@onready var _sack_full_timer: Timer = $SackFullTimer
 @onready var _gear: Label = $ProgressPanel/Margin/Readouts/Gear
 @onready var _menu_button: Button = $MenuButton
 @onready var _help_button: Button = $HelpKey
@@ -31,6 +33,7 @@ var _fish_result_remaining: float = 0.0
 func _ready() -> void:
 	_menu_button.pressed.connect(menu_requested.emit)
 	_help_button.pressed.connect(_toggle_help)
+	_sack_full_timer.timeout.connect(_sack_full.hide)
 
 
 func bind_session(pollution: PollutionSystem, catches: CatchResolverScript, rod: FishingRod, sack: Sack, shop: ShackShop, fish_threshold: float) -> void:
@@ -46,7 +49,7 @@ func bind_session(pollution: PollutionSystem, catches: CatchResolverScript, rod:
 	catches.catch_hooked.connect(_on_catch_hooked)
 	catches.catches_returned.connect(_on_catches_returned)
 	rod.state_changed.connect(_on_rod_state_changed)
-	rod.cast_rejected.connect(_notify)
+	rod.cast_rejected.connect(_on_cast_rejected)
 	rod.fish_timing_finished.connect(_on_fish_timing_finished)
 	rod.fish_timing_advanced.connect(_on_fish_timing_advanced)
 	rod.fish_timing_saved.connect(_on_fish_timing_saved)
@@ -137,6 +140,9 @@ func _first_upgrade_cost() -> int:
 func _update_inventory() -> void:
 	_inventory.text = "SACK  %d/%d" % [_sack.item_count, _sack.capacity]
 	_gear.text = "Rod %d  •  Sack tier %d" % [_shop.rod_tier + 1, _shop.sack_tier + 1]
+	if _sack.free_slots > 0:
+		_sack_full_timer.stop()
+		_sack_full.hide()
 
 
 func _on_pollution_changed(normalized: float) -> void:
@@ -157,8 +163,18 @@ func _on_rod_state_changed(state: FishingRod.State) -> void:
 		_hooked_count = 0
 		_notification_remaining = 0.0
 		_notification.hide()
-		if _sack.free_slots == 0:
-			_notify("Sack full. Sell your catch at the shack.")
+		_show_full_sack_feedback()
+
+
+func _on_cast_rejected(reason: String) -> void:
+	_notify(reason)
+	_show_full_sack_feedback()
+
+
+func _show_full_sack_feedback() -> void:
+	if _sack.free_slots == 0:
+		_sack_full.show()
+		_sack_full_timer.start()
 
 
 func _on_fish_timing_finished(succeeded: bool) -> void:

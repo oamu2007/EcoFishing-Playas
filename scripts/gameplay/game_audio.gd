@@ -26,7 +26,7 @@ const EFFECTS: Dictionary[Cue, AudioStream] = {
 	Cue.CLEANUP: preload("res://assets/audio/effects/cleanup.wav"),
 }
 const CUE_GAIN: Dictionary[Cue, float] = {
-	Cue.FOOTSTEP: -3.0,
+	Cue.FOOTSTEP: -8.0,
 	Cue.NAVIGATE: -3.0,
 	Cue.REEL: -2.0,
 	Cue.CATCH: 1.0,

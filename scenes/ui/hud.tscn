@@ -110,6 +110,22 @@ theme_override_font_sizes/font_size = 13
 toggle_mode = true
 text = "H  Help"
 
+[node name="SackFull" type="Label" parent="."]
+visible = false
+offset_left = 263.0
+offset_top = 130.0
+offset_right = 347.0
+offset_bottom = 152.0
+mouse_filter = 2
+theme = ExtResource("2_theme")
+theme_type_variation = &"FieldNote"
+theme_override_font_sizes/font_size = 13
+text = "Sack full"
+horizontal_alignment = 1
+
+[node name="SackFullTimer" type="Timer" parent="."]
+one_shot = true
+
 [node name="Hint" type="Label" parent="."]
 visible = false
 anchor_top = 1.0

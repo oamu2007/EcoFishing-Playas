@@ -104,7 +104,7 @@ func _exercise_fishing(world: WorldScript) -> void:
 		item.set_physics_process(false)
 	for attempt: int in 2:
 		var fish: CatchableFish = FISH.instantiate()
-		fish.species = world.catchable_fish.species_catalog.back()
+		fish.species = world.catchable_fish.species_catalog[3]
 		fish.length_cm = 24
 		world.add_child(fish)
 		fish.global_position = spot

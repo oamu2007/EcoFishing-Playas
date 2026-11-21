@@ -56,6 +56,7 @@ func _run() -> void:
 	for index: int in starter_capacity:
 		_catch_one()
 	_check(_sack.item_count == starter_capacity, "Normal catches failed to fill the Sack")
+	await _test_full_sack_feedback()
 	var collected: int = _world.pollution.trash_collected
 	var remaining: int = _manager.items.size()
 	_catch_one()
@@ -119,6 +120,47 @@ func _run() -> void:
 	_session.free()
 	print("Shop smoke test: %d failures" % _failures)
 	quit(0 if _failures == 0 else 1)
+
+
+func _test_full_sack_feedback() -> void:
+	var hud: CanvasLayer = _session.get_node("HUD")
+	var popup: Label = hud.get_node("SackFull")
+	var timer: Timer = hud.get_node("SackFullTimer")
+	var help: Button = hud.get_node("HelpKey")
+	var spot: Vector2 = Vector2(_world.shore_start.x + 76.0, 450.0)
+	_place_on_shore(spot.y)
+	for help_enabled: bool in [false, true]:
+		_check(hud.is_help_enabled() == help_enabled, "Full Sack fixture used the wrong Help state")
+		_check(not popup.visible, "Sack popup appeared before the cast was attempted")
+		_cast_for_feedback(spot)
+		_check(popup.visible and popup.text == "Sack full" and not timer.is_stopped(), "Full Sack cast did not show immediate feedback")
+		_finish_feedback_cast()
+		await create_timer(0.4).timeout
+		var remaining: float = timer.time_left
+		_cast_for_feedback(_rod.global_position - Vector2(100.0, 0.0))
+		_check(popup.visible and timer.time_left > remaining and _rod.state == FishingRod.State.IDLE, "An invalid retry did not refresh the same popup while preserving cast validation")
+		await create_timer(timer.wait_time + 0.1).timeout
+		_check(not popup.visible and timer.is_stopped(), "Full Sack feedback did not clear on its own")
+		var entry: Sack.Entry = _sack.entries().back()
+		_sack.remove_entries([entry])
+		_cast_for_feedback(spot)
+		_check(not popup.visible and _sack.free_slots == 1, "The popup showed with space for a catch")
+		_finish_feedback_cast()
+		_sack.store(entry.label, entry.value, entry.is_fish, entry.art)
+		help.pressed.emit()
+
+
+func _cast_for_feedback(point: Vector2) -> void:
+	var click: InputEventMouseButton = _click()
+	click.position = _rod.get_canvas_transform() * point
+	_rod._unhandled_input(click)
+
+
+func _finish_feedback_cast() -> void:
+	_check(_rod.state == FishingRod.State.CASTING, "Full Sack changed whether a valid cast could start")
+	_rod._process(_rod.cast_duration)
+	_rod._unhandled_input(_click())
+	_rod._process(_rod.retrieval_duration)
 
 
 func _earn(amount: int) -> void:

@@ -14,7 +14,7 @@ The next playtest pass makes catchable fish more active and gives common, rare, 
 
 ## Current checkpoint
 
-[Milestones 26–28](#milestone-26--fish-motion-and-timing-feel) are verified. Player review called for a clearer common-to-rare difficulty gap, which informed the rare and trophy windows. Continue with Sack feedback and footsteps in M29. The first-time-player run, human listening pass, and cross-device checks from [M25](#milestone-25--integrated-playtest-and-stabilization) carry forward to M30.
+[Milestones 26–29](#milestone-26--fish-motion-and-timing-feel) are verified. Player review called for a clearer common-to-rare difficulty gap, which informed the rare and trophy windows. Continue with the focused M30 playtest and regression checks. The first-time-player run, human listening pass, and cross-device checks from [M25](#milestone-25--integrated-playtest-and-stabilization) carry forward to M30.
 
 ## Completed baseline
 
@@ -661,7 +661,7 @@ The trader smoke test passed headless and on Intel Iris Xe / OpenGL at both size
 
 ## Milestone 29 — Full Sack feedback and quieter walking
 
-**Planned.** Casting with a full Sack gives immediate, brief feedback, and walking sounds quieter.
+**Verified November 21, 2026.** A full Sack shows a brief `Sack full` popup next to the inventory when the player attempts a cast. The footstep cue is 5 dB quieter than M25.
 
 - Show a small, short-lived `Sack full` pop-up as soon as a cast is attempted with no space. Keep it available with Help off as action feedback. Reuse or refresh the same pop-up on repeated attempts, and keep it clear of the aim point and timing dial. Preserve the existing cast and inventory rules.
 - Lower the volume of footsteps relative to M25 while keeping them audible. Adjust the footstep cue independently of the music and other action effects.
@@ -669,6 +669,10 @@ The trader smoke test passed headless and on Intel Iris Xe / OpenGL at both size
 **Verification**
 
 Cast with a full Sack and with one free slot, with Help both on and off. Verify that the pop-up appears immediately only for the full Sack, clears on its own, and never stacks. Listen while walking into the next cast and compare footsteps, music, and fishing effects against M25.
+
+The shop smoke test passed the full and one-slot cases with Help on and off. Valid casts still run, invalid attempts refresh the same popup, and the timer clears it after one second. The focused session walked into a regular cast at capacity with Help off and preserved all three entries.
+
+The WASAPI comparison against `d91844c` measured the isolated footstep at −14.91 dBFS in M25 and −19.91 dBFS here. Cast, splash, and reel measured the same peaks in both builds, and the same music plays at −11 dB. The WASAPI audio smoke test passed footsteps, fishing cues, and music continuity through menus and session changes. Its rare-fish fixture uses the two-check kelp bass after the trophy was added. Human listening for audibility and overlapping balance remains open. Continue M30.
 
 ## Milestone 30 — Focused playtest and regression checks
 
