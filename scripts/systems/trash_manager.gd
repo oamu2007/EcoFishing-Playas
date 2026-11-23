@@ -15,7 +15,7 @@ const TRASH_SCENE: PackedScene = preload("res://scenes/gameplay/trash.tscn")
 @export_range(5.0, 150.0) var arrival_speed: float = 44.0
 @export var offscreen_margin: float = 100.0
 @export var starter_band: Vector2 = Vector2(110.0, 205.0)
-@export var arrival_inset: Vector2 = Vector2(20.0, 95.0)
+@export_range(1.0, 20.0) var arrival_edge_clearance: float = 4.0
 @export var minimum_spacing: float = 72.0
 @export_range(8.0, 60.0) var item_catch_radius: float = 24.0
 @export_range(1, 30) var pollution_per_item: int = 5
@@ -26,9 +26,9 @@ var _rod: FishingRod
 var _shore_x: float
 var _drift_limits: Vector2
 var _safe_water: Rect2
-var _reach_x: float
+var _stop_band: Vector2
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
-var _arrival_offsets: Dictionary[OceanTrash, float] = {}
+var _arrival_fractions: Dictionary[OceanTrash, float] = {}
 var _clock: float = 0.0
 var _spawned_count: int = 0
 
@@ -41,10 +41,10 @@ func initialize(rod: FishingRod, shore_start: Vector2, shore_end: Vector2) -> vo
 	_shore_x = shore_start.x
 	var margin: float = item_catch_radius + 8.0
 	_safe_water = _rod.water_bounds.grow(-margin)
-	_reach_x = _shore_x + _rod.maximum_cast_range
+	_stop_band = _reachable_stop_band()
 	var initial_band: Vector2 = Vector2(
-		maxf(_minimum_stop_x(), _shore_x + starter_band.x),
-		minf(_reach_x, minf(_safe_water.end.x, _shore_x + starter_band.y))
+		maxf(_stop_band.x, _shore_x + starter_band.x),
+		minf(_stop_band.y, _shore_x + starter_band.y)
 	)
 	_drift_limits = Vector2(maxf(_safe_water.position.y, shore_start.y), minf(_safe_water.end.y, shore_end.y))
 	for index: int in range(mini(initial_item_count, maximum_active_items)):
@@ -61,27 +61,30 @@ func _physics_process(delta: float) -> void:
 	if _clock < arrival_interval:
 		return
 	_clock = fmod(_clock, arrival_interval)
-	if _reach_x >= _minimum_stop_x():
-		_spawn(Vector2(_arrival_stop_x(arrival_inset.y), _arrival_stop_x(arrival_inset.x)), true)
+	_spawn(_stop_band, true)
 
 
-func _minimum_stop_x() -> float:
-	return maxf(_safe_water.position.x, _shore_x + _rod.minimum_cast_range)
-
-
-func _arrival_stop_x(inset: float) -> float:
-	return clampf(_reach_x - maxf(0.0, inset), _minimum_stop_x(), _safe_water.end.x)
+func _reachable_stop_band() -> Vector2:
+	return Vector2(
+		maxf(_safe_water.position.x, _shore_x + _rod.minimum_cast_range),
+		minf(_safe_water.end.x, _shore_x + _rod.maximum_cast_range - arrival_edge_clearance)
+	)
 
 
 func _update_arrival_stops() -> void:
-	var next_reach: float = _shore_x + _rod.maximum_cast_range
-	var reach_changed: bool = next_reach != _reach_x
-	_reach_x = next_reach
-	for item: OceanTrash in _arrival_offsets.keys():
+	var next_band: Vector2 = _reachable_stop_band()
+	var reach_changed: bool = next_band != _stop_band
+	_stop_band = next_band
+	for item: OceanTrash in _arrival_fractions.keys():
 		if not item.is_arriving:
-			_arrival_offsets.erase(item)
+			_arrival_fractions.erase(item)
 		elif reach_changed:
-			item.retarget_arrival(_arrival_stop_x(_arrival_offsets[item]))
+			var stop: Vector2 = item.drift_stop_position()
+			var preferred_x: float = lerpf(next_band.x, next_band.y, _arrival_fractions[item])
+			# Keep moving inward if the new preferred point is already behind the piece.
+			stop.x = minf(preferred_x, item.global_position.x - arrival_edge_clearance)
+			if stop.x >= next_band.x and _stop_is_clear(stop, item):
+				item.retarget_arrival(stop.x)
 
 
 func _spawn(band: Vector2, incoming: bool) -> void:
@@ -94,10 +97,10 @@ func _spawn(band: Vector2, incoming: bool) -> void:
 			return
 
 
-func _stop_is_clear(point: Vector2) -> bool:
+func _stop_is_clear(point: Vector2, moving_item: OceanTrash = null) -> bool:
 	var spacing: float = maxf(minimum_spacing, item_catch_radius * 2.0 + 4.0)
 	for item: OceanTrash in items:
-		if not item.hooked and point.distance_to(item.drift_stop_position()) < spacing:
+		if item != moving_item and not item.hooked and point.distance_to(item.drift_stop_position()) < spacing:
 			return false
 	return true
 
@@ -118,7 +121,7 @@ func _add_item(point: Vector2, incoming: bool) -> void:
 		var entry_x: float = _rod.water_bounds.end.x + offscreen_margin
 		var phase: float = PI if point.y < (_drift_limits.x + _drift_limits.y) * 0.5 else 0.0
 		item.entered_water.connect(_on_item_arrived.bind(item))
-		_arrival_offsets[item] = _reach_x - point.x
+		_arrival_fractions[item] = inverse_lerp(_stop_band.x, _stop_band.y, point.x) if _stop_band.x < _stop_band.y else 0.0
 		item.configure_arrival(entry_x, point, arrival_speed, _rod.water_bounds.end.x, _drift_limits, speed, phase)
 	else:
 		item.global_position = point
@@ -134,5 +137,5 @@ func _on_item_arrived(item: OceanTrash) -> void:
 func _on_item_landed(target: FishingTarget) -> void:
 	var item: OceanTrash = target as OceanTrash
 	items.erase(item)
-	_arrival_offsets.erase(item)
+	_arrival_fractions.erase(item)
 	trash_collected.emit(item.get_instance_id())

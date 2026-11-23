@@ -16,7 +16,7 @@ The next pass spreads trash stops through the equipped rod's casting range and g
 
 ## Current checkpoint
 
-Start with [Milestone 31](#milestone-31--trash-stop-variety-and-offshore-fish) using the verified M30 build. Continue with the roadmap execution workflow in [AGENTS.md](../AGENTS.md). The outstanding human timing, onboarding, listening, and cross-device checks in [M30](#milestone-30--focused-playtest-and-regression-checks) carry forward to M36.
+[Milestone 31](#milestone-31--trash-stop-variety-and-offshore-fish) is verified locally on the M30 baseline. Publish the M31 checkpoint, then begin [Milestone 32](#milestone-32--first-catch-discoveries-and-visible-fish-size) with the roadmap execution workflow in [AGENTS.md](../AGENTS.md). The outstanding human timing, onboarding, listening, and cross-device checks in [M30](#milestone-30--focused-playtest-and-regression-checks) carry forward to M36.
 
 ## Completed baseline
 
@@ -704,7 +704,7 @@ The player tried the M26 common and rare comparison and asked for a bigger diffi
 
 ## Milestone 31 — Trash stop variety and offshore fish
 
-**Next.** Trash settles throughout the currently reachable water, and fish can appear farther offshore while the starter rod still has fish to catch.
+**Verified locally November 23, 2026.** Trash settles throughout the currently reachable water. Nearshore fish continue to visit, and the two upgrades add progressively farther routes.
 
 - Keep the slower inward drift and offscreen entry. Once an arrival crosses into the equipped rod's range, let it continue to a randomly chosen stop drawn across the usable span between minimum and maximum reach. Respect actual shoreline casting geometry, spacing, and water clearance. Retarget in-flight arrivals after an upgrade without snapping or reversing course. Preserve the gentle motion after a piece settles.
 - Expand catchable fish placement and routes beyond the existing starter-only band. Keep regular reachable encounters with starter gear and offer additional offshore catches as rod reach improves. Keep fish routes and cues within the water and readable in the supported camera views. Preserve pollution thresholds, species weights, and the existing encounter difficulty.
@@ -712,6 +712,20 @@ The player tried the M26 common and rare comparison and asked for a bigger diffi
 **Verification**
 
 Sample seeded trash stops for each rod tier and confirm that near, middle, and far catches all occur. Compare visible stops with M30 at both test window sizes. Upgrade a rod during an arrival and check its path, verify recurring starter catches at cap, and exercise nearshore and offshore fish routes and casting access with each tier.
+
+- Godot 4.7.2 imported a clean project copy. The configured main scene reached the title and closed through the normal shutdown path.
+- The reach smoke test passed headless and on Intel Iris Xe / OpenGL 3.3 at 1280 × 720 and 800 × 450. Each tier sampled 72 seeded arrivals at each size. Every stop and its cue fit the shore-aligned view, including the Offshore rod's far edge with the extra camera lead. The M30 envelopes below are calculated from the original 20–95 world unit inset.
+
+| Rod | M30 stop envelope, world X | M31 sampled visible stops, world X | Near / middle / far |
+| --- | ---: | ---: | ---: |
+| Starter | 954–1029 | 872.9–1044.7 | 21 / 25 / 26 |
+| Shore | 1104–1179 | 874.0–1188.2 | 28 / 21 / 23 |
+| Offshore | 1314–1389 | 913.3–1402.5 | 19 / 28 / 25 |
+
+- Upgrades during approach and after crossing into reach preserved position, inward speed, and settling. The refinement and cleanup regressions confirmed starter collection and arrival refill at the shared cap. Fish tests confirmed that the whole route and its cue fit the castable view, that the prior rod could not reach the new offshore route, and that a nearshore visitor returned when its slot opened. Viewport clicks hooked fish with each rod at both sizes. Spawn rates, species weights, and fish timing passed their existing checks.
+- The full input playthrough at both sizes reached the first upgrade after three starter trips, landed and sold a first fish, completed the permanent cleanup catalog, and observed the existing rebound from 0% to 5%. Both runs recorded zero trophy visits.
+
+After publishing this checkpoint, build the M32 fixture for the common and trophy first-catch reveals and the two sizes of one species.
 
 ## Milestone 32 — First-catch discoveries and visible fish size
 

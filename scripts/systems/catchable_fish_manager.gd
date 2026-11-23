@@ -17,6 +17,8 @@ const FISH_SCENE: PackedScene = preload("res://scenes/gameplay/catchable_fish.ts
 @export_range(0.0, 1.0) var clean_spawn_chance: float = 0.85
 @export_range(8.0, 60.0) var fish_catch_radius: float = 25.0
 @export var starter_band: Vector2 = Vector2(88.0, 136.0)
+@export_range(0.0, 0.9) var offshore_band_start: float = 0.5
+@export_range(4.0, 100.0) var offshore_reach_clearance: float = 32.0
 @export var shore_search_distance: float = 190.0
 @export var swim_radius: Vector2 = Vector2(10.0, 22.0)
 @export var swim_speed: Vector2 = Vector2(1.15, 1.60)
@@ -65,26 +67,49 @@ func _physics_process(delta: float) -> void:
 
 
 func _spawn() -> void:
-	var bounds: Rect2 = _spawn_bounds()
+	if _rod.maximum_cast_range > _starter_range and _has_nearshore_fish():
+		if _spawn_in_band(_spawn_bounds(true)):
+			return
+	_spawn_in_band(_spawn_bounds())
+
+
+func _has_nearshore_fish() -> bool:
+	for visitor: CatchableFish in fish:
+		if not visitor.hooked and visitor.swim_center.x < _shore_start.x + _starter_range:
+			return true
+	return false
+
+
+func _spawn_in_band(bounds: Rect2) -> bool:
 	if not bounds.has_area():
-		return
+		return false
 	for _attempt: int in range(12):
 		var center: Vector2 = Vector2(_rng.randf_range(bounds.position.x, bounds.end.x), _rng.randf_range(bounds.position.y, bounds.end.y))
 		if _route_is_clear(center):
 			var species: FishSpecies = _roll_species()
 			if species != null:
 				_add_fish(center, species)
-			return
+				return true
+			return false
+	return false
 
 
-func _spawn_bounds() -> Rect2:
+func _spawn_bounds(offshore: bool = false) -> Rect2:
 	var water: Rect2 = _rod.water_bounds.grow(-fish_catch_radius - 4.0)
-	var x_min: float = maxf(water.position.x, _shore_start.x + maxf(starter_band.x, _rod.minimum_cast_range))
-	var x_max: float = minf(water.end.x, _shore_start.x + minf(starter_band.y, _starter_range))
+	var cast_reach: float = _starter_range
+	var band: Vector2 = starter_band
+	if offshore:
+		cast_reach = _rod.maximum_cast_range
+		band = Vector2(
+			maxf(_starter_range + offshore_reach_clearance, lerpf(_starter_range, cast_reach, offshore_band_start)),
+			cast_reach - offshore_reach_clearance
+		)
+	var x_min: float = maxf(water.position.x, _shore_start.x + maxf(band.x, _rod.minimum_cast_range))
+	var x_max: float = minf(water.end.x, _shore_start.x + minf(band.y, cast_reach))
 	var x_offset: float = x_max - _shore_start.x
-	# Fit the entire route inside one starter cast from the nearest reachable shore point.
+	# Fit the entire route inside one cast from the nearest reachable shore point.
 	var nearby_y: float = clampf(_rod.global_position.y, _shore_start.y, _shore_end.y)
-	var reachable_y: float = sqrt(maxf(0.0, _starter_range * _starter_range - x_offset * x_offset))
+	var reachable_y: float = sqrt(maxf(0.0, cast_reach * cast_reach - x_offset * x_offset))
 	var half_height: float = minf(shore_search_distance, reachable_y)
 	var y_min: float = maxf(water.position.y, maxf(_shore_start.y, nearby_y - half_height))
 	var y_max: float = minf(water.end.y, minf(_shore_end.y, nearby_y + half_height))
