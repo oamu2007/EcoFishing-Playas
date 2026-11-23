@@ -3,6 +3,8 @@ extends "res://scripts/gameplay/main.gd"
 const REVIEW_THEME: Theme = preload("res://ui/themes/coastal_field_guide.tres")
 const LevelScript = preload("res://scripts/gameplay/playas_vertical_slice.gd")
 
+@export var discovery_review: bool = false
+
 
 func _ready() -> void:
 	super._ready()
@@ -27,6 +29,8 @@ func _start_session() -> void:
 	instructions.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	instructions.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	instructions.text = "1  Common fish    ·    2  Rare fish    ·    3  Trophy fish\nClick or press Space in green, then click to reel in."
+	if discovery_review:
+		instructions.text = "1  Small topsmelt    2  Large topsmelt    3  Trophy\n4  Compare swimmers (10 cm above, 22 cm below)\nPress Space in green, then click to reel in."
 	_session.get_node("HUD").add_child(instructions)
 	instructions.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_MINSIZE, 18)
 
@@ -34,7 +38,8 @@ func _start_session() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not event is InputEventKey or not event.pressed or event.echo:
 		return
-	if event.physical_keycode not in [KEY_1, KEY_2, KEY_3] or _session == null or not _session.can_process():
+	var last_key: Key = KEY_4 if discovery_review else KEY_3
+	if event.physical_keycode < KEY_1 or event.physical_keycode > last_key or _session == null or not _session.can_process() or _session._fish_reveal.visible:
 		return
 	var world: LevelScript = _session.get_node("World")
 	var rod: FishingRod = world.rod
@@ -45,13 +50,24 @@ func _unhandled_input(event: InputEvent) -> void:
 		world.sack.remove_entries(world.sack.entries())
 	var checks: int = event.physical_keycode - KEY_1 + 1
 	var manager: CatchableFishManager = world.catchable_fish
-	var choices: Array[FishSpecies] = manager.species_catalog.filter(func(species: FishSpecies) -> bool: return species.timing_checks == checks)
-	var species: FishSpecies = choices[manager._rng.randi_range(0, choices.size() - 1)]
 	var player: CharacterBody2D = world.get_node("Player")
 	var rod_offset: Vector2 = rod.global_position - player.global_position
 	var shore_y: float = (world.shore_start.y + world.shore_end.y) * 0.5
 	player.global_position = Vector2(world.shore_start.x, shore_y) - rod_offset
 	var center: Vector2 = manager._spawn_bounds().get_center()
-	manager._add_fish(center, species)
+	if discovery_review:
+		for visitor: CatchableFish in manager.fish.duplicate():
+			visitor.escape()
+		var common: FishSpecies = manager.species_catalog[0]
+		if event.physical_keycode == KEY_4:
+			manager._add_fish(center - Vector2(0.0, 53.0), common, common.minimum_length_cm)
+			manager._add_fish(center + Vector2(0.0, 53.0), common, common.maximum_length_cm)
+			return
+		var species: FishSpecies = manager.species_catalog.back() if event.physical_keycode == KEY_3 else common
+		var length_cm: int = species.minimum_length_cm if event.physical_keycode == KEY_1 else species.maximum_length_cm
+		manager._add_fish(center, species, length_cm)
+	else:
+		var choices: Array[FishSpecies] = manager.species_catalog.filter(func(species: FishSpecies) -> bool: return species.timing_checks == checks)
+		manager._add_fish(center, choices[manager._rng.randi_range(0, choices.size() - 1)])
 	# The entire swim loop fits inside the hook's catch radius at this aim point.
 	rod._start_cast(center)

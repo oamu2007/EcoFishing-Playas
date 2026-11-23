@@ -104,6 +104,8 @@ Tune `early_reveal_pollution`, `late_reveal_pollution`, and `fade_width` on the 
 
 A catchable fish is a bright `FishingTarget` with a species sprite, split-ring cue, and collision on layer 3. A cast can attach one fish by landing or waiting and can collect trash on the return path. The Sack's space is shared by all pending catches. Fish have a timed visit that pauses when hooked. `CatchResolver` passes the species' check count and window to the rod. Each check uses a 1.20-second sweep. The rod places a bounded interval with its own random generator and shares that interval with the dial. It holds the interval steady until the next stage. The stock timing progression is one 204 ms common check, two 168 ms rare checks, and three 150 ms trophy checks. Slip guard retries the current stage once after a missed input. A timeout releases the fish. Pausing freezes progress and the current interval. Fish leave the manager when they escape or land, and the Sack keeps each landed fish's species, size, art, and sale price.
 
+The catch resolver emits `fish_landed` after it stores a fish and completes the return. `Session` tracks discoveries by catalog species and owns the reveal's input and the world's temporary pause. The `FishReveal` scene presents the rolled length and exact stored value with rarity-specific colors. Game audio supplies separate standard and trophy cues. A new session starts with an empty discovery set. The fish scene's length curve scales the sprite and cue around the fish center. Its collision radius stays independent of the artwork.
+
 Starter, Shore and Offshore rod art shares a grip and tip coordinate. The shop applies the texture from each `RodUpgrade` alongside its cast settings.
 
 ### Beach detail and landing effects

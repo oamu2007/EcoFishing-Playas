@@ -187,6 +187,7 @@ func _test_recovery_and_sales() -> void:
 	_check(sack.item_count == 2 and sack.fish_count == 1 and sack.sale_total() == expected, "Mixed return did not preserve fish and trash values")
 	rod.retrieval_completed.emit(spot)
 	_check(sack.item_count == 2, "Duplicate completion duplicated a fish")
+	session.get_node("FishReveal").dismiss()
 
 	_cast(rod, downstream.global_position)
 	_retrieve(rod)
@@ -223,7 +224,7 @@ func _test_recovery_and_sales() -> void:
 		_retrieve(rod)
 		_check(not excess.hooked and sack.item_count == 0, "Retrieval sweep hooked a fish without a landing")
 		_test_misses(manager, rod, sack, spot)
-		_test_rare_timing_and_add_ons(world, spot, session.get_node("HUD/FishTiming"))
+		_test_rare_timing_and_add_ons(world, spot, session)
 	await process_frame
 	_check(not is_instance_valid(fish), "Landed fish did not leave the water")
 	session.free()
@@ -249,7 +250,8 @@ func _test_misses(manager: CatchableFishManager, rod: FishingRod, sack: Sack, sp
 	_check(rod.state == FishingRod.State.IDLE, "A new cast did not recover after timing failures")
 
 
-func _test_rare_timing_and_add_ons(world: LevelScript, spot: Vector2, dial: TimingDialScript) -> void:
+func _test_rare_timing_and_add_ons(world: LevelScript, spot: Vector2, session: Node) -> void:
+	var dial: TimingDialScript = session.get_node("HUD/FishTiming")
 	var rod: FishingRod = world.rod
 	var shop: ShackShop = world.shop
 	var manager: CatchableFishManager = world.catchable_fish
@@ -276,6 +278,7 @@ func _test_rare_timing_and_add_ons(world: LevelScript, spot: Vector2, dial: Timi
 	_check(rod.fish_secured, "Two stock timing checks did not secure a rare fish")
 	_retrieve(rod)
 	_check(rare.collected and world.sack.fish_count == 1, "Stock rod could not land the rare fish")
+	session.get_node("FishReveal").dismiss()
 
 	shop.coins = 250
 	for tier: int in 2:
@@ -413,6 +416,7 @@ func _test_trophy() -> void:
 	_check(fish.collected and world.sack.fish_count == 1 and manager.fish.is_empty() and price >= 81 and price <= 111, "Trophy landing or payout was wrong")
 	if not entries.is_empty():
 		_check(entries[0].art == trophy.art and entries[0].label == fish.display_name() and entries[0].value == price, "The Sack did not preserve trophy art, size, or payout")
+	session.get_node("FishReveal").dismiss()
 	player.global_position = session.get_node("World/FishingShack").global_position
 	var open: InputEventKey = InputEventKey.new()
 	open.physical_keycode = KEY_E

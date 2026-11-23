@@ -2,6 +2,7 @@ extends Node
 
 signal catch_hooked(type_name: String)
 signal catches_returned(count: int, type_name: String)
+signal fish_landed(species: FishSpecies, length_cm: int, sale_value: int)
 
 const ATTACHMENT_COLUMNS: Array[float] = [0.0, -22.0, 22.0, -44.0, 44.0]
 
@@ -119,15 +120,25 @@ func _on_retrieval_completed(_point: Vector2) -> void:
 	_trash_held = 0
 	var type_name: String
 	var count: int = 0
+	var landed_fish: CatchableFish
+	var fish_value: int = 0
 	for target: FishingTarget in returned:
 		if not is_instance_valid(target) or not target.hooked or target.collected:
 			continue
 		var label: String = target.display_name()
-		if not _sack.store(label, target.sale_price(), target is CatchableFish, target.inventory_art()):
+		var sale_value: int = maxi(0, target.sale_price())
+		if not _sack.store(label, sale_value, target is CatchableFish, target.inventory_art()):
 			push_error("A reserved catch could not fit in the Sack")
+			if target is CatchableFish:
+				target.escape()
 			continue
 		target.finish_collection()
+		if target is CatchableFish:
+			landed_fish = target
+			fish_value = sale_value
 		if count == 0:
 			type_name = label
 		count += 1
 	catches_returned.emit(count, type_name)
+	if landed_fish != null and landed_fish.species != null:
+		fish_landed.emit(landed_fish.species, landed_fish.length_cm, fish_value)

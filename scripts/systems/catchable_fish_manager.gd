@@ -125,10 +125,10 @@ func _route_is_clear(center: Vector2) -> bool:
 	return true
 
 
-func _add_fish(center: Vector2, species: FishSpecies) -> void:
+func _add_fish(center: Vector2, species: FishSpecies, fixed_length_cm: int = 0) -> CatchableFish:
 	var visitor: CatchableFish = FISH_SCENE.instantiate()
 	visitor.species = species
-	visitor.length_cm = _rng.randi_range(species.minimum_length_cm, species.maximum_length_cm)
+	visitor.length_cm = fixed_length_cm if fixed_length_cm > 0 else _rng.randi_range(species.minimum_length_cm, species.maximum_length_cm)
 	visitor.catch_radius = fish_catch_radius
 	visitor.lifetime = fish_lifetime
 	visitor.visit_ended.connect(_on_fish_visit_ended)
@@ -137,6 +137,7 @@ func _add_fish(center: Vector2, species: FishSpecies) -> void:
 	visitor.configure_visit(center, swim_radius, _rng.randf_range(0.0, TAU), _rng.randf_range(swim_speed.x, swim_speed.y))
 	fish.append(visitor)
 	fish_spawned.emit(visitor)
+	return visitor
 
 
 func _roll_species() -> FishSpecies:

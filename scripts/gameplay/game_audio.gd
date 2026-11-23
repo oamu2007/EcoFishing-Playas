@@ -3,6 +3,7 @@ extends Node
 enum Cue {
 	FOOTSTEP, CAST, SPLASH, REEL, CATCH, MISS, TIMING_SUCCESS, TIMING_FAILURE,
 	NAVIGATE, CONFIRM, CANCEL, PICKUP, DROP, SALE, PURCHASE, CLEANUP,
+	FISH_DISCOVERY, TROPHY_DISCOVERY,
 }
 
 signal cue_started(cue: Cue)
@@ -24,6 +25,8 @@ const EFFECTS: Dictionary[Cue, AudioStream] = {
 	Cue.SALE: preload("res://assets/audio/effects/sale.wav"),
 	Cue.PURCHASE: preload("res://assets/audio/effects/purchase.wav"),
 	Cue.CLEANUP: preload("res://assets/audio/effects/cleanup.wav"),
+	Cue.FISH_DISCOVERY: preload("res://assets/audio/effects/fish_discovery.wav"),
+	Cue.TROPHY_DISCOVERY: preload("res://assets/audio/effects/trophy_discovery.wav"),
 }
 const CUE_GAIN: Dictionary[Cue, float] = {
 	Cue.FOOTSTEP: -8.0,

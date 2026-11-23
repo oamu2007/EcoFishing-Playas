@@ -16,7 +16,7 @@ The next pass spreads trash stops through the equipped rod's casting range and g
 
 ## Current checkpoint
 
-[Milestone 31](#milestone-31--trash-stop-variety-and-offshore-fish) is verified locally on the M30 baseline. Publish the M31 checkpoint, then begin [Milestone 32](#milestone-32--first-catch-discoveries-and-visible-fish-size) with the roadmap execution workflow in [AGENTS.md](../AGENTS.md). The outstanding human timing, onboarding, listening, and cross-device checks in [M30](#milestone-30--focused-playtest-and-regression-checks) carry forward to M36.
+[Milestone 31](#milestone-31--trash-stop-variety-and-offshore-fish) is published at `6d83b93` on `roadmap-implementation`. M32 completed its player review and verification. Next is M33 line motion and audio feedback. The outstanding M30 timing, onboarding, listening, and cross-device checks carry forward to M36.
 
 ## Completed baseline
 
@@ -729,7 +729,7 @@ After publishing this checkpoint, build the M32 fixture for the common and troph
 
 ## Milestone 32 — First-catch discoveries and visible fish size
 
-**Planned.** Landing a species for the first time opens a celebratory **New Fish!** screen. Larger catches look larger in the water.
+**Verified November 23, 2026.** Landing a species for the first time opens **New Fish!**. Larger catches have visibly larger artwork in the water, on the hook, and in the reveal.
 
 - Mark a species as discovered when that catch successfully lands in the Sack. Show a striking fish illustration, species name, measured length, rarity, and exact sale value, with a dedicated sound effect. Give the trophy California sheephead a stronger reveal, animation, and sound treatment. Keep the details legible and dismissal explicit. Discoveries reset on New Game for this session-only build.
 - Open the screen after the catch completes and consume its inputs so dismissal cannot cast, reel, or change the inventory. Each species gets one reveal per session. Missed, escaped, or rejected catches do not count.
@@ -739,9 +739,18 @@ After publishing this checkpoint, build the M32 fixture for the common and troph
 
 Share a short build or repeatable fixture showing one common discovery and one trophy discovery, plus two visibly different sizes of the same species. Ask whether the trophy feels special and the first-catch screen is worth pausing for. Continue independent trader, audio, and line work during review.
 
+Open [fish_discovery_review.tscn](../tests/fish_discovery_review.tscn) in Godot and press F6. Press **4** to see 10 cm and 22 cm topsmelt swim together, **1** or **2** to cast for either topsmelt, or **3** to cast for the 85 cm California sheephead. Use Space in each green window and click to reel in. Start fresh to see another first-catch reveal for the same species.
+
+The player kept the gameplay pause, requested rarity-colored backgrounds, and asked for a stronger sheephead moment. The revised reveal uses green for common fish, blue for rare fish, and gold for the trophy. The sheephead gets a taller illustration area, a larger entrance, a gold halo and burst, and its own longer cue.
+
 **Verification**
 
 Land a first catch, dismiss the reveal, then land the same species again. Verify one reveal and sound, the exact length and sale quote, and normal fishing afterward. Repeat for the trophy and a new session. Compare small and large fish in motion, on the hook, and in the discovery screen. Check full Sack and escape paths, keyboard and mouse dismissal, and both window sizes.
+
+- The focused discovery smoke test exercised first and repeat common and trophy catches, exact length and payout, timing escape, a full Sack, a session reset, and keyboard and mouse input isolation. Godot 4.7.2 passed at 1280 x 720 and 800 x 450, including Intel Iris Xe / OpenGL 3.3.
+- All assets loaded in a fresh project copy, and the discovery smoke test passed there. The editor could not write its personal settings in the restricted environment. The configured main scene displayed the title and shut down through its normal close path.
+- Catchable-fish and offshore-reach checks passed. The full seeded input playthrough at both sizes reached the first upgrade after three starter trips, sold a first fish for 13 gold, and observed the pre-net rebound from 0% to 5%.
+- Next is M33 line and audio verification. Capture any follow-up reaction to the trophy treatment during M36.
 
 ## Milestone 33 — Fishing line motion and audio feedback
 

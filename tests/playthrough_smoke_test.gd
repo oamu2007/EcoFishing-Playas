@@ -450,7 +450,11 @@ func _cast_and_return(target: Vector2, rapid: bool = false) -> bool:
 	if rapid:
 		_cast_click(target)
 		_check(_rod.state == FishingRod.State.RETRIEVING, "Repeated clicks interrupted retrieval")
-	return await _wait_for_rod(FishingRod.State.IDLE)
+	if not await _wait_for_rod(FishingRod.State.IDLE):
+		return false
+	if _session.get_node("FishReveal").visible:
+		_key(KEY_ENTER)
+	return true
 
 
 func _wait_for_rod(state: FishingRod.State, allow_timing: bool = false) -> bool:

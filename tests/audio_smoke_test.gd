@@ -126,6 +126,8 @@ func _exercise_fishing(world: WorldScript) -> void:
 			_mouse_reel(rod, spot)
 			await create_timer(rod.equipped_retrieval_duration() + 0.08).timeout
 			_check(world.sack.fish_count == 1 and _seen(AudioScript.Cue.CATCH) == 1 and _seen(AudioScript.Cue.TIMING_SUCCESS) == 2, "Timing or the landed fish lost a success cue")
+			_check(_seen(AudioScript.Cue.FISH_DISCOVERY) == 1, "First fish did not play its discovery cue")
+			_key(KEY_ENTER)
 	rod._start_cast(spot)
 	await create_timer(rod.equipped_cast_duration() + 0.08).timeout
 	_mouse_reel(rod, spot)

@@ -26,6 +26,7 @@ art = ExtResource("4_sardine")
 [sub_resource type="Resource" id="Resource_surfperch"]
 script = ExtResource("2_species")
 title = "Barred surfperch"
+rarity = 1
 minimum_length_cm = 17
 maximum_length_cm = 30
 spawn_weight = 15.0
@@ -37,6 +38,7 @@ art = ExtResource("5_surfperch")
 [sub_resource type="Resource" id="Resource_bass"]
 script = ExtResource("2_species")
 title = "Kelp bass"
+rarity = 1
 minimum_length_cm = 21
 maximum_length_cm = 38
 spawn_weight = 5.0
@@ -48,6 +50,7 @@ art = ExtResource("6_bass")
 [sub_resource type="Resource" id="Resource_sheephead"]
 script = ExtResource("2_species")
 title = "California sheephead"
+rarity = 2
 minimum_length_cm = 55
 maximum_length_cm = 85
 spawn_weight = 0.25

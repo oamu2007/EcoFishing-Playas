@@ -3,6 +3,9 @@ extends FishingTarget
 
 signal visit_ended(fish: CatchableFish)
 
+@export var illustration_span: float = 48.0
+@export var length_scale_curve: Curve
+
 var species: FishSpecies
 var length_cm: int = 0
 var lifetime: float = 26.0
@@ -21,9 +24,11 @@ func _ready() -> void:
 	super._ready()
 	swim_center = global_position
 	_sprite.texture = inventory_art()
-	var base_scale: float = remap(clampf(length_cm, 10.0, 38.0), 10.0, 38.0, 0.85, 1.14)
-	var large_fish_scale: float = remap(clampf(length_cm, 38.0, 85.0), 38.0, 85.0, 0.0, 0.12)
-	_silhouette.scale = Vector2.ONE * (base_scale + large_fish_scale)
+	_sprite.scale = Vector2.ONE * illustration_span / _sprite.texture.get_width()
+	if length_scale_curve != null:
+		var size_multiplier: float = length_scale_curve.sample(float(length_cm))
+		_silhouette.scale = Vector2.ONE * size_multiplier
+		_ripple.scale = Vector2.ONE * maxf(0.85, size_multiplier)
 
 
 func configure_visit(center: Vector2, radius: Vector2, phase: float, speed: float) -> void:

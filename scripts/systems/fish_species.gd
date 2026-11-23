@@ -1,7 +1,10 @@
 class_name FishSpecies
 extends Resource
 
+enum Rarity { COMMON, RARE, TROPHY }
+
 @export var title: String = "Fish"
+@export var rarity: Rarity = Rarity.COMMON
 @export_range(1, 100) var minimum_length_cm: int = 10
 @export_range(1, 100) var maximum_length_cm: int = 22
 @export_range(0.0, 100.0) var spawn_weight: float = 1.0
