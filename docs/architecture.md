@@ -106,7 +106,7 @@ A catchable fish is a bright `FishingTarget` with a species sprite, split-ring c
 
 The catch resolver emits `fish_landed` after it stores a fish and completes the return. `Session` tracks discoveries by catalog species and owns the reveal's input and the world's temporary pause. The `FishReveal` scene presents the rolled length and exact stored value with rarity-specific colors. Game audio supplies separate standard and trophy cues. A new session starts with an empty discovery set. The fish scene's length curve scales the sprite and cue around the fish center. Its collision radius stays independent of the artwork.
 
-Starter, Shore and Offshore rod art shares a grip and tip coordinate. The shop applies the texture from each `RodUpgrade` alongside its cast settings.
+Starter, Shore and Offshore rod art shares a grip and tip coordinate. The shop applies the texture from each `RodUpgrade` alongside its cast settings. The trader displays one meter per 20 world units for catalog offers and equipped gear. Gameplay still uses world units. Cleanup cards and purchase feedback display the configured pollution reduction in percentage points.
 
 ### Beach detail and landing effects
 

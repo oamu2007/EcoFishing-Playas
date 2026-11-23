@@ -137,6 +137,7 @@ func _play(main: Node) -> void:
 	var offers: Array[Node] = gear.find_children("*", "Button", true, false)
 	var shore_rod: Button = offers[0]
 	var catalog: ScrollContainer = trader.get_node("%BuyScroll")
+	await _check_offer_labels(trader, world, catalog)
 	var add_ons: Control = trader.get_node("%RodAddOns")
 	_check(back.is_visible_in_tree() and back.text == "Back (B)" and catalog.get_global_rect().encloses(add_ons.get_global_rect()), "Buy did not show both add-on cards and Back at entry")
 	var buttons: Array[Node] = add_ons.find_children("*", "Button", true, false)
@@ -157,6 +158,7 @@ func _play(main: Node) -> void:
 	_click(shore_rod)
 	await process_frame
 	_check(shore_rod.disabled and shore_rod.text == "Owned" and balance.text == "5 gold", "Purchase did not update the visible balance and ownership")
+	_check(trader.get_node("%CurrentGear").text.contains("19.5 m reach"), "Equipped Shore rod did not show its converted reach")
 	_click(shore_rod)
 	_check(guard.disabled and guard.text == "12 gold", "The equipped rod add-on did not show its price and affordability")
 	world.shop.coins += 15
@@ -180,6 +182,7 @@ func _play(main: Node) -> void:
 	_click(offshore_rod)
 	await process_frame
 	_check(world.shop.rod_tier == 2 and not guard_art.visible and not spool_art.visible and guard.text == "12 gold" and spool.text == "15 gold", "Buying a new rod retained another rod's fitted art or card ownership")
+	_check(trader.get_node("%CurrentGear").text.contains("30 m reach"), "Equipped Offshore rod did not show its converted reach")
 	world.shop.coins += world.shop.rod_add_ons[1].cost
 	world.shop.purchases_changed.emit()
 	catalog.ensure_control_visible(spool)
@@ -222,6 +225,42 @@ func _play(main: Node) -> void:
 	_key(KEY_ESCAPE)
 	await process_frame
 	_check(pause.visible and balance.is_visible_in_tree() and balance.text == "23 gold" and world.rod.cast_number == 0, "The balance or input state did not survive return to shore and pause")
+	_key(KEY_ESCAPE)
+	_key(KEY_E)
+	_click(buy)
+	await process_frame
+	var projects: Array[Node] = trader.get_node("%Cleanup").find_children("*", "Button", true, false)
+	var permanent_before: int = world.pollution.permanent_points
+	var first_project: CleanupProject = world.shop.cleanup_projects.front()
+	catalog.ensure_control_visible(projects.front())
+	await process_frame
+	_click(projects.front())
+	await process_frame
+	var confirmation: Label = trader.get_node("%Feedback")
+	_check(world.pollution.permanent_points == permanent_before - first_project.pollution_reduction and confirmation.text.contains("fell by %d percentage points" % first_project.pollution_reduction), "Cleanup confirmation disagreed with the model")
+
+
+func _check_offer_labels(trader: CanvasLayer, world: World, catalog: ScrollContainer) -> void:
+	var current: Label = trader.get_node("%CurrentGear")
+	_check(current.text.contains("12 m reach") and not current.text.contains(" px "), "Starter gear did not show its converted reach")
+	var gear: Control = trader.get_node("%Gear")
+	var rods: Array[Node] = gear.find_children("*", "Button", true, false)
+	var projects: Array[Node] = trader.get_node("%Cleanup").find_children("*", "Button", true, false)
+	for index: int in world.shop.rod_upgrades.size():
+		var button: Button = rods[index]
+		var reach: String = ["19.5 m", "30 m"][index]
+		var details: Label = button.get_parent().find_children("*", "Label", false, false)[0]
+		_check(details.text.contains("%s reach" % reach), "Rod card disagreed with the configured cast range")
+	for index: int in world.shop.cleanup_projects.size():
+		var button: Button = projects[index]
+		var details: Label = button.get_parent().find_children("*", "Label", false, false)[0]
+		var project: CleanupProject = world.shop.cleanup_projects[index]
+		catalog.ensure_control_visible(button)
+		await process_frame
+		_check(details.text.contains("−%d percentage points of permanent pollution" % project.pollution_reduction), "Cleanup card disagreed with the configured reduction")
+		_check(button.get_global_rect().end.x <= catalog.get_global_rect().end.x and details.get_global_rect().end.x <= button.get_global_rect().position.x and details.size.y >= details.get_minimum_size().y, "Cleanup offer text or price overflowed the catalog")
+	catalog.scroll_vertical = 0
+	await process_frame
 
 
 func _test_sell_all(trader: CanvasLayer, world: World, balance: Label) -> void:

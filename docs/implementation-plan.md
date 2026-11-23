@@ -16,7 +16,7 @@ The next pass spreads trash stops through the equipped rod's casting range and g
 
 ## Current checkpoint
 
-[Milestone 31](#milestone-31--trash-stop-variety-and-offshore-fish) is published at `6d83b93` on `roadmap-implementation`. M32 and M33 are verified. Next is M34 trader wording and meter-scale reach. The outstanding M30 timing, onboarding, listening, and cross-device checks carry forward to M36.
+[Milestone 31](#milestone-31--trash-stop-variety-and-offshore-fish) is published at `6d83b93` on `roadmap-implementation`. M32–M34 are verified. Next is M35, the offshore trash net. Check the net’s floating-pollution label during M35. The outstanding M30 timing, onboarding, listening, and cross-device checks carry forward to M36.
 
 ## Completed baseline
 
@@ -770,7 +770,7 @@ Record representative casts, splashes, waits with a hooked fish, and retrieves. 
 
 ## Milestone 34 — Trader wording and meter-scale reach
 
-**Planned.** Players can read how each cleanup purchase changes pollution and compare rod reach in meters.
+**Verified November 23, 2026.** Players can read how each cleanup purchase changes pollution and compare rod reach in meters.
 
 - Label cleanup cards and confirmations with their effect on pollution, such as `−5 percentage points of permanent pollution`. Use the actual configured reduction and make the final net's effect on floating pollution clear.
 - Pick and document one display conversion from world units to meters. Apply it consistently to rod upgrade cards, current gear, and any related player-facing range text. Keep the underlying cast geometry and collision units as they are.
@@ -778,6 +778,10 @@ Record representative casts, splashes, waits with a hooked fish, and retrieves. 
 **Verification**
 
 Compare the shop labels against the model for each project, rod tier, and the final net after M35. Confirm that prices and labels fit at both test sizes and that the stated reach increases track the actual rod upgrades.
+
+- The trader displays one meter per 20 world units. The Starter, Shore, and Offshore rods show 12 m, 19.5 m, and 30 m. The configured ranges remain 240, 390, and 600 world units.
+- The trader smoke test passed at 1280 x 720 and 800 x 450. It checked the reductions and price layout on all eleven cleanup cards, all rod ranges, and the purchase confirmation against the change in permanent pollution.
+- Verify the final net's floating-pollution label against the M35 purchase and add it to the trader checks.
 
 ## Milestone 35 — Final investment, offshore trash net
 

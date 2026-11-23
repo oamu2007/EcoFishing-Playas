@@ -7,6 +7,8 @@ signal cancelled
 
 enum Page { HOME, SELL, BUY }
 
+@export_range(1.0, 100.0) var world_units_per_meter: float = 20.0
+
 var _shop: ShackShop
 var _sack: Sack
 var _rod: FishingRod
@@ -60,7 +62,7 @@ func bind_shop(shop: ShackShop, sack: Sack, rod: FishingRod) -> void:
 	_rod = rod
 	for index: int in shop.rod_upgrades.size():
 		var upgrade: RodUpgrade = shop.rod_upgrades[index]
-		var effect: String = "%d px reach · %d trash\n%.2f s cast · %.2f s reel" % [upgrade.cast_range, upgrade.trash_limit, upgrade.cast_time, upgrade.retrieval_time]
+		var effect: String = "%s reach · %d trash\n%.2f s cast · %.2f s reel" % [_format_reach(upgrade.cast_range), upgrade.trash_limit, upgrade.cast_time, upgrade.retrieval_time]
 		var button: Button = _add_catalog_card(_gear, upgrade.title, effect, upgrade.art)
 		button.pressed.connect(_buy_rod.bind(index))
 		_rod_buttons.append(button)
@@ -71,7 +73,8 @@ func bind_shop(shop: ShackShop, sack: Sack, rod: FishingRod) -> void:
 		_sack_buttons.append(button)
 	for index: int in shop.cleanup_projects.size():
 		var project: CleanupProject = shop.cleanup_projects[index]
-		var button: Button = _add_catalog_card(_cleanup, project.title, "Removes %d permanent points" % project.pollution_reduction, project.art)
+		var effect: String = "−%d percentage points of permanent pollution" % project.pollution_reduction
+		var button: Button = _add_catalog_card(_cleanup, project.title, effect, project.art)
 		button.pressed.connect(_buy_cleanup.bind(index))
 		_cleanup_buttons.append(button)
 	_rod_add_ons_section.visible = not shop.rod_add_ons.is_empty()
@@ -340,7 +343,7 @@ func _add_rod_add_on_card(add_on: RodAddOn) -> Button:
 
 func _refresh_catalog() -> void:
 	var rod_title: String = _shop.rod_title(_shop.rod_tier)
-	_current_gear.text = "Equipped   ·   %s   ·   %d px reach   ·   %d Sack slots" % [rod_title, _rod.maximum_cast_range, _sack.capacity]
+	_current_gear.text = "Equipped   ·   %s   ·   %s reach   ·   %d Sack slots" % [rod_title, _format_reach(_rod.maximum_cast_range), _sack.capacity]
 	_rod_add_ons_heading.text = "Rod add-ons · %s" % rod_title
 	for index: int in _rod_buttons.size():
 		_set_price(_rod_buttons[index], index, _shop.rod_tier, _shop.rod_upgrades[index].cost)
@@ -358,6 +361,10 @@ func _refresh_catalog() -> void:
 			status = "Owned · %s" % status
 		_set_availability(_rod_add_on_buttons[index], not _shop.can_buy_rod_add_on(index), status, add_on.cost)
 	_refresh_rod_add_on_ownership()
+
+
+func _format_reach(world_distance: float) -> String:
+	return "%s m" % String.num(world_distance / world_units_per_meter, 1).trim_suffix(".0")
 
 
 func _refresh_rod_add_on_ownership() -> void:
@@ -407,7 +414,7 @@ func _buy_sack(index: int) -> void:
 
 func _buy_cleanup(index: int) -> void:
 	if visible and _page == Page.BUY and _shop.buy_cleanup(index):
-		_feedback.text = "Permanent pollution fell by %d points. Return to shore to see the work." % _shop.cleanup_projects[index].pollution_reduction
+		_feedback.text = "Permanent pollution fell by %d percentage points. Return to shore to see the work." % _shop.cleanup_projects[index].pollution_reduction
 
 
 func _buy_rod_add_on(index: int) -> void:
