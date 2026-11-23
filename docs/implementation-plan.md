@@ -1,6 +1,6 @@
 # Vertical slice implementation plan
 
-The `roadmap-implementation` branch starts from playable revision `f812046` on `feature/dynamic-water`. Revision `0ee166b` completes M7–M12, `97b5709` completes M13–M18, and `d91844c` completes the verified M19–M25 follow-up. M26–M30 build on the M25 checkpoint.
+The `roadmap-implementation` branch starts from playable revision `f812046` on `feature/dynamic-water`. Revisions `0ee166b`, `97b5709`, `d91844c`, and `e53893c` record the verified checkpoints through M12, M18, M25, and M30. M31–M36 build on the M30 checkpoint.
 
 ## Definition of done
 
@@ -12,9 +12,11 @@ In the next pass, incoming trash keeps moving inward until it reaches the equipp
 
 The next playtest pass makes catchable fish more active and gives common, rare, and trophy encounters distinct stakes. The trader has roomier add-on cards and a shortcut back from Buy or Sell. Purchased add-ons are visible on the rod. A full Sack gives brief feedback at cast time, and footsteps sit lower in the mix.
 
+The next pass spreads trash stops through the equipped rod's casting range and gives fish more room offshore. First catches get a species discovery screen, fish show their individual size in the water, and the line and audio respond more naturally. The trader explains reach in meters and cleanup in pollution percentage points. An expensive final offshore net visibly intercepts trash, sells it automatically, and ends floating-trash pollution for the session.
+
 ## Current checkpoint
 
-[Milestones 26–30](#milestone-26--fish-motion-and-timing-feel) are verified on `roadmap-implementation`. Player review called for a clearer common-to-rare difficulty gap, which informed the rare and trophy windows. [M30](#milestone-30--focused-playtest-and-regression-checks) records the final checks and remaining human review.
+Start with [Milestone 31](#milestone-31--trash-stop-variety-and-offshore-fish) using the verified M30 build. Continue with the roadmap execution workflow in [AGENTS.md](../AGENTS.md). The outstanding human timing, onboarding, listening, and cross-device checks in [M30](#milestone-30--focused-playtest-and-regression-checks) carry forward to M36.
 
 ## Completed baseline
 
@@ -699,6 +701,75 @@ The player tried the M26 common and rare comparison and asked for a bigger diffi
 - Run an independent first-time session to check discovery of Help, the trader, and multi-check fishing, and assess the first three Sack trips.
 - Listen to the loop seam and the mix while walking into a cast, including the quieter footsteps and overlapping interface and fishing cues.
 - Check graphics, frame pacing, UI legibility, and audio on a second device.
+
+## Milestone 31 — Trash stop variety and offshore fish
+
+**Next.** Trash settles throughout the currently reachable water, and fish can appear farther offshore while the starter rod still has fish to catch.
+
+- Keep the slower inward drift and offscreen entry. Once an arrival crosses into the equipped rod's range, let it continue to a randomly chosen stop drawn across the usable span between minimum and maximum reach. Respect actual shoreline casting geometry, spacing, and water clearance. Retarget in-flight arrivals after an upgrade without snapping or reversing course. Preserve the gentle motion after a piece settles.
+- Expand catchable fish placement and routes beyond the existing starter-only band. Keep regular reachable encounters with starter gear and offer additional offshore catches as rod reach improves. Keep fish routes and cues within the water and readable in the supported camera views. Preserve pollution thresholds, species weights, and the existing encounter difficulty.
+
+**Verification**
+
+Sample seeded trash stops for each rod tier and confirm that near, middle, and far catches all occur. Compare visible stops with M30 at both test window sizes. Upgrade a rod during an arrival and check its path, verify recurring starter catches at cap, and exercise nearshore and offshore fish routes and casting access with each tier.
+
+## Milestone 32 — First-catch discoveries and visible fish size
+
+**Planned.** Landing a species for the first time opens a celebratory **New Fish!** screen. Larger catches look larger in the water.
+
+- Mark a species as discovered when that catch successfully lands in the Sack. Show a striking fish illustration, species name, measured length, rarity, and exact sale value, with a dedicated sound effect. Give the trophy California sheephead a stronger reveal, animation, and sound treatment. Keep the details legible and dismissal explicit. Discoveries reset on New Game for this session-only build.
+- Open the screen after the catch completes and consume its inputs so dismissal cannot cast, reel, or change the inventory. Each species gets one reveal per session. Missed, escaped, or rejected catches do not count.
+- Scale the swimming and hooked fish artwork by its actual rolled length. Make size differences visible within a species and across the roster. Keep sizes legible, preserve sprite and cue alignment, and base the payout and discovery details on the same landed catch. Keep the existing fish timing and catch rules.
+
+**Playable review checkpoint**
+
+Share a short build or repeatable fixture showing one common discovery and one trophy discovery, plus two visibly different sizes of the same species. Ask whether the trophy feels special and the first-catch screen is worth pausing for. Continue independent trader, audio, and line work during review.
+
+**Verification**
+
+Land a first catch, dismiss the reveal, then land the same species again. Verify one reveal and sound, the exact length and sale quote, and normal fishing afterward. Repeat for the trophy and a new session. Compare small and large fish in motion, on the hook, and in the discovery screen. Check full Sack and escape paths, keyboard and mouse dismissal, and both window sizes.
+
+## Milestone 33 — Fishing line motion and audio feedback
+
+**Planned.** The line bends and settles with the cast, water contact, fish movement, and retrieval. A full Sack has a clear negative sound, and pause lowers the music.
+
+- Make the line feel like a flexible connection between the rod tip and the hook. Let it trail or bow during flight, settle as the hook lands, and show changing slack and tension as the hook moves or reels in. Keep both endpoints attached and use visual motion without changing casting or catch geometry.
+- Pair the existing full-Sack pop-up with a short negative sound even when Help is off. Trigger it with the warning and handle rapid repeats without stacking the cue.
+- Duck the background music smoothly while the pause screen or its confirmation is open. Restore the previous level on resume or exit. Keep the same track and playback position through these transitions.
+
+**Verification**
+
+Record representative casts, splashes, waits with a hooked fish, and retrieves. Look for smooth transitions and attached endpoints after resizing and across rod tiers. Compare full and non-full cast attempts and listen for the warning. Measure the paused and resumed music levels and check for continuous playback after repeated pauses and a return to title.
+
+## Milestone 34 — Trader wording and meter-scale reach
+
+**Planned.** Players can read how each cleanup purchase changes pollution and compare rod reach in meters.
+
+- Label cleanup cards and confirmations with their effect on pollution, such as `−5 percentage points of permanent pollution`. Use the actual configured reduction and make the final net's effect on floating pollution clear.
+- Pick and document one display conversion from world units to meters. Apply it consistently to rod upgrade cards, current gear, and any related player-facing range text. Keep the underlying cast geometry and collision units as they are.
+
+**Verification**
+
+Compare the shop labels against the model for each project, rod tier, and the final net after M35. Confirm that prices and labels fit at both test sizes and that the stated reach increases track the actual rod upgrades.
+
+## Milestone 35 — Final investment, offshore trash net
+
+**Planned.** The player can buy an expensive final beach investment that places a giant net at the offshore edge of view. The net automatically sells the trash it intercepts, and floating trash stops affecting pollution for the rest of the session.
+
+- Unlock the net after the existing permanent cleanup catalog is complete. Tune its cost as a substantial late-game goal funded through normal play, with a viable path that does not depend on a trophy fish. Show its unlock condition, price, and effect in the shop.
+- Stage a visible installation at a world-anchored offshore location near the ocean-side edge of the screen. Make the net and its collection readable across supported camera views. Intercept arriving trash at the net, remove each intercepted piece, and credit its sale value directly to the wallet exactly once. Automatic sales use no Sack capacity. Keep collection independent of the player's camera position and show a concise catch or coin cue.
+- On successful purchase, zero the existing floating-trash contribution and keep future arrivals and remaining debris from affecting it. Keep the earlier 30/70 behavior and live rebound before purchase. With permanent cleanup complete, the purchase enables a stable 0% and clean-water fish conditions even while trash continues to arrive. Reset the net, auto-sales, and normal pollution rules on New Game.
+
+**Verification**
+
+Fund the net through a regular non-trophy route. Check locking, affordability, repeated input, and the one-time charge. Observe and count intercepted pieces and reconcile the wallet against their exact sale values with a full Sack. Leave previously counted debris in the water, watch new arrivals, and verify stable true and displayed 0%. Check pause, camera movement, both window sizes, and a fresh session.
+
+## Milestone 36 — Integrated playtest and regression checks
+
+**Planned.** A fresh session progresses from varied nearshore trash and a first species discovery to offshore fishing and a working endgame net.
+
+- Play an ordinary progression route, including a first discovery, repeat catch, rod upgrade, and the final net purchase. Use a separate controlled trophy encounter to verify its presentation. Record time and earnings to the net, old and new offshore access, and the before-purchase rebound and after-purchase stable 0%.
+- Run Godot import, main startup, and relevant smoke, audio, and GPU checks, including the standalone water preview. Record any pending human timing, listening, onboarding, and cross-device checks. Update the README and architecture notes for the new behavior and scene ownership.
 
 ## Scope guardrails
 
