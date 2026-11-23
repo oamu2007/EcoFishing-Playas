@@ -43,7 +43,7 @@ The level also creates footprint and splash nodes at runtime, plus a shader-back
 
 ### Implemented fishing composition
 
-`Player` owns a `FishingRod` and checks `is_active()` to lock movement outside `IDLE`. The rod owns an aiming pivot, a tip marker, separate `FishingLine` and `FishingHook` scenes, and a status label. The pivot rotates toward the world-space mouse position; line endpoints are converted into local coordinates.
+`Player` owns a `FishingRod` and checks `is_active()` to lock movement outside `IDLE`. The rod owns an aiming pivot, a tip marker, separate `FishingLine` and `FishingHook` scenes, and a status label. The pivot rotates toward the world-space mouse position. The rod supplies the line with both world-space endpoints and the desired slack for its current state. `FishingLine` converts the endpoints to local coordinates and interpolates the slack of its visual curve through flight, landing, fish tension, and retrieval. The hook still owns catch geometry.
 
 The level derives an axis-aligned water rectangle from its rectangular ocean polygon and injects it into the rod. Translation/scaling is supported; rotated or nonrectangular water needs a polygon-based validator. Validation checks distance to water (140 px), a water target, and range (60–240 px for the starter rod), measured from the rod origin.
 
@@ -127,7 +127,7 @@ The title, pause, HUD, and trader share `ui/themes/coastal_field_guide.tres`. Br
 
 ### Audio
 
-`Main` owns `GameAudio` for the lifetime of the application. Its music player starts the selected track once, and its eight-voice player handles short effects on a separate bus. The session binds rod, catch, footprint, trader, transaction, and cleanup signals when it starts. `GameAudio` applies a separate −8 dB gain to the footstep cue before the effects player gain. Replacing the session removes those signal sources while music playback continues. Closing the application stops both players and gives the Godot mixer time to release the streams. The mixer and stream selection are set in `scenes/components/game_audio.tscn` and `default_bus_layout.tres`. [Asset credits](asset-credits.md) lists the music source and effects.
+`Main` owns `GameAudio` for the lifetime of the application. Its music player starts the selected track once, and its eight-voice player handles short effects on a separate bus. The session binds rod, catch, footprint, trader, transaction, and cleanup signals when it starts. The HUD emits the full-Sack warning alongside its popup, and `GameAudio` limits overlapping repeats. `GameAudio` applies a separate -8 dB gain to the footstep cue before the effects player gain. Pause and its confirmation duck the playing track by 14 dB over 0.24 seconds. Resume, restart, and return to title restore its previous level. Closing the application stops both players and gives the Godot mixer time to release the streams. The mixer and stream selection are set in `scenes/components/game_audio.tscn` and `default_bus_layout.tres`. [Asset credits](asset-credits.md) lists the music source and effects.
 
 ## Systems and data flow
 

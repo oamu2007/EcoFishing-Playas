@@ -57,6 +57,7 @@ func _start_session() -> void:
 	_session.bind_audio(_audio)
 	_menu.dismiss()
 	_pause.hide()
+	_audio.set_music_ducked(false)
 	_starting_session = false
 
 
@@ -71,6 +72,7 @@ func _request_title() -> void:
 func _return_to_title() -> void:
 	_drop_session()
 	_pause.hide()
+	_audio.set_music_ducked(false)
 	_menu.open()
 	_starting_session = false
 
@@ -88,6 +90,7 @@ func _open_pause() -> void:
 	_session.process_mode = Node.PROCESS_MODE_DISABLED
 	_session.set_hud_visible(false)
 	_pause.open()
+	_audio.set_music_ducked(true)
 
 
 func _resume() -> void:
@@ -95,5 +98,6 @@ func _resume() -> void:
 		return
 	_audio.play_cue(AudioScript.Cue.CANCEL)
 	_pause.hide()
+	_audio.set_music_ducked(false)
 	_session.process_mode = Node.PROCESS_MODE_INHERIT
 	_session.set_hud_visible(true)

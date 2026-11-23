@@ -2,6 +2,7 @@ extends CanvasLayer
 
 signal menu_requested
 signal help_visibility_changed(enabled: bool)
+signal sack_full_warned
 
 const CatchResolverScript = preload("res://scripts/systems/catch_resolver.gd")
 const TimingDialScript = preload("res://scripts/ui/fish_timing_dial.gd")
@@ -175,6 +176,7 @@ func _show_full_sack_feedback() -> void:
 	if _sack.free_slots == 0:
 		_sack_full.show()
 		_sack_full_timer.start()
+		sack_full_warned.emit()
 
 
 func _on_fish_timing_finished(succeeded: bool) -> void:

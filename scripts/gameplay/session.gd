@@ -35,6 +35,7 @@ func _ready() -> void:
 func bind_audio(audio: AudioScript) -> void:
 	_audio = audio
 	_world.bind_audio(audio)
+	_hud.sack_full_warned.connect(audio.play_cue.bind(AudioScript.Cue.SACK_FULL))
 	_shack_panel.inventory_picked_up.connect(audio.play_cue.bind(AudioScript.Cue.PICKUP))
 	_shack_panel.inventory_dropped.connect(audio.play_cue.bind(AudioScript.Cue.DROP))
 	_shack_panel.cancelled.connect(audio.play_cue.bind(AudioScript.Cue.CANCEL))

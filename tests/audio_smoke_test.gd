@@ -38,14 +38,22 @@ func _run() -> void:
 	_check(_seen(AudioScript.Cue.FOOTSTEP) >= 1, "Walking did not play footsteps")
 
 	var pause: CanvasLayer = main.get_node("PauseMenu")
+	var playing_gain: float = music.volume_db
 	_key(KEY_ESCAPE)
 	var paused_at: float = music.get_playback_position()
-	await create_timer(0.25).timeout
-	_check(pause.visible and music.get_playback_position() > paused_at + 0.1, "Pausing the session stopped the music")
+	await create_timer(audio.pause_fade_seconds + 0.08).timeout
+	_check(pause.visible and music.get_playback_position() > paused_at + 0.1 and is_equal_approx(music.volume_db, playing_gain - audio.pause_duck_db), "Pause did not duck continuous playback to its configured level")
+	pause.get_node("%QuitToTitle").pressed.emit()
+	await create_timer(audio.pause_fade_seconds + 0.08).timeout
+	_check(is_equal_approx(music.volume_db, playing_gain - audio.pause_duck_db), "Pause confirmation restored unducked music")
 	_key(KEY_ESCAPE)
+	_key(KEY_ESCAPE)
+	await create_timer(audio.pause_fade_seconds + 0.08).timeout
+	_check(is_equal_approx(music.volume_db, playing_gain), "Resume did not restore the previous level")
 	_check_music(main, music, stream, paused_at)
 
 	await _exercise_fishing(world)
+	_exercise_sack_full(session, world)
 	var player: CharacterBody2D = world.get_node("Player")
 	player.global_position = world.get_node("FishingShack").global_position
 	_key(KEY_E)
@@ -80,6 +88,8 @@ func _run() -> void:
 	pause.get_node("%ConfirmDiscard").pressed.emit()
 	await process_frame
 	_check(not main.has_node("Session"), "Quit did not return to title")
+	await create_timer(audio.pause_fade_seconds + 0.08).timeout
+	_check(is_equal_approx(music.volume_db, playing_gain), "Returning to title left the music ducked")
 	_check_music(main, music, stream, trader_at)
 	main.get_node("SessionMenu").get_node("%StartSession").pressed.emit()
 	await process_frame
@@ -141,6 +151,21 @@ func _key(code: Key) -> void:
 	event.keycode = code
 	event.pressed = true
 	root.push_input(event, true)
+
+
+func _exercise_sack_full(session: Node, world: WorldScript) -> void:
+	var hud: CanvasLayer = session.get_node("HUD")
+	var warning: Label = hud.get_node("SackFull")
+	var empty_cast_cues: int = _seen(AudioScript.Cue.MISS)
+	var rod: FishingRod = world.rod
+	var bad_spot: Vector2 = rod.global_position + Vector2(-38.0, 0.0)
+	for slot: int in world.sack.free_slots:
+		world.sack.store("Trash", slot, false)
+	for attempt: int in 3:
+		_mouse_reel(rod, bad_spot)
+	_check(warning.visible and not hud.is_help_enabled() and _seen(AudioScript.Cue.SACK_FULL) == 1 and _seen(AudioScript.Cue.MISS) == empty_cast_cues, "Full Sack warning did not play one dedicated cue with Help off")
+	world.sack.remove_entries(world.sack.entries().slice(1))
+	_check(not warning.visible, "Opening a Sack slot did not clear the warning")
 
 
 func _mouse_reel(rod: FishingRod, point: Vector2) -> void:

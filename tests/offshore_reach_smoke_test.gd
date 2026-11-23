@@ -142,12 +142,22 @@ func _test_fish_routes(tier: int, starter_reach: float, previous_reach: float) -
 	click.pressed = false
 	root.push_input(click, true)
 	_check(rod.state == FishingRod.State.CASTING, "Viewport click could not cast to the fish")
-	rod._process(rod.equipped_cast_duration())
+	rod._process(rod.equipped_cast_duration() * 0.5)
+	_check_line_endpoints(rod)
+	rod._process(rod.equipped_cast_duration() * 0.5)
 	_check(candidate.hooked and rod.state == FishingRod.State.TIMING, "Viewport cast could not hook the fish")
+	_check_line_endpoints(rod)
 	rod._process(rod.fish_timing_duration)
 	for visitor: CatchableFish in manager.fish.duplicate():
 		visitor.escape()
 	await process_frame
+
+
+func _check_line_endpoints(rod: FishingRod) -> void:
+	var line: Line2D = rod.get_node("FishingLine")
+	var tip: Marker2D = rod.get_node("Pivot/Tip")
+	var hook: FishingHook = rod.get_node("FishingHook")
+	_check(line.to_global(line.points[0]).is_equal_approx(tip.global_position) and line.to_global(line.points[-1]).is_equal_approx(hook.get_line_endpoint()), "Resized offshore view detached a line endpoint")
 
 
 func _aim_from_shore(y: float) -> void:

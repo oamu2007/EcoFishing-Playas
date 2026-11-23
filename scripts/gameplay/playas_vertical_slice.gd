@@ -87,7 +87,7 @@ func bind_audio(audio: AudioScript) -> void:
 	_footprints.stepped.connect(audio.on_footstep)
 	rod.state_changed.connect(audio.on_rod_state_changed)
 	rod.hook_landed.connect(audio.play_cue.bind(AudioScript.Cue.SPLASH).unbind(1))
-	rod.cast_rejected.connect(audio.play_cue.bind(AudioScript.Cue.MISS).unbind(1))
+	rod.cast_rejected.connect(_on_cast_rejected.bind(audio))
 	rod.fish_timing_advanced.connect(audio.play_cue.bind(AudioScript.Cue.TIMING_SUCCESS))
 	rod.fish_timing_saved.connect(audio.play_cue.bind(AudioScript.Cue.TIMING_FAILURE))
 	rod.fish_timing_finished.connect(audio.on_fish_timing_finished)
@@ -95,6 +95,11 @@ func bind_audio(audio: AudioScript) -> void:
 	cleanup_work.work_started.connect(audio.play_cue.bind(AudioScript.Cue.CLEANUP).unbind(1))
 	shop.sale_completed.connect(audio.play_cue.bind(AudioScript.Cue.SALE))
 	shop.purchase_completed.connect(audio.play_cue.bind(AudioScript.Cue.PURCHASE))
+
+
+func _on_cast_rejected(_reason: String, audio: AudioScript) -> void:
+	if sack.free_slots > 0:
+		audio.play_cue(AudioScript.Cue.MISS)
 
 
 func set_shop_open(value: bool) -> void:

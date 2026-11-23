@@ -3,7 +3,7 @@ extends Node
 enum Cue {
 	FOOTSTEP, CAST, SPLASH, REEL, CATCH, MISS, TIMING_SUCCESS, TIMING_FAILURE,
 	NAVIGATE, CONFIRM, CANCEL, PICKUP, DROP, SALE, PURCHASE, CLEANUP,
-	FISH_DISCOVERY, TROPHY_DISCOVERY,
+	FISH_DISCOVERY, TROPHY_DISCOVERY, SACK_FULL,
 }
 
 signal cue_started(cue: Cue)
@@ -27,6 +27,7 @@ const EFFECTS: Dictionary[Cue, AudioStream] = {
 	Cue.CLEANUP: preload("res://assets/audio/effects/cleanup.wav"),
 	Cue.FISH_DISCOVERY: preload("res://assets/audio/effects/fish_discovery.wav"),
 	Cue.TROPHY_DISCOVERY: preload("res://assets/audio/effects/trophy_discovery.wav"),
+	Cue.SACK_FULL: preload("res://assets/audio/effects/sack_full.wav"),
 }
 const CUE_GAIN: Dictionary[Cue, float] = {
 	Cue.FOOTSTEP: -8.0,
@@ -37,21 +38,27 @@ const CUE_GAIN: Dictionary[Cue, float] = {
 	Cue.TIMING_FAILURE: 2.0,
 	Cue.SALE: 2.0,
 }
-const MINIMUM_GAP_MS: Dictionary[Cue, int] = {Cue.NAVIGATE: 65, Cue.MISS: 110, Cue.FOOTSTEP: 100}
+const MINIMUM_GAP_MS: Dictionary[Cue, int] = {Cue.NAVIGATE: 65, Cue.MISS: 110, Cue.FOOTSTEP: 100, Cue.SACK_FULL: 330}
 const SHUTDOWN_GRACE_MS: int = 150
 
 @export var tracks: Array[AudioStreamMP3] = []
 @export_range(0, 15) var starting_track: int = 0
 @export_range(0.0, 30.0, 0.01) var loop_start_seconds: float = 0.0
+@export_range(0.0, 30.0) var pause_duck_db: float = 14.0
+@export_range(0.05, 1.0, 0.01) var pause_fade_seconds: float = 0.24
 
 var _last_cues: Dictionary[Cue, int] = {}
 var _voices: AudioStreamPlaybackPolyphonic
+var _music_gain_db: float
+var _music_ducked: bool = false
+var _music_fade: Tween
 
 @onready var _music: AudioStreamPlayer = $Music
 @onready var _effects: AudioStreamPlayer = $Effects
 
 
 func _ready() -> void:
+	_music_gain_db = _music.volume_db
 	if not tracks.is_empty():
 		var track: AudioStreamMP3 = tracks[mini(starting_track, tracks.size() - 1)].duplicate()
 		track.loop = true
@@ -76,9 +83,22 @@ func prepare_shutdown() -> void:
 
 
 func _stop_all() -> void:
+	if _music_fade != null:
+		_music_fade.kill()
 	_music.stop()
 	_effects.stop()
 	_voices = null
+
+
+func set_music_ducked(ducked: bool) -> void:
+	if _music_ducked == ducked:
+		return
+	_music_ducked = ducked
+	if _music_fade != null:
+		_music_fade.kill()
+	var target_db: float = _music_gain_db - pause_duck_db if ducked else _music_gain_db
+	_music_fade = create_tween()
+	_music_fade.tween_property(_music, "volume_db", target_db, pause_fade_seconds).set_trans(Tween.TRANS_SINE)
 
 
 func play_cue(cue: Cue, pitch: float = 1.0) -> void:

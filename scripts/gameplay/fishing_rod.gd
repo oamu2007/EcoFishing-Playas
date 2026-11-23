@@ -22,6 +22,10 @@ const FishingLineScript = preload("res://scripts/gameplay/fishing_line.gd")
 @export_range(0.1, 3.0) var retrieval_duration: float = 0.85
 @export_range(1, 10) var trash_per_cast: int = 1
 @export var cast_height: float = 100.0
+@export var line_cast_bow: float = 46.0
+@export var line_landing_slack: float = 26.0
+@export var line_waiting_slack: float = 9.0
+@export var line_tension_slack: float = 3.0
 @export_range(0.5, 5.0, 0.05) var fish_timing_duration: float = 1.20
 @export_range(0.05, 0.6, 0.01) var fish_timing_window: float = 0.17
 @export var fish_timing_centers: Vector2 = Vector2(0.50, 0.83)
@@ -43,6 +47,7 @@ var _timing_window: float
 var _forgiven_misses: int = 0
 var _duration_discount: float = 0.0
 var _elapsed: float = 0.0
+var _time_since_landing: float = 0.0
 var _start: Vector2 = Vector2.ZERO
 var _target: Vector2 = Vector2.ZERO
 var _invalid_feedback: float = 0.0
@@ -203,6 +208,7 @@ func _process(delta: float) -> void:
 			# Height is presentation only: the Area2D follows the water-plane path.
 			_hook.set_height(4.0 * cast_height * progress * (1.0 - progress))
 			if progress >= 1.0:
+				_time_since_landing = 0.0
 				_set_state(State.WAITING)
 				hook_landed.emit(_target)
 				for area: Area2D in _hook.get_overlapping_areas():
@@ -225,10 +231,26 @@ func _process(delta: float) -> void:
 			if _elapsed >= fish_timing_duration:
 				_finish_fish_timing(false)
 	if is_active():
-		_line.connect_endpoints(_tip.global_position, _hook.get_line_endpoint())
+		_line.follow_endpoints(_tip.global_position, _hook.get_line_endpoint(), _desired_line_slack(), delta)
+		if state != State.CASTING:
+			_time_since_landing += delta
 	_refresh_status_visibility()
 	_status.modulate = Color(1.0, 0.4, 0.3) if _invalid_feedback > 0.0 else Color.WHITE
 	queue_redraw()
+
+
+func _desired_line_slack() -> float:
+	match state:
+		State.CASTING:
+			var flight: float = clampf(_elapsed / equipped_cast_duration(), 0.0, 1.0)
+			return line_cast_bow * sin(PI * flight)
+		State.TIMING:
+			return line_tension_slack * (1.1 + 0.8 * sin(_time_since_landing * 15.0)) + line_landing_slack * exp(-_time_since_landing * 19.0)
+		State.WAITING:
+			return line_tension_slack if fish_secured else line_waiting_slack + line_landing_slack * exp(-_time_since_landing * 7.0)
+		State.RETRIEVING:
+			return line_tension_slack
+	return 0.0
 
 
 func _refresh_status_visibility() -> void:

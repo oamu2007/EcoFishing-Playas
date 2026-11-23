@@ -16,7 +16,7 @@ The next pass spreads trash stops through the equipped rod's casting range and g
 
 ## Current checkpoint
 
-[Milestone 31](#milestone-31--trash-stop-variety-and-offshore-fish) is published at `6d83b93` on `roadmap-implementation`. M32 completed its player review and verification. Next is M33 line motion and audio feedback. The outstanding M30 timing, onboarding, listening, and cross-device checks carry forward to M36.
+[Milestone 31](#milestone-31--trash-stop-variety-and-offshore-fish) is published at `6d83b93` on `roadmap-implementation`. M32 and M33 are verified. Next is M34 trader wording and meter-scale reach. The outstanding M30 timing, onboarding, listening, and cross-device checks carry forward to M36.
 
 ## Completed baseline
 
@@ -754,7 +754,7 @@ Land a first catch, dismiss the reveal, then land the same species again. Verify
 
 ## Milestone 33 — Fishing line motion and audio feedback
 
-**Planned.** The line bends and settles with the cast, water contact, fish movement, and retrieval. A full Sack has a clear negative sound, and pause lowers the music.
+**Verified November 23, 2026.** The line bends and settles with the cast, water contact, fish movement, and retrieval. A full Sack has a dedicated warning cue, and pause lowers the music.
 
 - Make the line feel like a flexible connection between the rod tip and the hook. Let it trail or bow during flight, settle as the hook lands, and show changing slack and tension as the hook moves or reels in. Keep both endpoints attached and use visual motion without changing casting or catch geometry.
 - Pair the existing full-Sack pop-up with a short negative sound even when Help is off. Trigger it with the warning and handle rapid repeats without stacking the cue.
@@ -763,6 +763,10 @@ Land a first catch, dismiss the reveal, then land the same species again. Verify
 **Verification**
 
 Record representative casts, splashes, waits with a hooked fish, and retrieves. Look for smooth transitions and attached endpoints after resizing and across rod tiers. Compare full and non-full cast attempts and listen for the warning. Measure the paused and resumed music levels and check for continuous playback after repeated pauses and a return to title.
+
+- The line smoke test verified both endpoints through flight, landing, waiting and retrieval. It measured 45.9 world units of mid-flight sag, 35.0 at splash, 9.0 after settling, and 3.9 to 5.5 during fish tension. Its rendered samples at 1280 x 720 and 800 x 450 show the line bowing in flight and tightening with a hooked topsmelt and on retrieval. Run the test with `-- --capture-line` to record those frames in `.godot/line_captures/`. The rendered offshore reach test verified attachment with all three rods after resizing.
+- The audio test passed with the Dummy and WASAPI drivers. Three rapid full-Sack attempts with Help off produced one warning cue. Pause and its confirmation reached -25 dB from -11 dB, and resume and return to title restored -11 dB on the same track and playback.
+- Next is M34 trader verification. Subjective listening and cross-device checks carry forward to M36.
 
 ## Milestone 34 — Trader wording and meter-scale reach
 
