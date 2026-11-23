@@ -27,6 +27,7 @@ var _sale_trips: int
 var _first_threshold_time: float
 var _start_ticks: int
 var _sale_count: int
+var _gross_earned: int
 var _starter_range: float
 var _seen_starter_items: Dictionary[int, bool]
 var _new_starter_times: Array[float]
@@ -107,6 +108,7 @@ func _start_session(restarting: bool = false) -> bool:
 	_intentionally_fishing = false
 	_sale_trips = 0
 	_sale_count = 0
+	_gross_earned = 0
 	_first_threshold_time = -1.0
 	_cleanup_cues = 0
 	_trophy_visits = 0
@@ -119,6 +121,7 @@ func _start_session(restarting: bool = false) -> bool:
 	_world.cleanup_work.work_started.connect(_count_cleanup_cue)
 	_world.catchable_fish.fish_spawned.connect(_count_trophy_visit)
 	_check(_sack.item_count == 0 and _sack.capacity == 3 and _shop.coins == 0 and _coin_amount.text == "0 gold" and _shop.rod_tier == 0 and _shop.sack_tier == 0, "Fresh session retained Sack, gold, or gear progress")
+	_check(not _shop.offshore_net_installed and not _world.get_node("OffshoreNet").visible, "Fresh session retained the offshore net")
 	for tier: int in range(_shop.rod_upgrades.size() + 1):
 		for add_on: int in _shop.rod_add_ons.size():
 			_check(not _shop.owns_rod_add_on(tier, add_on), "Fresh session retained a rod add-on")
@@ -198,6 +201,8 @@ func _play_session(window: String) -> void:
 	_check(is_equal_approx(_water.displayed_pollution, rebound_target) and _visible_ambient_count() == zero_ambient, "Water and ambient fish did not settle after the rebound")
 	print("Clean-water window at %.1fs, live rebound to %d%%, %d ambient fish" % [clean_time, _world.pollution.current_pollution, _visible_ambient_count()])
 	await _check_cleanup_sites()
+	if not await _purchase_and_watch_net():
+		return
 	_check(_trophy_visits == 0, "The seeded ordinary progression route encountered a trophy")
 	var longest_gap: float = 0.0
 	for index: int in range(1, _new_starter_times.size()):
@@ -205,6 +210,49 @@ func _play_session(window: String) -> void:
 	if _check(_new_starter_times.size() >= 2, "Recurring starter-range supply was not observed"):
 		var mean_gap: float = (_new_starter_times.back() - _new_starter_times.front()) / (_new_starter_times.size() - 1)
 		print("Ingress %.1f px/s, cadence %.1fs. Starter arrivals %.1fs apart on average, longest %.1fs (%d observed)." % [_world.trash_manager.arrival_speed, _world.trash_manager.arrival_interval, mean_gap, longest_gap, _new_starter_times.size()])
+
+
+func _purchase_and_watch_net() -> bool:
+	var price: int = _shop.offshore_net_cost
+	if not await _fund(price):
+		return false
+	var net: Node2D = _world.get_node("OffshoreNet")
+	var old_debris: Array[OceanTrash] = []
+	for frame: int in 1400:
+		for item: OceanTrash in _world.trash_manager.items:
+			if item.in_water and item.global_position.x < net.global_position.x:
+				old_debris.append(item)
+		if not old_debris.is_empty():
+			break
+		await physics_frame
+	if not _check(not old_debris.is_empty() and _world.pollution.floating_points > 0, "The net purchase had no existing floating pollution to remove"):
+		return false
+	var before: int = _shop.coins
+	var intercepted: Dictionary[int, int] = {}
+	_world.trash_manager.trash_intercepted.connect(func(item: OceanTrash, sale_value: int) -> void:
+		var id: int = item.get_instance_id()
+		_check(not intercepted.has(id) and sale_value == item.sale_price() and item.global_position.x == net.global_position.x, "The net intercepted a piece twice or credited the wrong value")
+		intercepted[id] = sale_value
+	)
+	if not await _buy("OffshoreNetOffer", 0, price):
+		return false
+	_check(net.visible and _shop.offshore_net_installed and _world.pollution.current_pollution == 0, "Purchase did not deploy the net and clear floating pollution")
+	print("Offshore net at %.1fs, %d gold earned before purchase, paid %d gold" % [_seconds_since(_start_ticks), _gross_earned, price])
+	for frame: int in 2400:
+		if not _check(_world.pollution.current_pollution == 0, "True pollution rebounded after net installation"):
+			return false
+		if intercepted.size() >= 3 and is_zero_approx(_water.displayed_pollution):
+			break
+		await physics_frame
+	var net_earnings: int = 0
+	for sale_value: int in intercepted.values():
+		net_earnings += sale_value
+	var meter: ProgressBar = _session.get_node("HUD/ProgressPanel/Margin/Readouts/PollutionBar")
+	_check(is_instance_valid(old_debris.front()) and _world.trash_manager.items.has(old_debris.front()), "Installation removed earlier shoreward debris")
+	_check(_shop.coins == before - price + net_earnings and _coin_amount.text == "%d gold" % _shop.coins, "Visible wallet did not reconcile with intercepted sales")
+	_check(is_zero_approx(_water.displayed_pollution) and meter.value == 0.0 and _visible_ambient_count() == 6, "Water, HUD, or fish did not settle at clean conditions")
+	print("Stable 0%% after %d net interceptions (+%d gold), with earlier debris still in the water" % [intercepted.size(), net_earnings])
+	return _check(intercepted.size() >= 3, "The net did not intercept recurring arrivals")
 
 
 func _sample_starter_supply() -> void:
@@ -317,6 +365,7 @@ func _sell() -> bool:
 		_click_button(sell)
 		_click_button(sell)
 	_sale_count += 1
+	_gross_earned += payout
 	_check(_shop.coins == before + payout and _sack.item_count == 0 and _coin_amount.text == "%d gold" % _shop.coins, "Sale did not update the Sack and visible balance exactly once")
 	if fish_in_load:
 		_fish_sale_value = payout

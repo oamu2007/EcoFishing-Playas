@@ -4,6 +4,7 @@ extends Node2D
 signal trash_arrived(item_id: int, pollution_points: int)
 signal trash_spawned(item: OceanTrash)
 signal trash_collected(item_id: int)
+signal trash_intercepted(item: OceanTrash, sale_value: int)
 
 const TRASH_SCENE: PackedScene = preload("res://scenes/gameplay/trash.tscn")
 
@@ -27,6 +28,7 @@ var _shore_x: float
 var _drift_limits: Vector2
 var _safe_water: Rect2
 var _stop_band: Vector2
+var _net_x: float = -INF
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var _arrival_fractions: Dictionary[OceanTrash, float] = {}
 var _clock: float = 0.0
@@ -61,7 +63,20 @@ func _physics_process(delta: float) -> void:
 	if _clock < arrival_interval:
 		return
 	_clock = fmod(_clock, arrival_interval)
-	_spawn(_stop_band, true)
+	if is_finite(_net_x):
+		# Reserve one transit slot even if settled debris fills the fishing area.
+		if items.size() <= maximum_active_items:
+			_add_item(Vector2(_net_x, _rng.randf_range(_drift_limits.x, _drift_limits.y)), true)
+	else:
+		_spawn(_stop_band, true)
+
+
+func install_net(world_x: float) -> Vector2:
+	_net_x = world_x
+	for item: OceanTrash in items:
+		if item.is_arriving and not item.hooked and item.global_position.x >= _net_x:
+			_aim_at_net(item)
+	return _drift_limits
 
 
 func _reachable_stop_band() -> Vector2:
@@ -123,6 +138,8 @@ func _add_item(point: Vector2, incoming: bool) -> void:
 		item.entered_water.connect(_on_item_arrived.bind(item))
 		_arrival_fractions[item] = inverse_lerp(_stop_band.x, _stop_band.y, point.x) if _stop_band.x < _stop_band.y else 0.0
 		item.configure_arrival(entry_x, point, arrival_speed, _rod.water_bounds.end.x, _drift_limits, speed, phase)
+		if is_finite(_net_x):
+			_aim_at_net(item)
 	else:
 		item.global_position = point
 		item.configure_drift(_drift_limits, speed, _rng.randf_range(0.0, TAU))
@@ -135,7 +152,22 @@ func _on_item_arrived(item: OceanTrash) -> void:
 
 
 func _on_item_landed(target: FishingTarget) -> void:
-	var item: OceanTrash = target as OceanTrash
+	_remove_item(target as OceanTrash)
+
+
+func _aim_at_net(item: OceanTrash) -> void:
+	_arrival_fractions.erase(item)
+	item.set_interception_line(_net_x)
+	item.interception_reached.connect(_on_interception_reached.bind(item), CONNECT_ONE_SHOT)
+
+
+func _on_interception_reached(item: OceanTrash) -> void:
+	if item.finish_interception():
+		_remove_item(item)
+		trash_intercepted.emit(item, item.sale_price())
+
+
+func _remove_item(item: OceanTrash) -> void:
 	items.erase(item)
 	_arrival_fractions.erase(item)
 	trash_collected.emit(item.get_instance_id())

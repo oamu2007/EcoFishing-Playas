@@ -7,6 +7,8 @@ signal cancelled
 
 enum Page { HOME, SELL, BUY }
 
+const OFFSHORE_NET_ART: Texture2D = preload("res://assets/trader/offshore_net.svg")
+
 @export_range(1.0, 100.0) var world_units_per_meter: float = 20.0
 
 var _shop: ShackShop
@@ -17,6 +19,7 @@ var _selection: Array[Sack.Entry] = []
 var _rod_buttons: Array[Button] = []
 var _sack_buttons: Array[Button] = []
 var _cleanup_buttons: Array[Button] = []
+var _offshore_net_button: Button
 var _rod_add_on_buttons: Array[Button] = []
 
 @onready var _home: Control = %Home
@@ -36,6 +39,7 @@ var _rod_add_on_buttons: Array[Button] = []
 @onready var _tray_items: VBoxContainer = %TrayItems
 @onready var _gear: VBoxContainer = %Gear
 @onready var _cleanup: VBoxContainer = %Cleanup
+@onready var _net_offer: VBoxContainer = %OffshoreNetOffer
 @onready var _current_gear: Label = %CurrentGear
 @onready var _rod_add_ons_section: VBoxContainer = %RodAddOnsSection
 @onready var _rod_add_ons: HBoxContainer = %RodAddOns
@@ -77,6 +81,10 @@ func bind_shop(shop: ShackShop, sack: Sack, rod: FishingRod) -> void:
 		var button: Button = _add_catalog_card(_cleanup, project.title, effect, project.art)
 		button.pressed.connect(_buy_cleanup.bind(index))
 		_cleanup_buttons.append(button)
+	if shop.offshore_net_cost > 0:
+		var effect: String = "Unlocks after all %d cleanup projects.\nAuto-sells incoming trash and removes all floating pollution." % shop.cleanup_projects.size()
+		_offshore_net_button = _add_catalog_card(_net_offer, "Offshore trash net", effect, OFFSHORE_NET_ART)
+		_offshore_net_button.pressed.connect(_buy_offshore_net)
 	_rod_add_ons_section.visible = not shop.rod_add_ons.is_empty()
 	for index: int in shop.rod_add_ons.size():
 		var add_on: RodAddOn = shop.rod_add_ons[index]
@@ -354,6 +362,8 @@ func _refresh_catalog() -> void:
 		var complete: bool = _shop.is_cleanup_complete(index)
 		var project: CleanupProject = _shop.cleanup_projects[index]
 		_set_availability(button, not _shop.can_buy_cleanup(index), "Complete" if complete else "%d gold" % project.cost, project.cost)
+	if _offshore_net_button != null:
+		_refresh_offshore_net_offer()
 	for index: int in _rod_add_on_buttons.size():
 		var add_on: RodAddOn = _shop.rod_add_ons[index]
 		var status: String = "%d gold" % add_on.cost
@@ -361,6 +371,16 @@ func _refresh_catalog() -> void:
 			status = "Owned · %s" % status
 		_set_availability(_rod_add_on_buttons[index], not _shop.can_buy_rod_add_on(index), status, add_on.cost)
 	_refresh_rod_add_on_ownership()
+
+
+func _refresh_offshore_net_offer() -> void:
+	var price: String = "%d gold" % _shop.offshore_net_cost
+	var status: String = price
+	if _shop.offshore_net_installed:
+		status = "Installed"
+	elif not _shop.is_offshore_net_unlocked():
+		status = "Locked · %s" % price
+	_set_availability(_offshore_net_button, not _shop.can_buy_offshore_net(), status, _shop.offshore_net_cost)
 
 
 func _format_reach(world_distance: float) -> String:
@@ -415,6 +435,11 @@ func _buy_sack(index: int) -> void:
 func _buy_cleanup(index: int) -> void:
 	if visible and _page == Page.BUY and _shop.buy_cleanup(index):
 		_feedback.text = "Permanent pollution fell by %d percentage points. Return to shore to see the work." % _shop.cleanup_projects[index].pollution_reduction
+
+
+func _buy_offshore_net() -> void:
+	if visible and _page == Page.BUY and _shop.buy_offshore_net():
+		_feedback.text = "Net installed. Floating trash adds 0 pollution. Visit the shore to watch automatic sales."
 
 
 func _buy_rod_add_on(index: int) -> void:

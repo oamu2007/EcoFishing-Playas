@@ -20,6 +20,7 @@ Main (Node)
     │   │   │   └── Surface (ColorRect)
     │   │   └── AmbientFish (Node2D)
     │   ├── CleanupWork (Node2D)
+    │   ├── OffshoreNet (Node2D)
     │   ├── WorldBounds (StaticBody2D)
     │   ├── Player (CharacterBody2D)
     │   │   └── FishingRod (Node2D)
@@ -61,7 +62,7 @@ The rod emits `state_changed`, `hook_landed`, `fish_timing_finished`, `retrieval
 - On `hook_landed`, the resolver selects the nearest available fish or trash whose own catch radius contains the landing position. This synchronous geometric check avoids stale physics overlap caches and prevents catches along the airborne path. `target_detected` remains an additional waiting-only hint; its handling is deferred to avoid reparenting during physics callbacks. Landing/waiting attachment remains limited to one item.
 - During RETRIEVING the rod emits each actual hook movement segment, including the final segment **before** switching to IDLE. The resolver projects each current trash position onto the bounded segment and tests distance against `item.catch_radius + hook_radius` (defaults 24 + 10 px). This is a swept hook disk against the item's catch disk; neither the fishing line nor an infinite ray collects items. An empty landing can still sweep a piece on the way back without tunneling at high hook speeds. One shared trash limit covers landing, waiting, and retrieval.
 - Hooking reparents each item to the hook's visual anchor, stops drift/bobbing, and disables monitorability. A compact five-column offset pattern keeps attached sprites distinct. Per-item flags and a typed held-item array prevent duplicates. Pollution and counts remain unchanged until `retrieval_completed` in IDLE. The resolver clears its held array first, stores each landed item in the Sack, and tells the target to finish collection. The trash manager sends the landed trash ID to the pollution model. The model consumes each ID once.
-- `PollutionSystem` registers live IDs as they arrive and consumes each ID once on successful return. The total is the sum of floating points, capped at 30, and permanent points, bounded at 0–70. Permanent points start at 70. When both components are zero, the meter reaches 0% until another piece arrives. The pollution signal emits only when the capped total changes.
+- `PollutionSystem` registers live IDs as they arrive and consumes each ID once when the trash is removed from the water. The total is the sum of floating points, capped at 30, and permanent points, bounded at 0–70. Permanent points start at 70. Before the offshore net is installed, the meter can rebound from 0% when another piece arrives. The pollution signal emits only when the capped total changes.
 - The resolver’s `catch_hooked(type_name)` and `catches_returned(count, type_name)` feed cast-scoped HUD notifications, including misses. The level routes arrivals and successful collection to the model.
 
 ### Compact interface
@@ -77,6 +78,12 @@ The level injects its Sack into `Player` and `CatchResolver`. The Sack holds nam
 `FishingShack` marks a short route inland from starter-range water. The player presses E in range with the rod idle. The session opens the full-screen `ShackPanel` and gates movement and rod input until the trader closes. The trader owns page navigation, keyboard focus, drag and drop, and its temporary sale selection. It selects individual `Sack.Entry` references, so identical catches remain distinct. A fresh B press on Buy or Sell cancels the drag and selection and focuses Sell on the trader home. Sell All and a fresh F press on Sell pass the whole Sack through the same transaction as a partial sale. `ShackShop` validates ownership and uniqueness, credits the chosen entries once, and removes them. The session-owned `CoinBalance` follows those transactions through gameplay, trading, and pause.
 
 Typed `RodUpgrade` and `SackUpgrade` resources configure ordered gear tiers. `RodAddOn` resources define the card icon, timing forgiveness, and cast or reel discounts. The shop tracks ownership by rod tier and add-on and applies the effects for the equipped rod. The rod uses the active effects to show Slip guard and Quick spool sprites under its pivot. A purchase debits only on success. The shop also owns funding flags for eleven `CleanupProject` resources and applies each project's stated reduction to `PollutionSystem` once. The full catalog removes 70 permanent points. Arrivals affect only floating points.
+
+### Offshore trash net
+
+`ShackShop` unlocks the 72-gold offshore net after all eleven permanent projects have been funded. A successful purchase records ownership, disables the effective floating contribution, and tells `World` to deploy the net scene. `PollutionSystem` keeps live IDs so remaining debris can still be fished. The water and ambient fish ease to the clean visuals while the HUD and catchable fish use the immediate 0% value.
+
+`TrashManager` routes future arrivals and inbound trash still seaward of world X 1355 to the installed net. A transit slot keeps arrivals flowing when older debris fills the fishing area's cap. `OceanTrash` stops on the interception line during its inward physics step and claims the piece once. The manager removes it from its live list and tells the level to unregister it from fishing, credit its sale value directly to the shop wallet, and show a brief gold cue at the mesh. Older shoreward and hooked items remain under the usual fishing rules. The net scene handles deployment and sale animations in world coordinates. New Game recreates the shop, manager, net, and pollution model.
 
 The level's `CleanupWork` scene listens for successful project purchases. Each project references a distinct authored site by ID, even when several sites share a type of work. The scene runs one visual sequence at a time after the trader closes. Each site draws its initial, working, and completed state. The session presents the site's watch cue through Help. The trader and pause menu freeze work. Replacing the session resets all sites and discards queued work.
 
@@ -142,13 +149,15 @@ CatchResolver hook and return events -> HUD notifications
 FishingRod fish timing state -> HUD dial and outcome notification
 ShackShop.purchases_changed -> CoinBalance and trader catalog
 ShackShop.cleanup_funded -> CleanupWork -> HUD watch cue
+ShackShop.offshore_net_purchased -> World -> TrashManager and OffshoreNet
+TrashManager.trash_intercepted -> World -> CatchResolver, ShackShop and OffshoreNet
 PollutionSystem.pollution_changed -> HUD and WaterVisuals
 WaterVisuals.displayed_pollution_changed -> AmbientFish
 FishingRod.hook_landed -> Level -> WaterSplash (true pollution tint)
 Player position -> Footprints
 ```
 
-The rod reports lifecycle and hook positions. The resolver chooses and finalizes items. The trash manager reports each landed trash ID to the pollution model. The HUD and catchable fish manager read true pollution. Ambient fish follow the water's displayed value.
+The rod reports lifecycle and hook positions. The resolver chooses and finalizes caught items. The trash manager reports each removed trash ID to the pollution model. The HUD and catchable fish manager read true pollution. Ambient fish follow the water's displayed value.
 
 ## State ownership
 

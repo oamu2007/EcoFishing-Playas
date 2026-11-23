@@ -153,6 +153,7 @@ pollution_reduction = 6
 
 [node name="ShackShop" type="Node"]
 script = ExtResource("1_shop")
+offshore_net_cost = 72
 rod_upgrades = Array[ExtResource("3_rod_tier")]([SubResource("Resource_shore_rod"), SubResource("Resource_offshore_rod")])
 rod_add_ons = Array[ExtResource("13_add_on")]([SubResource("Resource_forgiveness"), SubResource("Resource_speed")])
 sack_upgrades = Array[ExtResource("4_sack_tier")]([SubResource("Resource_canvas_sack"), SubResource("Resource_cargo_sack")])

@@ -16,7 +16,7 @@ The next pass spreads trash stops through the equipped rod's casting range and g
 
 ## Current checkpoint
 
-[Milestone 31](#milestone-31--trash-stop-variety-and-offshore-fish) is published at `6d83b93` on `roadmap-implementation`. M32–M34 are verified. Next is M35, the offshore trash net. Check the net’s floating-pollution label during M35. The outstanding M30 timing, onboarding, listening, and cross-device checks carry forward to M36.
+M32–M34 are published at `01aa843`, `c37315d`, and `1547c78` on `roadmap-implementation`. M35 is verified through the ordinary progression route and the focused offshore net test. Next is M36, the integrated playtest and regression checks. The outstanding M30 timing, onboarding, listening, and cross-device checks carry forward.
 
 ## Completed baseline
 
@@ -781,11 +781,11 @@ Compare the shop labels against the model for each project, rod tier, and the fi
 
 - The trader displays one meter per 20 world units. The Starter, Shore, and Offshore rods show 12 m, 19.5 m, and 30 m. The configured ranges remain 240, 390, and 600 world units.
 - The trader smoke test passed at 1280 x 720 and 800 x 450. It checked the reductions and price layout on all eleven cleanup cards, all rod ranges, and the purchase confirmation against the change in permanent pollution.
-- Verify the final net's floating-pollution label against the M35 purchase and add it to the trader checks.
+- The M35 offshore net smoke test verified the final card's unlock condition, price, and floating-pollution effect at both window sizes.
 
 ## Milestone 35 — Final investment, offshore trash net
 
-**Planned.** The player can buy an expensive final beach investment that places a giant net at the offshore edge of view. The net automatically sells the trash it intercepts, and floating trash stops affecting pollution for the rest of the session.
+**Verified November 23, 2026.** After funding all eleven cleanup projects, the player can spend 72 gold to install a net at the offshore edge of the shoreline view. It sells arriving trash directly and keeps the water at 0% for the rest of that session.
 
 - Unlock the net after the existing permanent cleanup catalog is complete. Tune its cost as a substantial late-game goal funded through normal play, with a viable path that does not depend on a trophy fish. Show its unlock condition, price, and effect in the shop.
 - Stage a visible installation at a world-anchored offshore location near the ocean-side edge of the screen. Make the net and its collection readable across supported camera views. Intercept arriving trash at the net, remove each intercepted piece, and credit its sale value directly to the wallet exactly once. Automatic sales use no Sack capacity. Keep collection independent of the player's camera position and show a concise catch or coin cue.
@@ -794,6 +794,10 @@ Compare the shop labels against the model for each project, rod tier, and the fi
 **Verification**
 
 Fund the net through a regular non-trophy route. Check locking, affordability, repeated input, and the one-time charge. Observe and count intercepted pieces and reconcile the wallet against their exact sale values with a full Sack. Leave previously counted debris in the water, watch new arrivals, and verify stable true and displayed 0%. Check pause, camera movement, both window sizes, and a fresh session.
+
+- The regular input route bought the net at 688.0 seconds with 283 gold earned across the session at both 1280 × 720 and 800 × 450. It reached 0% at 578.2 seconds, rebounded to 5% before purchase, and then held true and displayed 0% through three interceptions worth 9 gold. Six ambient fish returned, earlier debris stayed in the water, and the route used no trophy income.
+- The focused net test passed headless and on Intel Iris Xe / OpenGL 3.3 at both sizes. It verified the locked, unaffordable, and purchased states, one charge, a full legacy trash cap, held Sack capacity, two distinct exact sale values, and no second credit. It also checked pause, off-camera interception, a fresh session, and clean fish arrival conditions.
+- Rendered captures showed the complete trader offer, offshore mesh, gold cue, full Sack, and 0% meter. Godot 4.7.2 imported the assets and passed the 120-frame startup, trader, and cleanup-project checks. The editor reported the existing personal settings safe-save error. Continue M36 for repeat discovery, offshore encounters, and the full regression pass.
 
 ## Milestone 36 — Integrated playtest and regression checks
 

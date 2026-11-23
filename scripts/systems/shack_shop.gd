@@ -3,6 +3,7 @@ extends Node
 
 signal purchases_changed
 signal cleanup_funded(project: CleanupProject)
+signal offshore_net_purchased
 signal sale_completed
 signal purchase_completed
 
@@ -10,10 +11,12 @@ signal purchase_completed
 @export var rod_add_ons: Array[RodAddOn] = []
 @export var sack_upgrades: Array[SackUpgrade] = []
 @export var cleanup_projects: Array[CleanupProject] = []
+@export_range(0, 500) var offshore_net_cost: int = 0
 
 var coins: int = 0
 var rod_tier: int = 0
 var sack_tier: int = 0
+var offshore_net_installed: bool = false
 var _sack: Sack
 var _rod: FishingRod
 var _pollution: PollutionSystem
@@ -132,3 +135,28 @@ func buy_cleanup(index: int) -> bool:
 	purchase_completed.emit()
 	cleanup_funded.emit(project)
 	return true
+
+
+func is_offshore_net_unlocked() -> bool:
+	return offshore_net_cost > 0 and _completed_projects.size() == cleanup_projects.size()
+
+
+func can_buy_offshore_net() -> bool:
+	return is_offshore_net_unlocked() and not offshore_net_installed and coins >= offshore_net_cost
+
+
+func buy_offshore_net() -> bool:
+	if not can_buy_offshore_net():
+		return false
+	coins -= offshore_net_cost
+	offshore_net_installed = true
+	_pollution.disable_floating_pollution()
+	offshore_net_purchased.emit()
+	purchases_changed.emit()
+	purchase_completed.emit()
+	return true
+
+
+func credit_intercepted_trash(value: int) -> void:
+	coins += value
+	purchases_changed.emit()

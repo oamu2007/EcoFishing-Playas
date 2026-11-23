@@ -123,6 +123,8 @@ func _guidance() -> String:
 			return "Catch and sell more trash. Your first upgrade needs %d more gold." % (price - _shop.coins)
 	if not _rod.is_near_shore(_rod.global_position):
 		return "Move right to the shoreline with WASD or the arrow keys."
+	if _shop.offshore_net_installed:
+		return "The offshore net sells incoming trash and keeps the water at 0%."
 	if _pollution.permanent_points == 0 and _pollution.current_pollution > 0:
 		return "Clear floating trash between arrivals to reach 0%."
 	if _pollution.normalized_pollution <= _fish_threshold:

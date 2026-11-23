@@ -9,6 +9,7 @@ const MAX_PERMANENT_POINTS: int = 70
 var permanent_points: int = MAX_PERMANENT_POINTS
 var trash_collected: int = 0
 var _floating_load: int = 0
+var _floating_disabled: bool = false
 var _remaining: Dictionary[int, int] = {}
 
 var remaining_trash: int:
@@ -16,7 +17,7 @@ var remaining_trash: int:
 		return _remaining.size()
 var floating_points: int:
 	get:
-		return mini(_floating_load, MAX_FLOATING_POINTS)
+		return 0 if _floating_disabled else mini(_floating_load, MAX_FLOATING_POINTS)
 var current_pollution: int:
 	get:
 		return permanent_points + floating_points
@@ -29,6 +30,7 @@ func initialize(item_values: Dictionary[int, int], permanent: int = MAX_PERMANEN
 	var previous: int = current_pollution
 	permanent_points = clampi(permanent, 0, MAX_PERMANENT_POINTS)
 	trash_collected = 0
+	_floating_disabled = false
 	_remaining.clear()
 	_floating_load = 0
 	for id: int in item_values:
@@ -66,6 +68,12 @@ func remove_permanent(points: int) -> int:
 	permanent_points -= removed
 	_emit_change(previous)
 	return removed
+
+
+func disable_floating_pollution() -> void:
+	var previous: int = current_pollution
+	_floating_disabled = true
+	_emit_change(previous)
 
 
 func _emit_change(previous: int) -> void:

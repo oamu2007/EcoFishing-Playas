@@ -2,6 +2,7 @@ class_name OceanTrash
 extends FishingTarget
 
 signal entered_water
+signal interception_reached
 
 enum Kind { BOTTLE, CAN, BAG }
 
@@ -16,6 +17,7 @@ var is_arriving: bool = false
 var _stop: Vector2
 var _arrival_speed: float
 var _water_edge: float
+var _interception_x: float = -INF
 var _arrival_drift_limits: Vector2
 var _elapsed: float = 0.0
 var _drift_center: float = 0.0
@@ -63,6 +65,19 @@ func retarget_arrival(stop_x: float) -> void:
 	_stop.x = minf(stop_x, global_position.x)
 
 
+func set_interception_line(line_x: float) -> void:
+	_interception_x = line_x
+
+
+func finish_interception() -> bool:
+	if not is_arriving or not can_hook() or global_position.x != _interception_x:
+		return false
+	collected = true
+	hide()
+	queue_free()
+	return true
+
+
 func drift_stop_position() -> Vector2:
 	return _stop if is_arriving else global_position
 
@@ -71,11 +86,14 @@ func _physics_process(delta: float) -> void:
 	if hooked:
 		return
 	if is_arriving:
-		global_position.x = move_toward(global_position.x, _stop.x, _arrival_speed * delta)
+		var stop_x: float = _interception_x if is_finite(_interception_x) else _stop.x
+		global_position.x = move_toward(global_position.x, stop_x, _arrival_speed * delta)
 		if not in_water and global_position.x <= _water_edge:
 			in_water = true
 			entered_water.emit()
-		if global_position.x == _stop.x:
+		if global_position.x == _interception_x:
+			interception_reached.emit()
+		elif global_position.x == _stop.x:
 			is_arriving = false
 			configure_drift(_arrival_drift_limits, drift_speed, _drift_phase)
 		return

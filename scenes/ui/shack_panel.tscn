@@ -211,6 +211,10 @@ theme_override_constants/separation = 5
 theme_type_variation = &"FieldSection"
 text = "Cleanup projects"
 
+[node name="OffshoreNetOffer" type="VBoxContainer" parent="Backdrop/Panel/Margin/Layout/BuyScreen/BuyScroll/Catalog"]
+unique_name_in_owner = true
+layout_mode = 2
+
 [node name="Feedback" type="Label" parent="Backdrop/Panel/Margin/Layout"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 22)

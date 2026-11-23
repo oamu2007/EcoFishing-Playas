@@ -10,6 +10,7 @@ const SandDetailsScript = preload("res://scripts/gameplay/sand_details.gd")
 const PlayerScript = preload("res://scripts/gameplay/player.gd")
 const CatchResolverScript = preload("res://scripts/systems/catch_resolver.gd")
 const CleanupWorkScript = preload("res://scripts/gameplay/cleanup_work.gd")
+const OffshoreNetScript = preload("res://scripts/gameplay/offshore_net.gd")
 const SandShader: Shader = preload("res://shaders/sand.gdshader")
 
 var shore_start: Vector2
@@ -29,6 +30,7 @@ var shore_end: Vector2
 @onready var _player: PlayerScript = $Player
 @onready var _water: WaterVisuals = $Environment/Water
 @onready var _fish: AmbientFishScript = $Environment/AmbientFish
+@onready var _offshore_net: OffshoreNetScript = $OffshoreNet
 
 
 func _ready() -> void:
@@ -51,9 +53,11 @@ func _ready() -> void:
 	trash_manager.trash_arrived.connect(pollution.register_trash)
 	_player.sack = sack
 	shop.initialize(sack, rod, pollution)
+	shop.offshore_net_purchased.connect(_install_offshore_net)
 	cleanup_work.bind_shop(shop)
 	catches.initialize(rod, sack)
 	trash_manager.trash_spawned.connect(catches.register_target)
+	trash_manager.trash_intercepted.connect(_on_trash_intercepted)
 	trash_manager.initialize(rod, shore_start, shore_end)
 	catchable_fish.fish_spawned.connect(catches.register_target)
 	catchable_fish.fish_departed.connect(catches.unregister_target)
@@ -100,6 +104,16 @@ func bind_audio(audio: AudioScript) -> void:
 func _on_cast_rejected(_reason: String, audio: AudioScript) -> void:
 	if sack.free_slots > 0:
 		audio.play_cue(AudioScript.Cue.MISS)
+
+
+func _install_offshore_net() -> void:
+	_offshore_net.deploy(trash_manager.install_net(_offshore_net.global_position.x))
+
+
+func _on_trash_intercepted(item: OceanTrash, sale_value: int) -> void:
+	catches.unregister_target(item)
+	shop.credit_intercepted_trash(sale_value)
+	_offshore_net.show_sale(item.global_position, sale_value)
 
 
 func set_shop_open(value: bool) -> void:
