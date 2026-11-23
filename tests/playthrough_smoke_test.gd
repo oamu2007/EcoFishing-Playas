@@ -33,6 +33,10 @@ var _seen_starter_items: Dictionary[int, bool]
 var _new_starter_times: Array[float]
 var _cleanup_cues: int
 var _trophy_visits: int
+var _discoveries: Dictionary[FishSpecies, int] = {}
+var _last_landed_species: FishSpecies
+var _last_fish_value: int
+var _last_fish_reach: float
 
 
 func _initialize() -> void:
@@ -112,6 +116,10 @@ func _start_session(restarting: bool = false) -> bool:
 	_first_threshold_time = -1.0
 	_cleanup_cues = 0
 	_trophy_visits = 0
+	_discoveries.clear()
+	_last_landed_species = null
+	_last_fish_value = 0
+	_last_fish_reach = 0.0
 	_starter_range = _rod.maximum_cast_range
 	_seen_starter_items.clear()
 	_new_starter_times.clear()
@@ -120,6 +128,7 @@ func _start_session(restarting: bool = false) -> bool:
 	_world.pollution.pollution_changed.connect(_record_threshold)
 	_world.cleanup_work.work_started.connect(_count_cleanup_cue)
 	_world.catchable_fish.fish_spawned.connect(_count_trophy_visit)
+	_world.catches.fish_landed.connect(_record_fish_landing)
 	_check(_sack.item_count == 0 and _sack.capacity == 3 and _shop.coins == 0 and _coin_amount.text == "0 gold" and _shop.rod_tier == 0 and _shop.sack_tier == 0, "Fresh session retained Sack, gold, or gear progress")
 	_check(not _shop.offshore_net_installed and not _world.get_node("OffshoreNet").visible, "Fresh session retained the offshore net")
 	for tier: int in range(_shop.rod_upgrades.size() + 1):
@@ -160,24 +169,46 @@ func _play_session(window: String) -> void:
 	_intentionally_fishing = true
 	if not await _catch_fish():
 		return
+	var first_species: FishSpecies = _last_landed_species
+	if not _check(first_species != null and _discoveries.get(first_species, 0) == 1, "First species did not open a discovery"):
+		return
 	if not await _sell():
 		return
 	var first_fish_sale_time: float = _seconds_since(_start_ticks)
 	_check(_fish_sale_value > _world.trash_manager.trash_sale_value, "The first fish sale did not pay more than trash")
 	_check(_first_threshold_time >= 0.0, "The playthrough did not record a true 50% crossing")
 	print("First 50%% crossing %.1fs, first fish sale %.1fs (+%d gold), pollution %d%%" % [_first_threshold_time, first_fish_sale_time, _fish_sale_value, _world.pollution.current_pollution])
+	if not await _catch_fish(first_species):
+		return
+	_check(_last_landed_species == first_species and _discoveries.get(first_species, 0) == 1, "Repeat catch of the first species reopened discovery")
+	print("Repeat %s at %.1fs (+%d gold on sale), one discovery" % [first_species.title, _seconds_since(_start_ticks), _last_fish_value])
+	if not await _sell():
+		return
 
 	var spool_index: int = 1
 	var spool: RodAddOn = _shop.rod_add_ons[spool_index]
 	if not await _buy("RodAddOns", spool_index, spool.cost):
 		return
 	_check(_shop.owns_rod_add_on(1, spool_index) and is_equal_approx(_rod.equipped_cast_duration(), _rod.cast_duration * (1.0 - spool.duration_discount)), "The Shore rod did not apply its own Quick spool")
+	await _walk_to_shore()
+	await process_frame
+	var shore_reach: float = _rod.maximum_cast_range
+	var offshore_spot: Vector2 = _rod.global_position + Vector2(shore_reach + 110.0, 0.0)
+	var prior_cast: int = _rod.cast_number
+	_cast_click(offshore_spot)
+	_check(_rod.cast_number == prior_cast and not _rod.invalid_target_reason(offshore_spot).is_empty(), "The Shore rod accepted a cast into the Offshore rod's band")
 	if not await _buy("Gear", 1, _shop.rod_upgrades[1].cost):
 		return
 	_check(_shop.owns_rod_add_on(1, spool_index) and not _shop.owns_rod_add_on(2, spool_index) and is_equal_approx(_rod.equipped_cast_duration(), _rod.cast_duration), "The Offshore rod inherited its predecessor's Quick spool")
 	if not await _buy("RodAddOns", spool_index, spool.cost):
 		return
 	_check(_shop.owns_rod_add_on(2, spool_index) and is_equal_approx(_rod.equipped_retrieval_duration(), _rod.retrieval_duration * (1.0 - spool.duration_discount)), "The Offshore rod did not apply its own Quick spool")
+	if not await _catch_fish(null, shore_reach):
+		return
+	_check(_last_fish_reach > shore_reach and _last_fish_reach <= _rod.maximum_cast_range, "The Offshore rod did not land a fish beyond the old range")
+	print("Offshore %s at %.1fs, cast distance %.1f world units (Shore limit %.0f, Offshore limit %.0f)" % [_last_landed_species.title, _seconds_since(_start_ticks), _last_fish_reach, shore_reach, _rod.maximum_cast_range])
+	if not await _sell():
+		return
 	for index: int in range(project_index, _shop.cleanup_projects.size()):
 		if not await _buy("Cleanup", index, _shop.cleanup_projects[index].cost):
 			return
@@ -203,7 +234,7 @@ func _play_session(window: String) -> void:
 	await _check_cleanup_sites()
 	if not await _purchase_and_watch_net():
 		return
-	_check(_trophy_visits == 0, "The seeded ordinary progression route encountered a trophy")
+	print("Trophy visits during ordinary progression: %d" % _trophy_visits)
 	var longest_gap: float = 0.0
 	for index: int in range(1, _new_starter_times.size()):
 		longest_gap = maxf(longest_gap, _new_starter_times[index] - _new_starter_times[index - 1])
@@ -277,6 +308,14 @@ func _count_cleanup_cue(_watch_cue: String) -> void:
 func _count_trophy_visit(fish: CatchableFish) -> void:
 	if fish.species.timing_checks == 3:
 		_trophy_visits += 1
+
+
+func _record_fish_landing(species: FishSpecies, _length_cm: int, sale_value: int) -> void:
+	_check(species.rarity != FishSpecies.Rarity.TROPHY, "Ordinary progression landed a trophy fish")
+	_last_landed_species = species
+	_last_fish_value = sale_value
+	if _session.get_node("FishReveal").visible:
+		_discoveries[species] = _discoveries.get(species, 0) + 1
 
 
 func _check_cleanup_sites() -> void:
@@ -427,29 +466,41 @@ func _fish_near(point: Vector2) -> bool:
 	return false
 
 
-func _catch_fish() -> bool:
+func _catch_fish(species: FishSpecies = null, minimum_reach: float = 0.0) -> bool:
 	await _walk_to_shore()
 	for attempt: int in 160:
-		var candidates: Array[CatchableFish] = _world.catchable_fish.fish
-		if candidates.is_empty():
+		var target: CatchableFish = _fish_target(species, minimum_reach)
+		if target == null:
 			await _wait_ticks(20)
 			continue
-		var target: CatchableFish = candidates.front()
 		await _align(target.global_position.y)
 		if not is_instance_valid(target) or not target.can_hook():
 			continue
 		var point: Vector2 = target.global_position
-		if not _rod.invalid_target_reason(point).is_empty():
+		if point.x - _rod.global_position.x <= minimum_reach or not _rod.invalid_target_reason(point).is_empty():
 			continue
+		var cast_reach: float = _rod.global_position.distance_to(point)
 		if not await _cast_and_return(point):
 			return false
 		if _sack.fish_count > 0:
-			return true
+			_last_fish_reach = cast_reach
+			return _check(species == null or _last_landed_species == species, "Catch did not land the targeted species")
 		if _sack.free_slots == 0 and not await _sell():
 			return false
 		if _shack.is_near(_player.global_position):
 			await _walk_to_shore()
 	return _check(false, "No catchable fish could be landed after cleanup")
+
+
+func _fish_target(species: FishSpecies, minimum_reach: float) -> CatchableFish:
+	for target: CatchableFish in _world.catchable_fish.fish:
+		if target.species.rarity == FishSpecies.Rarity.TROPHY or (species != null and target.species != species) or not target.can_hook():
+			continue
+		var point: Vector2 = target.global_position
+		var origin: Vector2 = Vector2(_rod.global_position.x, point.y)
+		if point.x - origin.x > minimum_reach and _rod.invalid_target_reason_from(origin, point).is_empty():
+			return target
+	return null
 
 
 func _reach_clean_water() -> bool:

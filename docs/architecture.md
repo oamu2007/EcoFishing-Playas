@@ -33,10 +33,11 @@ Main (Node)
     │   └── PollutionSystem (Node)
     ├── HUD (CanvasLayer)
     ├── ShackPanel (CanvasLayer)
+    ├── FishReveal (CanvasLayer)
     └── CoinBalance (CanvasLayer)
 ```
 
-The tree omits decorative nodes. The entry point owns the title, pause overlay, and running session. The session composes the world, HUD, trader, and coin balance. The level owns local gameplay and environmental presentation.
+The tree omits decorative nodes. The entry point owns the title, pause overlay, and running session. The session composes the world, HUD, trader, fish reveal, and coin balance. The level owns local gameplay and environmental presentation.
 
 The level also creates footprint and splash nodes at runtime, plus a shader-backed sand overlay and static sand-detail node under `Environment`.
 

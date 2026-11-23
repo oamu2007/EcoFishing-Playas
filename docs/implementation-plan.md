@@ -16,7 +16,7 @@ The next pass spreads trash stops through the equipped rod's casting range and g
 
 ## Current checkpoint
 
-M32–M34 are published at `01aa843`, `c37315d`, and `1547c78` on `roadmap-implementation`. M35 is verified through the ordinary progression route and the focused offshore net test. Next is M36, the integrated playtest and regression checks. The outstanding M30 timing, onboarding, listening, and cross-device checks carry forward.
+M31–M35 are published on `roadmap-implementation`. M36 records the end-to-end route through discovery, offshore fishing, and net installation. Human timing, onboarding, listening, and second-device checks are listed under M36.
 
 ## Completed baseline
 
@@ -801,10 +801,38 @@ Fund the net through a regular non-trophy route. Check locking, affordability, r
 
 ## Milestone 36 — Integrated playtest and regression checks
 
-**Planned.** A fresh session progresses from varied nearshore trash and a first species discovery to offshore fishing and a working endgame net.
+**Verified November 23, 2026.** The seeded session progressed from nearshore trash and a first species discovery to offshore fishing and a working endgame net. A separate controlled encounter exercised the California sheephead trophy reveal.
 
 - Play an ordinary progression route, including a first discovery, repeat catch, rod upgrade, and the final net purchase. Use a separate controlled trophy encounter to verify its presentation. Record time and earnings to the net, old and new offshore access, and the before-purchase rebound and after-purchase stable 0%.
 - Run Godot import, main startup, and relevant smoke, audio, and GPU checks, including the standalone water preview. Record any pending human timing, listening, onboarding, and cross-device checks. Update the README and architecture notes for the new behavior and scene ownership.
+
+**Integrated input playthrough**
+
+Both seeded sessions at 1280 × 720 and 800 × 450 started from New Game and used the regular cast, timing, sale, and purchase controls. The headless and OpenGL runs passed with matching results. Times are game seconds from the start of each session.
+
+| Checkpoint | Time | Result |
+| --- | ---: | --- |
+| First rod upgrade | 47.2 s | Three full starter Sack trips funded the Shore rod. |
+| First Pacific sardine sale | 254.7 s | The first landing opened the discovery. The sale earned 13 gold. |
+| Repeat Pacific sardine | 262.9 s | The landing earned a 21-gold quote and the species still had exactly one reveal. |
+| Offshore topsmelt | 365.8 s | The Shore rod rejected an offshore cast. The Offshore rod landed a fish at 535.6 world units, beyond the old 390-unit range and within its 600-unit range. |
+| Clean-water window | 425.8 s | True and displayed pollution reached 0% after permanent cleanup. A live arrival restored 5% before the net was installed. |
+| Offshore net | 608.3 s | The route earned 292 gold across its sales and bought the net once for 72 gold. No trophy fish contributed. |
+
+After the purchase, the three intercepted pieces added exactly 9 gold. Earlier debris stayed in the water. True pollution and the HUD held at 0%, the water display settled at 0%, and all six ambient fish were visible. Start fresh restored 100% and reset the net and wallet.
+
+**Regression and render checks**
+
+- Godot 4.7.2.stable.official.ed1daf0bf imported a fresh source copy with the portable editor. The main scene displayed the title for 120 frames and closed normally. All fifteen headless smoke tests passed, including the integrated route, fishing, line motion, the trader, cleanup, discovery, offshore reach, and net collection.
+- Intel Iris Xe / OpenGL 3.3 Compatibility passed the rendered water comparison and 120 frames of the standalone water preview. Rendered controlled discovery at both window sizes verified the first and repeat common and trophy catches, the distinct trophy cue and treatment, and reset. On WASAPI and Dummy, the audio test passed the full-Sack warning, pause fade, and continuous music checks.
+- The focused net test checked 5- and 8-gold fixture catches against the wallet while the Sack was full. It also verified the net offer, repeated input, pause, off-camera collection, the reserved arrival slot at a full trash cap, and reset. The README and architecture notes now describe discoveries, offshore access, net purchases, and replay.
+
+**Remaining human checks**
+
+- Try the revised rare and trophy timing by hand across repeated catches.
+- Run an independent first-time session to assess Help, the trader, timing discovery, and the first three Sack trips.
+- Listen to the loop seam and overlapping footstep, interface, and fishing cues.
+- Check graphics, frame pacing, UI legibility, and audio on a second device.
 
 ## Scope guardrails
 
